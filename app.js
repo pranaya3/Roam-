@@ -1,46 +1,20 @@
-/* ==========================================
-   ROAM
-   Main Application
-   ========================================== */
-
-
-/* ==========================================
-   STATE
-   ========================================== */
-
 const state = {
-
   roamName: "",
-
   location: "",
-
   groupSize: 10,
-
   dates: [],
-
   participantName: "",
-
   availability: [],
-
   budget: null,
-
   averageBudget: 47,
-
   selectedResult: null,
-
   selectedPlace: null,
 
   userLocation: {
     latitude: null,
     longitude: null
   }
-
 };
-
-
-/* ==========================================
-   TIME OPTIONS
-   ========================================== */
 
 const times = [
   "10:00 AM",
@@ -54,872 +28,410 @@ const times = [
   "9:00 PM"
 ];
 
-
-/* ==========================================
-   START ROAM
-   ========================================== */
-
-function startRoam() {
-
-  showScreen("create");
-
-}
-
-
-/* ==========================================
+/* -----------------------------
    SCREEN NAVIGATION
-   ========================================== */
+----------------------------- */
 
 function showScreen(screenName) {
+  document.querySelectorAll(".screen").forEach(screen => {
+    screen.classList.remove("active");
+  });
 
-  document
-    .querySelectorAll(".screen")
-    .forEach(screen => {
-      screen.classList.remove("active");
-    });
+  const target = document.getElementById(screenName);
 
-
-  const screen =
-    document.getElementById(screenName);
-
-  if (screen) {
-
-    screen.classList.add("active");
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-
+  if (target) {
+    target.classList.add("active");
   }
 
-
-  if (screenName === "days") {
-
-    renderDates();
-
-  }
-
-
-  if (screenName === "availability") {
-
-    renderTimes();
-
-  }
-
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
 }
 
+/* -----------------------------
+   START ROAM
+----------------------------- */
 
-/* ==========================================
+function startRoam() {
+  showScreen("create");
+}
+
+/* -----------------------------
    CREATE ROAM
-   ========================================== */
+----------------------------- */
 
 function saveRoamDetails() {
+  const nameInput = document.getElementById("roamName");
+  const locationInput = document.getElementById("location");
+  const groupInput = document.getElementById("groupSize");
 
-  const name =
-    document.getElementById("roamName").value.trim();
+  state.roamName = nameInput.value.trim();
+  state.location = locationInput.value.trim();
+  state.groupSize = Number(groupInput.value) || 2;
 
-  const location =
-    document.getElementById("location").value.trim();
-
-  const groupSize =
-    Number(
-      document.getElementById("groupSize").value
-    );
-
-
-  if (!name) {
-
-    alert("Give your Roam a name.");
-
+  if (!state.roamName) {
+    alert("Give your Roam a name first!");
     return;
-
   }
-
-
-  if (!location && !state.userLocation.latitude) {
-
-    alert(
-      "Enter a location or use your current location."
-    );
-
-    return;
-
-  }
-
-
-  if (!groupSize || groupSize < 2) {
-
-    alert(
-      "Your Roam needs at least 2 people."
-    );
-
-    return;
-
-  }
-
-
-  state.roamName = name;
-
-  state.location = location;
-
-  state.groupSize = groupSize;
-
 
   showScreen("days");
-
+  renderDates();
 }
 
-
-/* ==========================================
-   USER LOCATION
-   ========================================== */
-
-const useLocationBtn =
-  document.getElementById("useLocationBtn");
-
-const locationStatus =
-  document.getElementById("locationStatus");
-
-
-if (useLocationBtn) {
-
-  useLocationBtn.addEventListener(
-    "click",
-    getUserLocation
-  );
-
-}
-
+/* -----------------------------
+   FREE LOCATION TRACKING
+----------------------------- */
 
 function getUserLocation() {
+  const status = document.getElementById("locationStatus");
+  const locationInput = document.getElementById("location");
 
   if (!navigator.geolocation) {
-
-    locationStatus.textContent =
-      "Your browser does not support location.";
-
+    status.textContent =
+      "Your browser does not support location services.";
     return;
-
   }
 
-
-  locationStatus.textContent =
-    "📍 Finding your location...";
-
-
-  useLocationBtn.disabled = true;
-
+  status.textContent = "📍 Finding your location...";
 
   navigator.geolocation.getCurrentPosition(
+    position => {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
 
-    function(position) {
+      state.userLocation.latitude = latitude;
+      state.userLocation.longitude = longitude;
 
-      const latitude =
-        position.coords.latitude;
+      status.textContent =
+        "📍 Location found!";
 
-      const longitude =
-        position.coords.longitude;
+      /*
+        We don't need Google Maps to get the
+        user's location.
 
+        We use OpenStreetMap's reverse geocoding
+        service to find the area/city name.
+      */
 
-      state.userLocation.latitude =
-        latitude;
-
-      state.userLocation.longitude =
-        longitude;
-
-
-      locationStatus.textContent =
-        "✓ Location found! Roam can now find places near you.";
-
-
-      useLocationBtn.textContent =
-        "✓ Location found";
-
-
-      useLocationBtn.disabled = false;
-
-
-      console.log(
-        "Roam location:",
-        latitude,
-        longitude
-      );
-
+      reverseGeocode(latitude, longitude, locationInput);
     },
 
+    error => {
+      console.log(error);
 
-    function(error) {
-
-      useLocationBtn.disabled = false;
-
-      useLocationBtn.textContent =
-        "📍 Use my location";
-
-
-      if (
-        error.code ===
-        error.PERMISSION_DENIED
-      ) {
-
-        locationStatus.textContent =
-          "Location permission was denied. You can enter a city instead.";
-
-      }
-
-      else if (
-        error.code ===
-        error.POSITION_UNAVAILABLE
-      ) {
-
-        locationStatus.textContent =
-          "We couldn't find your location. Try again.";
-
-      }
-
-      else if (
-        error.code ===
-        error.TIMEOUT
-      ) {
-
-        locationStatus.textContent =
-          "Location request timed out. Try again.";
-
-      }
-
-      else {
-
-        locationStatus.textContent =
-          "Something went wrong finding your location.";
-
-      }
-
+      status.textContent =
+        "❌ We couldn't access your location. Please allow location access.";
     },
-
 
     {
       enableHighAccuracy: true,
-
       timeout: 10000,
-
       maximumAge: 300000
     }
-
   );
-
 }
 
+/* -----------------------------
+   REVERSE GEOCODING
+----------------------------- */
 
-/* ==========================================
+async function reverseGeocode(latitude, longitude, input) {
+  try {
+    const url =
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`;
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error("Location lookup failed.");
+    }
+
+    const data = await response.json();
+
+    const address = data.address || {};
+
+    const city =
+      address.city ||
+      address.town ||
+      address.village ||
+      address.municipality ||
+      "";
+
+    const stateName =
+      address.state || "";
+
+    if (city && stateName) {
+      input.value = `${city}, ${stateName}`;
+      state.location = input.value;
+    } else if (city) {
+      input.value = city;
+      state.location = city;
+    }
+
+  } catch (error) {
+    console.log("Reverse geocoding error:", error);
+
+    input.value = "My current location";
+    state.location = "My current location";
+  }
+}
+
+/* -----------------------------
    DATES
-   ========================================== */
+----------------------------- */
 
 function renderDates() {
+  const container = document.getElementById("dateGrid");
 
-  const dateGrid =
-    document.getElementById("dateGrid");
+  if (!container) return;
 
+  container.innerHTML = "";
 
-  dateGrid.innerHTML = "";
-
-
-  const today =
-    new Date();
-
+  const today = new Date();
 
   for (let i = 0; i < 14; i++) {
+    const date = new Date(today);
 
-    const date =
-      new Date(today);
+    date.setDate(today.getDate() + i);
 
+    const button = document.createElement("button");
 
-    date.setDate(
-      today.getDate() + i
-    );
+    button.type = "button";
+    button.className = "date-option";
 
+    const month = date.toLocaleString("en-US", {
+      month: "short"
+    });
 
-    const day =
-      date.toLocaleDateString(
-        "en-US",
-        {
-          weekday: "short"
-        }
-      );
-
-
-    const month =
-      date.toLocaleDateString(
-        "en-US",
-        {
-          month: "short"
-        }
-      );
-
-
-    const number =
-      date.getDate();
-
-
-    const dateValue =
-      date.toISOString().split("T")[0];
-
-
-    const button =
-      document.createElement("button");
-
-
-    button.className =
-      "date-option";
-
-
-    button.dataset.date =
-      dateValue;
-
+    const weekday = date.toLocaleString("en-US", {
+      weekday: "short"
+    });
 
     button.innerHTML = `
-      <span class="date-day">
-        ${day}
-      </span>
-
-      <span class="date-number">
-        ${number}
-      </span>
-
-      <small>
-        ${month}
-      </small>
+      <strong>${weekday}</strong>
+      <span>${month} ${date.getDate()}</span>
     `;
 
+    button.dataset.date =
+      date.toISOString().split("T")[0];
 
-    button.addEventListener(
-      "click",
-      function() {
+    button.addEventListener("click", () => {
+      button.classList.toggle("selected");
+    });
 
-        this.classList.toggle(
-          "selected"
-        );
-
-
-        const dateIndex =
-          state.dates.indexOf(
-            dateValue
-          );
-
-
-        if (dateIndex >= 0) {
-
-          state.dates.splice(
-            dateIndex,
-            1
-          );
-
-        }
-
-        else {
-
-          state.dates.push(
-            dateValue
-          );
-
-        }
-
-      }
-    );
-
-
-    dateGrid.appendChild(button);
-
+    container.appendChild(button);
   }
-
 }
-
-
-/* ==========================================
-   SAVE DATES
-   ========================================== */
 
 function saveDates() {
+  const selected =
+    document.querySelectorAll(".date-option.selected");
 
-  if (!state.dates.length) {
-
-    alert(
-      "Pick at least one day."
-    );
-
-    return;
-
-  }
-
-
-  showScreen("availability");
-
-}
-
-
-/* ==========================================
-   TIMES
-   ========================================== */
-
-function renderTimes() {
-
-  const timeGrid =
-    document.getElementById("timeGrid");
-
-
-  timeGrid.innerHTML = "";
-
-
-  times.forEach(time => {
-
-    const button =
-      document.createElement("button");
-
-
-    button.className =
-      "time-option";
-
-
-    button.textContent =
-      time;
-
-
-    button.type =
-      "button";
-
-
-    button.addEventListener(
-      "click",
-      function() {
-
-        this.classList.toggle(
-          "selected"
-        );
-
-      }
-    );
-
-
-    timeGrid.appendChild(button);
-
+  state.dates = Array.from(selected).map(button => {
+    return button.dataset.date;
   });
 
+  if (state.dates.length === 0) {
+    alert("Pick at least one day!");
+    return;
+  }
+
+  showScreen("availability");
+  renderTimes();
 }
 
+/* -----------------------------
+   AVAILABILITY
+----------------------------- */
 
-/* ==========================================
-   SAVE AVAILABILITY
-   ========================================== */
+function renderTimes() {
+  const container = document.getElementById("timeGrid");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  times.forEach(time => {
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "time-option";
+
+    button.textContent = time;
+
+    button.addEventListener("click", () => {
+      button.classList.toggle("selected");
+    });
+
+    container.appendChild(button);
+  });
+}
 
 function saveAvailability() {
-
-  const name =
-    document
-      .getElementById("participantName")
-      .value
-      .trim();
-
-
-  if (!name) {
-
-    alert(
-      "Enter your name."
-    );
-
-    return;
-
-  }
-
-
-  const selectedTimes =
-    [...document.querySelectorAll(
-      ".time-option.selected"
-    )]
-      .map(button =>
-        button.textContent
-      );
-
-
-  if (!selectedTimes.length) {
-
-    alert(
-      "Pick at least one time."
-    );
-
-    return;
-
-  }
-
+  const nameInput =
+    document.getElementById("participantName");
 
   state.participantName =
-    name;
+    nameInput.value.trim();
 
+  if (!state.participantName) {
+    alert("Enter your name first!");
+    return;
+  }
+
+  const selectedTimes =
+    document.querySelectorAll(".time-option.selected");
 
   state.availability =
-    selectedTimes;
+    Array.from(selectedTimes).map(button =>
+      button.textContent
+    );
 
+  if (state.availability.length === 0) {
+    alert("Pick at least one time!");
+    return;
+  }
 
   showScreen("budget");
-
 }
 
-
-/* ==========================================
+/* -----------------------------
    BUDGET
-   ========================================== */
+----------------------------- */
 
 function selectBudget(button, value) {
-
   document
     .querySelectorAll(".budget-option")
     .forEach(option => {
-
-      option.classList.remove(
-        "selected"
-      );
-
+      option.classList.remove("selected");
     });
 
+  button.classList.add("selected");
 
-  button.classList.add(
-    "selected"
-  );
-
-
-  state.budget =
-    value;
-
+  state.budget = value;
 }
-
-
-/* ==========================================
-   FINISH BUDGET
-   ========================================== */
 
 function finishBudget() {
-
   if (!state.budget) {
-
-    alert(
-      "Choose a budget first."
-    );
-
+    alert("Choose a budget first!");
     return;
-
   }
 
+  /*
+    For the prototype, we estimate the group average.
+    Later this can be connected to a real database
+    so every participant's budget is combined.
+  */
+
+  const averages = {
+    "0-20": 15,
+    "20-40": 30,
+    "40-60": 50,
+    "60-100": 80,
+    "100+": 120
+  };
 
   state.averageBudget =
-    state.budget;
-
+    averages[state.budget] || 47;
 
   calculateResults();
-
-
-  showScreen("results");
-
 }
 
-
-/* ==========================================
-   CALCULATE RESULTS
-   ========================================== */
+/* -----------------------------
+   FIND BEST TIMES
+----------------------------- */
 
 function calculateResults() {
-
   const resultsList =
-    document.getElementById(
-      "resultsList"
-    );
+    document.getElementById("resultsList");
 
-
-  const averageBudget =
-    document.getElementById(
-      "averageBudget"
-    );
-
-
-  averageBudget.innerHTML = `
-    <strong>
-      Group budget
-    </strong>
-
-    <br>
-
-    Around $${state.averageBudget}
-    per person
-  `;
-
+  if (!resultsList) return;
 
   resultsList.innerHTML = "";
 
+  const availableTimes =
+    state.availability.length
+      ? state.availability
+      : times.slice(0, 3);
 
-  const results = [];
+  availableTimes.slice(0, 3).forEach((time, index) => {
+    const card = document.createElement("button");
 
-
-  state.dates.forEach(date => {
-
-    state.availability.forEach(time => {
-
-      results.push({
-
-        date: date,
-
-        time: time,
-
-        count:
-          Math.floor(
-            state.groupSize *
-            (0.65 + Math.random() * 0.35)
-          )
-
-      });
-
-    });
-
-  });
-
-
-  results
-    .sort(
-      (a, b) =>
-        b.count - a.count
-    );
-
-
-  const bestResults =
-    results.slice(0, 3);
-
-
-  bestResults.forEach(result => {
-
-    const card =
-      document.createElement("div");
-
-
-    card.className =
-      "result-card";
-
-
-    const date =
-      new Date(
-        result.date + "T12:00:00"
-      );
-
-
-    const formattedDate =
-      date.toLocaleDateString(
-        "en-US",
-        {
-          weekday: "long",
-          month: "long",
-          day: "numeric"
-        }
-      );
-
+    card.type = "button";
+    card.className = "result-card";
 
     card.innerHTML = `
-
       <div>
-
-        <h3>
-          ${formattedDate}
-        </h3>
-
-        <p>
-          ${result.time}
-        </p>
-
+        <small>OPTION ${index + 1}</small>
+        <h3>${time}</h3>
+        <p>Works for your group</p>
       </div>
-
-
-      <div class="result-count">
-
-        <strong>
-          ${result.count}/${state.groupSize}
-        </strong>
-
-        <span>
-          people free
-        </span>
-
-      </div>
-
+      <span>→</span>
     `;
 
+    card.addEventListener("click", () => {
+      state.selectedResult = time;
 
-    card.addEventListener(
-      "click",
-      function() {
+      showScreen("places");
 
-        state.selectedResult =
-          result;
+      searchNearbyPlaces();
+    });
 
-
-        loadNearbyPlaces();
-
-
-        showScreen("places");
-
-      }
-    );
-
-
-    resultsList.appendChild(
-      card
-    );
-
+    resultsList.appendChild(card);
   });
 
+  const average =
+    document.getElementById("averageBudget");
+
+  if (average) {
+    average.textContent =
+      `$${state.averageBudget}`;
+  }
+
+  showScreen("results");
 }
 
+/* -----------------------------
+   CONVERT TIME TO HOUR
+----------------------------- */
 
-/* ==========================================
-   GOOGLE PLACES
-   ========================================== */
+function convertTimeToHour(timeString) {
+  const match =
+    timeString.match(/(\d+):(\d+)\s*(AM|PM)/i);
 
-async function searchNearbyPlaces() {
+  if (!match) return 18;
 
-  const latitude =
-    state.userLocation.latitude;
+  let hour = Number(match[1]);
+  const period = match[3].toUpperCase();
 
-  const longitude =
-    state.userLocation.longitude;
-
-
-  if (
-    latitude === null ||
-    longitude === null
-  ) {
-
-    return [];
-
+  if (period === "PM" && hour !== 12) {
+    hour += 12;
   }
 
-
-  try {
-
-    const placesLibrary =
-      await google.maps.importLibrary(
-        "places"
-      );
-
-
-    const Place =
-      placesLibrary.Place;
-
-
-    const SearchNearbyRankPreference =
-      placesLibrary.SearchNearbyRankPreference;
-
-
-    const types =
-      getPlaceTypesForTime();
-
-
-    const request = {
-
-      fields: [
-        "displayName",
-        "location",
-        "formattedAddress",
-        "rating",
-        "userRatingCount",
-        "photos",
-        "googleMapsURI",
-        "priceLevel",
-        "primaryType"
-      ],
-
-
-      locationRestriction: {
-
-        center: {
-          lat: latitude,
-          lng: longitude
-        },
-
-        radius: 8046.72
-
-      },
-
-
-      includedPrimaryTypes:
-        types,
-
-
-      maxResultCount: 10,
-
-
-      rankPreference:
-        SearchNearbyRankPreference.POPULARITY,
-
-
-      language: "en",
-
-      region: "US"
-
-    };
-
-
-    const response =
-      await Place.searchNearby(
-        request
-      );
-
-
-    return response.places || [];
-
+  if (period === "AM" && hour === 12) {
+    hour = 0;
   }
 
-  catch (error) {
-
-    console.error(
-      "Google Places error:",
-      error
-    );
-
-
-    return [];
-
-  }
-
+  return hour;
 }
 
+/* -----------------------------
+   CHOOSE PLACE TYPES
+----------------------------- */
 
-/* ==========================================
-   TIME → PLACE TYPE
-   ========================================== */
+function getPlaceTypesForTime(time) {
+  const hour = convertTimeToHour(time);
 
-function getPlaceTypesForTime() {
-
-  const time =
-    state.selectedResult?.time ||
-    "6:30 PM";
-
-
-  const hour =
-    convertTimeToHour(time);
-
-
-  if (
-    hour >= 7 &&
-    hour < 11
-  ) {
-
+  if (hour >= 7 && hour < 11) {
     return [
       "cafe",
       "bakery",
       "restaurant"
     ];
-
   }
 
-
-  if (
-    hour >= 11 &&
-    hour < 17
-  ) {
-
+  if (hour >= 11 && hour < 17) {
     return [
       "cafe",
       "park",
@@ -927,808 +439,704 @@ function getPlaceTypesForTime() {
       "restaurant",
       "shopping_mall"
     ];
-
   }
 
-
-  if (
-    hour >= 17 &&
-    hour < 21
-  ) {
-
+  if (hour >= 17 && hour < 21) {
     return [
       "restaurant",
       "italian_restaurant",
       "pizza_restaurant"
     ];
-
   }
-
 
   return [
     "bar",
     "night_club",
-    "pizza_restaurant",
-    "restaurant"
+    "restaurant",
+    "pizza_restaurant"
   ];
-
 }
 
+/* -----------------------------
+   FREE NEARBY PLACE SEARCH
+   OPENSTREETMAP / OVERPASS
+----------------------------- */
 
-/* ==========================================
-   CONVERT TIME
-   ========================================== */
+async function searchNearbyPlaces() {
+  const container =
+    document.getElementById("placesList");
 
-function convertTimeToHour(
-  timeString
-) {
-
-  if (!timeString) {
-
-    return 18;
-
-  }
-
-
-  const parts =
-    timeString.split(" ");
-
-
-  const time =
-    parts[0];
-
-
-  const modifier =
-    parts[1];
-
-
-  let [hours] =
-    time
-      .split(":")
-      .map(Number);
-
+  if (!container) return;
 
   if (
-    modifier === "PM" &&
-    hours !== 12
+    state.userLocation.latitude === null ||
+    state.userLocation.longitude === null
   ) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <h3>📍 Location needed</h3>
+        <p>
+          Go back and tap "Use my location"
+          so Roam can find places near you.
+        </p>
+      </div>
+    `;
 
-    hours += 12;
-
+    return;
   }
 
-
-  if (
-    modifier === "AM" &&
-    hours === 12
-  ) {
-
-    hours = 0;
-
-  }
-
-
-  return hours;
-
-}
-
-
-/* ==========================================
-   LOAD NEARBY PLACES
-   ========================================== */
-
-async function loadNearbyPlaces() {
-
-  const placesList =
-    document.getElementById(
-      "placesList"
-    );
-
-
-  const placesSubtitle =
-    document.getElementById(
-      "placesSubtitle"
-    );
-
-
-  placesList.innerHTML = `
-
-    <div class="loading-places">
-
+  container.innerHTML = `
+    <div class="loading-card">
       <div class="loading-spinner"></div>
-
-      <h3>
-        Finding places near you...
-      </h3>
-
-      <p>
-        Roam is looking for somewhere good.
-      </p>
-
+      <h3>Finding places near you...</h3>
+      <p>Roam is looking around your area.</p>
     </div>
-
   `;
 
+  const hour =
+    convertTimeToHour(state.selectedResult);
 
-  if (
-    state.userLocation.latitude === null
-  ) {
+  const tags =
+    getOpenStreetMapTags(hour);
 
-    placesList.innerHTML = `
+  try {
+    const places =
+      await loadNearbyPlaces(tags);
 
-      <div class="empty-places">
+    renderNearbyPlaces(places);
 
-        <h3>
-          We need your location.
-        </h3>
+  } catch (error) {
+    console.error(error);
 
+    container.innerHTML = `
+      <div class="empty-state">
+        <h3>Oops!</h3>
         <p>
-          Go back and tap
-          "Use my location" so Roam
-          can find real places nearby.
+          We couldn't load nearby places right now.
+          Try again in a moment.
         </p>
-
-        <br>
-
         <button
-          class="primary-button"
-          onclick="showScreen('create')"
+          class="btn btn-primary"
+          onclick="searchNearbyPlaces()"
         >
-          Add my location
+          Try Again
         </button>
-
       </div>
-
     `;
-
-    return;
-
   }
-
-
-  const places =
-    await searchNearbyPlaces();
-
-
-  if (!places.length) {
-
-    placesList.innerHTML = `
-
-      <div class="empty-places">
-
-        <h3>
-          No places found.
-        </h3>
-
-        <p>
-          Try another time or expand your search area.
-        </p>
-
-      </div>
-
-    `;
-
-    return;
-
-  }
-
-
-  placesSubtitle.textContent =
-    `Real places near you based on your time and vibe.`;
-
-
-  renderNearbyPlaces(
-    places
-  );
-
 }
 
+/* -----------------------------
+   OPENSTREETMAP TAGS
+----------------------------- */
 
-/* ==========================================
-   RENDER PLACES
-   ========================================== */
+function getOpenStreetMapTags(hour) {
+  if (hour >= 7 && hour < 11) {
+    return [
+      ["amenity", "cafe"],
+      ["amenity", "restaurant"],
+      ["shop", "bakery"]
+    ];
+  }
 
-function renderNearbyPlaces(
-  places
-) {
+  if (hour >= 11 && hour < 17) {
+    return [
+      ["amenity", "cafe"],
+      ["amenity", "restaurant"],
+      ["leisure", "park"],
+      ["amenity", "ice_cream"]
+    ];
+  }
 
-  const placesList =
-    document.getElementById(
-      "placesList"
+  if (hour >= 17 && hour < 21) {
+    return [
+      ["amenity", "restaurant"],
+      ["amenity", "pub"],
+      ["amenity", "fast_food"]
+    ];
+  }
+
+  return [
+    ["amenity", "bar"],
+    ["amenity", "pub"],
+    ["amenity", "nightclub"],
+    ["amenity", "restaurant"]
+  ];
+}
+
+/* -----------------------------
+   OVERPASS SEARCH
+----------------------------- */
+
+async function loadNearbyPlaces(tags) {
+  const latitude =
+    state.userLocation.latitude;
+
+  const longitude =
+    state.userLocation.longitude;
+
+  /*
+    Approximately 5 miles.
+    8046 meters = about 5 miles.
+  */
+
+  const radius = 8046;
+
+  const queries = tags.map(([key, value]) => {
+    return `
+      node["${key}"="${value}"]
+        (around:${radius},${latitude},${longitude});
+
+      way["${key}"="${value}"]
+        (around:${radius},${latitude},${longitude});
+
+      relation["${key}"="${value}"]
+        (around:${radius},${latitude},${longitude});
+    `;
+  }).join("\n");
+
+  const query = `
+    [out:json][timeout:25];
+    (
+      ${queries}
     );
+    out center tags;
+  `;
 
+  const response = await fetch(
+    "https://overpass-api.de/api/interpreter",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type":
+          "application/x-www-form-urlencoded"
+      },
+      body:
+        "data=" + encodeURIComponent(query)
+    }
+  );
 
-  placesList.innerHTML = "";
+  if (!response.ok) {
+    throw new Error(
+      "Overpass request failed."
+    );
+  }
 
+  const data = await response.json();
 
-  places.forEach(place => {
+  const places = [];
 
-    const card =
-      document.createElement(
-        "article"
-      );
+  for (const element of data.elements) {
+    const tags = element.tags || {};
 
+    let lat = element.lat;
+    let lon = element.lon;
 
-    card.className =
-      "place-card";
+    /*
+      Ways/relations use a center instead
+      of lat/lon directly.
+    */
 
+    if (
+      (lat === undefined || lon === undefined) &&
+      element.center
+    ) {
+      lat = element.center.lat;
+      lon = element.center.lon;
+    }
+
+    if (
+      lat === undefined ||
+      lon === undefined
+    ) {
+      continue;
+    }
 
     const name =
-      place.displayName?.text ||
-      "Nearby place";
+      tags.name ||
+      tags["name:en"];
 
+    if (!name) {
+      continue;
+    }
 
-    const address =
-      place.formattedAddress ||
-      "Address unavailable";
-
-
-    const rating =
-      place.rating
-        ? `⭐ ${place.rating}`
-        : "No rating";
-
-
-    const ratingCount =
-      place.userRatingCount
-        ? ` (${place.userRatingCount})`
-        : "";
-
-
-    const price =
-      formatPrice(
-        place.priceLevel
+    const distance =
+      calculateDistance(
+        latitude,
+        longitude,
+        lat,
+        lon
       );
 
+    places.push({
+      name,
+      latitude: lat,
+      longitude: lon,
+      distance,
+      address: buildAddress(tags),
+      type: getPlaceType(tags),
+      website: tags.website || "",
+      phone: tags.phone || ""
+    });
+  }
 
-    const type =
-      formatPlaceType(
-        place.primaryType
-      );
+  /*
+    Remove duplicates.
+  */
 
+  const uniquePlaces =
+    removeDuplicatePlaces(places);
 
-    let photoHTML = `
-      <div class="place-placeholder">
-        📍
+  /*
+    Closest first.
+  */
+
+  uniquePlaces.sort(
+    (a, b) => a.distance - b.distance
+  );
+
+  return uniquePlaces.slice(0, 12);
+}
+
+/* -----------------------------
+   DISTANCE
+----------------------------- */
+
+function calculateDistance(
+  lat1,
+  lon1,
+  lat2,
+  lon2
+) {
+  const earthRadius = 3958.8;
+
+  const dLat =
+    degreesToRadians(lat2 - lat1);
+
+  const dLon =
+    degreesToRadians(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(degreesToRadians(lat1)) *
+    Math.cos(degreesToRadians(lat2)) *
+    Math.sin(dLon / 2) ** 2;
+
+  const c =
+    2 * Math.atan2(
+      Math.sqrt(a),
+      Math.sqrt(1 - a)
+    );
+
+  return earthRadius * c;
+}
+
+function degreesToRadians(degrees) {
+  return degrees * Math.PI / 180;
+}
+
+/* -----------------------------
+   ADDRESS
+----------------------------- */
+
+function buildAddress(tags) {
+  const parts = [];
+
+  if (tags["addr:housenumber"]) {
+    parts.push(tags["addr:housenumber"]);
+  }
+
+  if (tags["addr:street"]) {
+    parts.push(tags["addr:street"]);
+  }
+
+  if (tags["addr:city"]) {
+    parts.push(tags["addr:city"]);
+  }
+
+  return parts.join(" ");
+}
+
+/* -----------------------------
+   PLACE TYPE
+----------------------------- */
+
+function getPlaceType(tags) {
+  if (tags.amenity) {
+    return formatPlaceType(tags.amenity);
+  }
+
+  if (tags.shop) {
+    return formatPlaceType(tags.shop);
+  }
+
+  if (tags.leisure) {
+    return formatPlaceType(tags.leisure);
+  }
+
+  return "Place";
+}
+
+function formatPlaceType(type) {
+  if (!type) return "Place";
+
+  return type
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, letter =>
+      letter.toUpperCase()
+    );
+}
+
+/* -----------------------------
+   REMOVE DUPLICATES
+----------------------------- */
+
+function removeDuplicatePlaces(places) {
+  const seen = new Set();
+
+  return places.filter(place => {
+    const key =
+      `${place.name.toLowerCase()}-${Math.round(place.latitude * 10000)}-${Math.round(place.longitude * 10000)}`;
+
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+
+    return true;
+  });
+}
+
+/* -----------------------------
+   RENDER PLACES
+----------------------------- */
+
+function renderNearbyPlaces(places) {
+  const container =
+    document.getElementById("placesList");
+
+  if (!container) return;
+
+  if (!places.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <h3>No places found nearby.</h3>
+        <p>
+          Try choosing another time or expanding
+          your search area.
+        </p>
       </div>
     `;
 
+    return;
+  }
 
-    if (
-      place.photos &&
-      place.photos.length
-    ) {
+  container.innerHTML = "";
 
-      try {
+  places.forEach((place, index) => {
+    const card =
+      document.createElement("article");
 
-        const photoURI =
-          place.photos[0].getURI({
-            maxWidth: 900,
-            maxHeight: 600
-          });
+    card.className = "place-card";
 
-
-        photoHTML = `
-          <img
-            src="${photoURI}"
-            alt="${escapeHTML(name)}"
-          >
-
-          <span class="place-photo-credit">
-            Google
-          </span>
-        `;
-
-      }
-
-      catch (error) {
-
-        console.log(
-          "Photo unavailable",
-          error
-        );
-
-      }
-
-    }
-
+    const distance =
+      place.distance < 0.1
+        ? "Less than 0.1 mi"
+        : `${place.distance.toFixed(1)} mi`;
 
     const mapsURL =
-      place.googleMapsURI ||
-      "#";
-
+      `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`;
 
     card.innerHTML = `
-
-      <div class="place-image">
-
-        ${photoHTML}
-
+      <div class="place-photo-placeholder">
+        ${getPlaceEmoji(place.type)}
       </div>
-
 
       <div class="place-content">
 
-        <div class="place-type">
-          ${escapeHTML(type)}
-        </div>
-
-
-        <div class="place-header">
-
-          <div>
-
-            <h3>
-              ${escapeHTML(name)}
-            </h3>
-
-          </div>
-
-          <span class="place-rating">
-            ${rating}
-            ${ratingCount}
+        <div class="place-top">
+          <span class="place-type">
+            ${escapeHTML(place.type)}
           </span>
 
+          <span class="place-distance">
+            📍 ${distance}
+          </span>
         </div>
 
+        <h3>
+          ${escapeHTML(place.name)}
+        </h3>
 
-        <p class="place-address">
-          ${escapeHTML(address)}
-        </p>
+        ${
+          place.address
+            ? `<p class="place-address">
+                ${escapeHTML(place.address)}
+              </p>`
+            : ""
+        }
 
+        <div class="place-actions">
 
-        <div class="place-bottom">
-
-          <span class="place-price">
-            ${price}
-          </span>
-
+          <button
+            class="btn btn-primary place-select"
+            data-index="${index}"
+          >
+            Choose this place
+          </button>
 
           <a
-            class="place-map-link"
+            class="btn btn-secondary"
             href="${mapsURL}"
             target="_blank"
             rel="noopener noreferrer"
           >
-            View on Maps →
+            Open Map
           </a>
 
         </div>
 
       </div>
-
     `;
 
-
-    card.addEventListener(
-      "click",
-      function(event) {
-
-        if (
-          event.target.closest(
-            "a"
-          )
-        ) {
-
-          return;
-
-        }
-
-
-        state.selectedPlace =
-          place;
-
+    card
+      .querySelector(".place-select")
+      .addEventListener("click", () => {
+        state.selectedPlace = place;
 
         renderFinalPlan();
 
-
         showScreen("final");
+      });
 
-      }
-    );
-
-
-    placesList.appendChild(
-      card
-    );
-
+    container.appendChild(card);
   });
-
 }
 
+/* -----------------------------
+   PLACE EMOJIS
+----------------------------- */
 
-/* ==========================================
-   FORMAT PRICE
-   ========================================== */
+function getPlaceEmoji(type) {
+  const lower =
+    type.toLowerCase();
 
-function formatPrice(
-  priceLevel
-) {
-
-  if (!priceLevel) {
-
-    return "$$";
-
+  if (lower.includes("cafe")) {
+    return "☕";
   }
 
-
-  const levels = {
-
-    PRICE_LEVEL_FREE:
-      "Free",
-
-    PRICE_LEVEL_INEXPENSIVE:
-      "$",
-
-    PRICE_LEVEL_MODERATE:
-      "$$",
-
-    PRICE_LEVEL_EXPENSIVE:
-      "$$$",
-
-    PRICE_LEVEL_VERY_EXPENSIVE:
-      "$$$$"
-
-  };
-
-
-  return (
-    levels[priceLevel] ||
-    "$$"
-  );
-
-}
-
-
-/* ==========================================
-   FORMAT PLACE TYPE
-   ========================================== */
-
-function formatPlaceType(
-  type
-) {
-
-  if (!type) {
-
-    return "Nearby place";
-
+  if (lower.includes("restaurant")) {
+    return "🍝";
   }
 
+  if (lower.includes("pizza")) {
+    return "🍕";
+  }
 
-  return type
-    .replaceAll("_", " ")
-    .replace(
-      /\b\w/g,
-      letter =>
-        letter.toUpperCase()
-    );
+  if (lower.includes("bakery")) {
+    return "🥐";
+  }
 
+  if (lower.includes("park")) {
+    return "🌳";
+  }
+
+  if (lower.includes("bar")) {
+    return "🍹";
+  }
+
+  if (lower.includes("ice")) {
+    return "🍦";
+  }
+
+  return "📍";
 }
 
-
-/* ==========================================
+/* -----------------------------
    FINAL PLAN
-   ========================================== */
+----------------------------- */
 
 function renderFinalPlan() {
+  const container =
+    document.getElementById("finalPlan");
 
-  const finalPlan =
-    document.getElementById(
-      "finalPlan"
-    );
-
-
-  const result =
-    state.selectedResult;
-
+  if (!container) return;
 
   const place =
     state.selectedPlace;
 
-
-  if (!result || !place) {
-
-    return;
-
-  }
-
+  if (!place) return;
 
   const date =
-    new Date(
-      result.date + "T12:00:00"
-    );
+    state.dates.length
+      ? formatDate(state.dates[0])
+      : "Your chosen day";
 
+  const distance =
+    place.distance < 0.1
+      ? "less than 0.1 miles away"
+      : `${place.distance.toFixed(1)} miles away`;
 
-  const formattedDate =
-    date.toLocaleDateString(
-      "en-US",
-      {
-        weekday: "long",
-        month: "long",
-        day: "numeric"
-      }
-    );
+  container.innerHTML = `
+    <div class="final-plan-card">
 
+      <span class="eyebrow">
+        YOUR ROAM IS READY
+      </span>
 
-  const name =
-    place.displayName?.text ||
-    "your chosen place";
+      <h2>
+        ${escapeHTML(state.roamName)}
+      </h2>
 
+      <div class="final-details">
 
-  const address =
-    place.formattedAddress ||
-    "";
+        <div>
+          <strong>📅 Day</strong>
+          <span>${date}</span>
+        </div>
 
+        <div>
+          <strong>⏰ Time</strong>
+          <span>
+            ${escapeHTML(state.selectedResult)}
+          </span>
+        </div>
 
-  const rating =
-    place.rating ||
-    "N/A";
+        <div>
+          <strong>📍 Place</strong>
+          <span>
+            ${escapeHTML(place.name)}
+          </span>
+        </div>
 
+        <div>
+          <strong>💰 Budget</strong>
+          <span>
+            Around $${state.averageBudget} per person
+          </span>
+        </div>
 
-  finalPlan.innerHTML = `
+        <div>
+          <strong>🚶 Distance</strong>
+          <span>${distance}</span>
+        </div>
 
-    <strong>
-      ${escapeHTML(state.roamName)}
-    </strong>
+      </div>
 
-    <br>
-
-    📅
-    ${formattedDate}
-
-    <br>
-
-    🕐
-    ${escapeHTML(result.time)}
-
-    <br>
-
-    👥
-    ${state.groupSize} people
-
-    <br>
-
-    💰
-    Around $${state.averageBudget}
-    per person
-
-
-    <div class="final-place">
-
-      <p>
-        You're going to:
-      </p>
-
-      <h3>
-        ${escapeHTML(name)}
-      </h3>
-
-      <p>
-        ${escapeHTML(address)}
-      </p>
-
-      <p>
-        ⭐ ${rating}
+      <p class="final-message">
+        Hey everyone! 👋
+        <br><br>
+        We're roaming to
+        <strong>${escapeHTML(place.name)}</strong>
+        on ${date} at
+        <strong>${escapeHTML(state.selectedResult)}</strong>.
+        <br><br>
+        See you there! 🇮🇹
       </p>
 
     </div>
-
   `;
-
 }
 
+/* -----------------------------
+   FORMAT DATE
+----------------------------- */
 
-/* ==========================================
+function formatDate(dateString) {
+  const date =
+    new Date(dateString + "T12:00:00");
+
+  return date.toLocaleDateString(
+    "en-US",
+    {
+      weekday: "long",
+      month: "long",
+      day: "numeric"
+    }
+  );
+}
+
+/* -----------------------------
    COPY PLAN
-   ========================================== */
+----------------------------- */
 
-async function copyPlan() {
-
-  const result =
-    state.selectedResult;
-
-
+function copyPlan() {
   const place =
     state.selectedPlace;
 
-
-  if (!result || !place) {
-
-    return;
-
-  }
-
+  if (!place) return;
 
   const date =
-    new Date(
-      result.date + "T12:00:00"
-    );
-
-
-  const formattedDate =
-    date.toLocaleDateString(
-      "en-US",
-      {
-        weekday: "long",
-        month: "long",
-        day: "numeric"
-      }
-    );
-
-
-  const placeName =
-    place.displayName?.text ||
-    "our spot";
-
-
-  const address =
-    place.formattedAddress ||
-    "";
-
+    state.dates.length
+      ? formatDate(state.dates[0])
+      : "your chosen day";
 
   const message =
+`🌿 ${state.roamName}
 
-`🌿 ROAM PLAN
-
-${state.roamName}
-
-📅 ${formattedDate}
-🕐 ${result.time}
-👥 ${state.groupSize} people
+📅 ${date}
+⏰ ${state.selectedResult}
+📍 ${place.name}
 💰 Around $${state.averageBudget} per person
 
-📍 ${placeName}
-${address}
+Let's roam! 🇮🇹`;
 
-Let's go! 🇮🇹`;
-
-
-  try {
-
-    await navigator.clipboard.writeText(
-      message
-    );
-
-
-    alert(
-      "✓ Plan copied!"
-    );
-
-  }
-
-  catch (error) {
-
-    alert(
-      "Couldn't copy automatically."
-    );
-
-  }
-
+  navigator.clipboard.writeText(message)
+    .then(() => {
+      alert("Plan copied! 🎉");
+    })
+    .catch(() => {
+      alert(
+        "Couldn't copy automatically. Try selecting the text manually."
+      );
+    });
 }
 
-
-/* ==========================================
+/* -----------------------------
    SHARE PLAN
-   ========================================== */
+----------------------------- */
 
-async function sharePlan() {
-
-  const result =
-    state.selectedResult;
-
-
+function sharePlan() {
   const place =
     state.selectedPlace;
 
+  if (!place) return;
 
-  if (!result || !place) {
-
-    return;
-
-  }
-
-
-  const placeName =
-    place.displayName?.text ||
-    "our spot";
-
+  const date =
+    state.dates.length
+      ? formatDate(state.dates[0])
+      : "your chosen day";
 
   const message =
+`🌿 ${state.roamName}
 
-`${state.roamName} 🌿
+📅 ${date}
+⏰ ${state.selectedResult}
+📍 ${place.name}
+💰 Around $${state.averageBudget} per person
 
-${result.time} — ${placeName}
+Let's roam! 🇮🇹`;
 
-Roamed with Roam.`;
-
-
-
-  if (
-    navigator.share
-  ) {
-
-    try {
-
-      await navigator.share({
-
-        title:
-          state.roamName,
-
-        text:
-          message
-
-      });
-
-    }
-
-    catch (error) {
-
-      console.log(
-        "Share cancelled."
-      );
-
-    }
-
+  if (navigator.share) {
+    navigator.share({
+      title: state.roamName,
+      text: message
+    });
+  } else {
+    copyPlan();
   }
-
-  else {
-
-    await copyPlan();
-
-  }
-
 }
 
-
-/* ==========================================
+/* -----------------------------
    ESCAPE HTML
-   ========================================== */
+----------------------------- */
 
-function escapeHTML(
-  value
-) {
-
+function escapeHTML(value) {
   return String(value)
-
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-
-    .replace(
-      /</g,
-      "&lt;"
-    )
-
-    .replace(
-      />/g,
-      "&gt;"
-    )
-
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
-
-
-/* ==========================================
-   INITIALIZE
-   ========================================== */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  function() {
-
-    console.log(
-      "🌿 Roam is ready."
-    );
-
-  }
-);
