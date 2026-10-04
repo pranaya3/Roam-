@@ -17,7 +17,12 @@
 
   <title>Roam — Find Your People. Find Your Place.</title>
 
+  <!-- =====================================================
+       FONTS
+  ====================================================== -->
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
+
   <link
     rel="preconnect"
     href="https://fonts.gstatic.com"
@@ -25,19 +30,504 @@
   />
 
   <link
-    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap"
     rel="stylesheet"
   />
+
+  <!-- =====================================================
+       ROAM CSS
+  ====================================================== -->
 
   <link
     rel="stylesheet"
     href="styles.css"
   />
 
+  <!-- =====================================================
+       EXTRA STYLES FOR THE 5-WORD CODE SCREENS
+  ====================================================== -->
+
+  <style>
+
+    /* -----------------------------------------------------
+       SMALL EYEBROW
+    ----------------------------------------------------- */
+
+    .eyebrow {
+      display: inline-block;
+
+      color: var(--orange);
+
+      font-size: 10px;
+      font-weight: 800;
+
+      letter-spacing: 2px;
+    }
+
+
+    /* -----------------------------------------------------
+       ROAM CODE IN TOP BAR
+    ----------------------------------------------------- */
+
+    .roam-code-mini {
+      display: none;
+
+      color: var(--brown-soft);
+
+      font-size: 9px;
+      font-weight: 800;
+
+      letter-spacing: 1.2px;
+
+      white-space: nowrap;
+    }
+
+    .roam-code-mini.visible {
+      display: block;
+    }
+
+
+    /* -----------------------------------------------------
+       CREATED / INVITE SCREEN
+    ----------------------------------------------------- */
+
+    .created-page {
+      width: min(1050px, 90%);
+      min-height: calc(100vh - 78px);
+
+      margin: 0 auto;
+      padding: 70px 0 100px;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .created-number {
+      width: 58px;
+      height: 58px;
+
+      margin-bottom: 28px;
+
+      display: grid;
+      place-items: center;
+
+      border: 1px solid var(--orange);
+      border-radius: 50%;
+
+      color: var(--orange);
+
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .created-page h2 {
+      max-width: 850px;
+
+      margin-top: 18px;
+
+      font-family: var(--display);
+      font-size: clamp(58px, 8vw, 105px);
+      font-weight: 500;
+
+      line-height: 0.92;
+      letter-spacing: -4px;
+    }
+
+    .created-page h2 em {
+      color: var(--orange);
+      font-weight: 500;
+    }
+
+    .created-description {
+      max-width: 520px;
+
+      margin-top: 28px;
+
+      color: var(--brown-soft);
+
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .invite-code-box {
+      margin-top: 45px;
+      padding: 35px;
+
+      background: var(--peach-light);
+
+      border: 1px solid var(--line);
+    }
+
+    .invite-code-label {
+      color: var(--brown-soft);
+
+      font-size: 10px;
+      font-weight: 800;
+
+      letter-spacing: 2px;
+    }
+
+    .invite-code {
+      margin-top: 15px;
+
+      color: var(--orange);
+
+      font-family: var(--display);
+
+      font-size: clamp(30px, 4.5vw, 58px);
+      font-weight: 600;
+
+      line-height: 1.15;
+      letter-spacing: 2px;
+
+      word-spacing: 12px;
+    }
+
+    .invite-code-note {
+      margin-top: 15px;
+
+      color: var(--brown-soft);
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .created-actions {
+      margin-top: 25px;
+
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .copy-code-button {
+      min-height: 56px;
+
+      padding: 0 25px;
+
+      background: var(--brown);
+      color: white;
+
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .copy-code-button:hover {
+      background: var(--orange);
+    }
+
+    .continue-code-button {
+      min-height: 56px;
+
+      padding: 0 25px;
+
+      background: var(--orange);
+      color: white;
+
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .continue-code-button:hover {
+      background: var(--orange-dark);
+    }
+
+
+    /* -----------------------------------------------------
+       JOIN SCREEN
+    ----------------------------------------------------- */
+
+    .join-page {
+      width: min(850px, 90%);
+
+      min-height: calc(100vh - 78px);
+
+      margin: 0 auto;
+      padding: 70px 0 100px;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .join-page h2 {
+      margin-top: 18px;
+
+      font-family: var(--display);
+
+      font-size: clamp(58px, 8vw, 100px);
+      font-weight: 500;
+
+      line-height: 0.92;
+      letter-spacing: -4px;
+    }
+
+    .join-page h2 em {
+      color: var(--orange);
+      font-weight: 500;
+    }
+
+    .join-description {
+      max-width: 500px;
+
+      margin-top: 25px;
+
+      color: var(--brown-soft);
+
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .join-form {
+      max-width: 700px;
+
+      margin-top: 45px;
+      padding: 35px;
+
+      background: var(--peach-light);
+    }
+
+    .join-form label {
+      display: block;
+
+      margin-bottom: 12px;
+
+      color: var(--brown-soft);
+
+      font-size: 10px;
+      font-weight: 800;
+
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+    }
+
+    .join-code-input {
+      width: 100%;
+
+      padding: 18px 0;
+
+      background: transparent;
+
+      border: 0;
+      border-bottom: 2px solid var(--brown);
+
+      outline: none;
+
+      color: var(--orange);
+
+      font-family: var(--display);
+      font-size: clamp(25px, 4vw, 45px);
+      font-weight: 600;
+
+      letter-spacing: 2px;
+      word-spacing: 8px;
+
+      text-transform: uppercase;
+    }
+
+    .join-code-input:focus {
+      border-color: var(--orange);
+    }
+
+    .join-code-input::placeholder {
+      color: rgba(58, 36, 28, 0.3);
+    }
+
+    .join-button-large {
+      width: 100%;
+
+      min-height: 56px;
+
+      margin-top: 30px;
+
+      background: var(--brown);
+      color: white;
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .join-button-large:hover {
+      background: var(--orange);
+    }
+
+    .join-help {
+      margin-top: 15px;
+
+      color: var(--brown-soft);
+
+      font-size: 11px;
+    }
+
+
+    /* -----------------------------------------------------
+       JOIN CONFIRMATION
+    ----------------------------------------------------- */
+
+    .join-confirm-page {
+      width: min(850px, 90%);
+
+      min-height: calc(100vh - 78px);
+
+      margin: 0 auto;
+      padding: 70px 0 100px;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .join-confirm-page h2 {
+      max-width: 800px;
+
+      margin-top: 18px;
+
+      font-family: var(--display);
+
+      font-size: clamp(55px, 7vw, 90px);
+      font-weight: 500;
+
+      line-height: 0.95;
+      letter-spacing: -3px;
+    }
+
+    .join-confirm-page h2 em {
+      color: var(--orange);
+      font-weight: 500;
+    }
+
+    .join-room-name {
+      margin-top: 25px;
+
+      color: var(--brown-soft);
+
+      font-size: 15px;
+    }
+
+    .join-room-code {
+      margin-top: 15px;
+
+      color: var(--orange);
+
+      font-family: var(--display);
+
+      font-size: 25px;
+      font-weight: 600;
+
+      letter-spacing: 1px;
+    }
+
+    .join-confirm-form {
+      max-width: 600px;
+
+      margin-top: 40px;
+    }
+
+    .join-confirm-form label {
+      display: block;
+
+      margin-bottom: 10px;
+
+      color: var(--brown-soft);
+
+      font-size: 10px;
+      font-weight: 800;
+
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .join-name-input {
+      width: 100%;
+
+      padding: 15px 0;
+
+      background: transparent;
+
+      border: 0;
+      border-bottom: 2px solid var(--brown);
+
+      outline: none;
+
+      color: var(--brown);
+
+      font-size: 22px;
+    }
+
+    .join-name-input:focus {
+      border-color: var(--orange);
+    }
+
+
+    /* -----------------------------------------------------
+       MOBILE — NEW CODE SCREENS
+    ----------------------------------------------------- */
+
+    @media (max-width: 650px) {
+
+      .roam-code-mini {
+        display: none !important;
+      }
+
+      .created-page,
+      .join-page,
+      .join-confirm-page {
+        width: calc(100% - 40px);
+
+        min-height: calc(100vh - 68px);
+
+        padding: 45px 0 70px;
+      }
+
+      .created-page h2,
+      .join-page h2,
+      .join-confirm-page h2 {
+        font-size: clamp(50px, 15vw, 72px);
+        letter-spacing: -2px;
+      }
+
+      .invite-code-box {
+        margin-top: 35px;
+        padding: 25px 20px;
+      }
+
+      .invite-code {
+        font-size: 27px;
+        line-height: 1.4;
+        letter-spacing: 1px;
+        word-spacing: 5px;
+      }
+
+      .created-actions {
+        flex-direction: column;
+      }
+
+      .copy-code-button,
+      .continue-code-button {
+        width: 100%;
+      }
+
+      .join-form {
+        margin-top: 35px;
+        padding: 25px 20px;
+      }
+
+      .join-code-input {
+        font-size: 24px;
+        line-height: 1.4;
+        word-spacing: 4px;
+      }
+
+    }
+
+  </style>
+
 </head>
 
 
 <body>
+
 
 <!-- =====================================================
      NAVIGATION
@@ -49,6 +539,7 @@
     class="brand"
     onclick="showScreen('home')"
     type="button"
+    aria-label="Go to Roam home"
   >
     Roam<span>.</span>
   </button>
@@ -56,18 +547,32 @@
 
   <div class="topbar-right">
 
+    <!-- The generated five-word code appears here
+         while someone is inside a Roam. -->
+
+    <div
+      id="roamCodeMini"
+      class="roam-code-mini"
+    >
+      ROAM
+    </div>
+
+
     <button
       class="join-button"
-      onclick="showJoinMessage()"
+      onclick="openJoinScreen()"
       type="button"
     >
       Join a Roam
     </button>
 
+
     <div class="progress">
+
       <span id="progressText">
         HOME
       </span>
+
     </div>
 
   </div>
@@ -131,6 +636,7 @@
         YOUR NEXT ADVENTURE
       </div>
 
+
       <div class="photo-frame">
 
         <div
@@ -154,11 +660,13 @@
           ROAM
         </div>
 
+
         <div class="photo-stamp">
           LET'S GO
         </div>
 
       </div>
+
 
       <div class="art-caption">
         Go somewhere.
@@ -228,6 +736,7 @@
           id="roamName"
           type="text"
           placeholder="Friday Night Roam"
+          autocomplete="off"
         />
 
       </div>
@@ -245,12 +754,14 @@
             id="location"
             type="text"
             placeholder="St. Louis, MO"
+            autocomplete="street-address"
           />
 
           <button
             type="button"
             onclick="getUserLocation()"
             aria-label="Use my location"
+            title="Use my location"
           >
             📍
           </button>
@@ -269,7 +780,7 @@
 
       <div class="field-row">
 
-        <div class="field">
+        <div class="field people-field">
 
           <label>
             How many people?
@@ -280,6 +791,7 @@
             <button
               type="button"
               onclick="changeGroupSize(-1)"
+              aria-label="Decrease group size"
             >
               −
             </button>
@@ -291,6 +803,7 @@
             <button
               type="button"
               onclick="changeGroupSize(1)"
+              aria-label="Increase group size"
             >
               +
             </button>
@@ -309,6 +822,90 @@
       >
         Continue
         <span>→</span>
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     ROAM CREATED
+===================================================== -->
+
+<section
+  id="created"
+  class="screen"
+>
+
+  <div class="created-page">
+
+    <div class="created-number">
+      ✓
+    </div>
+
+
+    <span class="tiny-label">
+      YOUR ROAM IS READY
+    </span>
+
+
+    <h2>
+      Send this to
+      <em>your people.</em>
+    </h2>
+
+
+    <p class="created-description">
+      Your Roam has been created. Give this five-word code
+      to your friends so they can join the same plan.
+    </p>
+
+
+    <div class="invite-code-box">
+
+      <div class="invite-code-label">
+        YOUR ROAM CODE
+      </div>
+
+
+      <div
+        id="inviteCode"
+        class="invite-code"
+      >
+        HAPPY SUNSET PIZZA MUSIC FRIENDS
+      </div>
+
+
+      <p class="invite-code-note">
+        Your friends can enter this exact code from the
+        <strong>Join a Roam</strong> button at the top.
+      </p>
+
+    </div>
+
+
+    <div class="created-actions">
+
+      <button
+        id="copyCodeButton"
+        class="copy-code-button"
+        type="button"
+        onclick="copyInviteCode()"
+      >
+        Copy code
+      </button>
+
+
+      <button
+        class="continue-code-button"
+        type="button"
+        onclick="continueAfterCreation()"
+      >
+        Continue planning
+        <span> →</span>
       </button>
 
     </div>
@@ -343,6 +940,7 @@
         </h2>
 
       </div>
+
 
       <p class="choice-helper">
         Pick every day that works for you.
@@ -401,6 +999,7 @@
 
       </div>
 
+
       <p class="choice-helper">
         Everyone chooses their own availability.
       </p>
@@ -418,6 +1017,7 @@
         id="participantName"
         type="text"
         placeholder="Your name"
+        autocomplete="name"
       />
 
     </div>
@@ -428,6 +1028,7 @@
       <div class="selection-label">
         Pick every time that works
       </div>
+
 
       <div
         id="timeGrid"
@@ -481,6 +1082,7 @@
 
       </div>
 
+
       <p class="choice-helper">
         Your exact answer stays private.
       </p>
@@ -496,6 +1098,7 @@
         data-budget="20"
         onclick="selectBudget(this, 20)"
       >
+
         <strong>
           $0–20
         </strong>
@@ -507,6 +1110,7 @@
         <small>
           Budget friendly
         </small>
+
       </button>
 
 
@@ -516,6 +1120,7 @@
         data-budget="40"
         onclick="selectBudget(this, 40)"
       >
+
         <strong>
           $20–40
         </strong>
@@ -527,6 +1132,7 @@
         <small>
           Easy night out
         </small>
+
       </button>
 
 
@@ -536,6 +1142,7 @@
         data-budget="60"
         onclick="selectBudget(this, 60)"
       >
+
         <strong>
           $40–60
         </strong>
@@ -547,6 +1154,7 @@
         <small>
           Dinner + activity
         </small>
+
       </button>
 
 
@@ -556,6 +1164,7 @@
         data-budget="100"
         onclick="selectBudget(this, 100)"
       >
+
         <strong>
           $60–100
         </strong>
@@ -567,6 +1176,7 @@
         <small>
           Make it special
         </small>
+
       </button>
 
 
@@ -576,6 +1186,7 @@
         data-budget="150"
         onclick="selectBudget(this, 150)"
       >
+
         <strong>
           $100+
         </strong>
@@ -587,6 +1198,7 @@
         <small>
           No limits
         </small>
+
       </button>
 
     </div>
@@ -638,6 +1250,7 @@
 
       </div>
 
+
       <p>
         Pick the vibe.
       </p>
@@ -646,6 +1259,7 @@
 
 
     <div class="activity-grid">
+
 
       <button
         class="activity-card"
@@ -656,9 +1270,19 @@
         <div class="activity-overlay"></div>
 
         <div class="activity-card-content">
-          <small>FOOD</small>
-          <strong>Eat</strong>
-          <span>Find somewhere good.</span>
+
+          <small>
+            FOOD
+          </small>
+
+          <strong>
+            Eat
+          </strong>
+
+          <span>
+            Find somewhere good.
+          </span>
+
         </div>
 
       </button>
@@ -673,9 +1297,19 @@
         <div class="activity-overlay"></div>
 
         <div class="activity-card-content">
-          <small>WATCH</small>
-          <strong>Movies</strong>
-          <span>Lights down.</span>
+
+          <small>
+            WATCH
+          </small>
+
+          <strong>
+            Movies
+          </strong>
+
+          <span>
+            Lights down.
+          </span>
+
         </div>
 
       </button>
@@ -690,9 +1324,19 @@
         <div class="activity-overlay"></div>
 
         <div class="activity-card-content">
-          <small>PLAY</small>
-          <strong>Bowling</strong>
-          <span>Strike night.</span>
+
+          <small>
+            PLAY
+          </small>
+
+          <strong>
+            Bowling
+          </strong>
+
+          <span>
+            Strike night.
+          </span>
+
         </div>
 
       </button>
@@ -707,9 +1351,19 @@
         <div class="activity-overlay"></div>
 
         <div class="activity-card-content">
-          <small>CHILL</small>
-          <strong>Coffee</strong>
-          <span>Slow down.</span>
+
+          <small>
+            CHILL
+          </small>
+
+          <strong>
+            Coffee
+          </strong>
+
+          <span>
+            Slow down.
+          </span>
+
         </div>
 
       </button>
@@ -724,9 +1378,19 @@
         <div class="activity-overlay"></div>
 
         <div class="activity-card-content">
-          <small>OUTSIDE</small>
-          <strong>Outdoors</strong>
-          <span>Get some air.</span>
+
+          <small>
+            OUTSIDE
+          </small>
+
+          <strong>
+            Outdoors
+          </strong>
+
+          <span>
+            Get some air.
+          </span>
+
         </div>
 
       </button>
@@ -741,9 +1405,19 @@
         <div class="activity-overlay"></div>
 
         <div class="activity-card-content">
-          <small>CULTURE</small>
-          <strong>Arts</strong>
-          <span>See something.</span>
+
+          <small>
+            CULTURE
+          </small>
+
+          <strong>
+            Arts
+          </strong>
+
+          <span>
+            See something.
+          </span>
+
         </div>
 
       </button>
@@ -758,9 +1432,19 @@
         <div class="activity-overlay"></div>
 
         <div class="activity-card-content">
-          <small>PLAY</small>
-          <strong>Games</strong>
-          <span>Let the competition begin.</span>
+
+          <small>
+            PLAY
+          </small>
+
+          <strong>
+            Games
+          </strong>
+
+          <span>
+            Let the competition begin.
+          </span>
+
         </div>
 
       </button>
@@ -777,9 +1461,19 @@
         </div>
 
         <div class="activity-card-content dark-content">
-          <small>SOMETHING ELSE</small>
-          <strong>Other</strong>
-          <span>We'll find something.</span>
+
+          <small>
+            SOMETHING ELSE
+          </small>
+
+          <strong>
+            Other
+          </strong>
+
+          <span>
+            We'll find something.
+          </span>
+
         </div>
 
       </button>
@@ -817,9 +1511,10 @@
 
       </div>
 
+
       <div class="match-badge">
 
-        <strong>
+        <strong id="matchCount">
           3
         </strong>
 
@@ -899,6 +1594,7 @@
 
       </div>
 
+
       <p id="placesSubtitle">
         Real places near you.
       </p>
@@ -929,7 +1625,7 @@
 
 
 <!-- =====================================================
-     FINAL
+     FINAL PLAN
 ===================================================== -->
 
 <section
@@ -945,13 +1641,16 @@
         FINAL PLAN
       </span>
 
+
       <h2>
         You're ready
         <br />
+
         <span style="color:var(--orange)">
           to roam.
         </span>
       </h2>
+
 
       <div class="final-orange-line"></div>
 
@@ -982,6 +1681,7 @@
           —
         </div>
 
+
         <div
           id="finalTime"
           class="ticket-activity"
@@ -989,12 +1689,14 @@
           —
         </div>
 
+
         <div
           id="finalActivity"
           class="ticket-activity"
         >
           —
         </div>
+
 
         <div
           id="finalPlace"
@@ -1032,6 +1734,7 @@
         <span>↗</span>
       </button>
 
+
       <button
         class="share-button"
         type="button"
@@ -1055,6 +1758,146 @@
 
 </section>
 
+
+<!-- =====================================================
+     JOIN A ROAM
+===================================================== -->
+
+<section
+  id="join"
+  class="screen"
+>
+
+  <div class="join-page">
+
+    <div class="section-number">
+      ↗
+    </div>
+
+
+    <span class="tiny-label">
+      JOIN A FRIEND'S PLAN
+    </span>
+
+
+    <h2>
+      Join a
+      <em>Roam.</em>
+    </h2>
+
+
+    <p class="join-description">
+      Enter the five-word code your friend gave you.
+      You don't need an account — just the code.
+    </p>
+
+
+    <div class="join-form">
+
+      <label for="joinCode">
+        Five-word Roam code
+      </label>
+
+
+      <input
+        id="joinCode"
+        class="join-code-input"
+        type="text"
+        placeholder="HAPPY SUNSET PIZZA MUSIC FRIENDS"
+        autocomplete="off"
+        autocapitalize="characters"
+        spellcheck="false"
+        maxlength="120"
+      />
+
+
+      <button
+        class="join-button-large"
+        type="button"
+        onclick="joinRoam()"
+      >
+        Join this Roam
+        <span> →</span>
+      </button>
+
+
+      <p class="join-help">
+        Example: HAPPY SUNSET PIZZA MUSIC FRIENDS
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     JOIN CONFIRMATION
+===================================================== -->
+
+<section
+  id="joinConfirm"
+  class="screen"
+>
+
+  <div class="join-confirm-page">
+
+    <div class="section-number">
+      ✓
+    </div>
+
+
+    <span class="tiny-label">
+      ROAM FOUND
+    </span>
+
+
+    <h2>
+      You're joining
+      <em id="joinRoomName">your friend's Roam.</em>
+    </h2>
+
+
+    <p
+      id="joinRoomCode"
+      class="join-room-code"
+    >
+      HAPPY SUNSET PIZZA MUSIC FRIENDS
+    </p>
+
+
+    <div class="join-confirm-form">
+
+      <label for="joinParticipantName">
+        What's your name?
+      </label>
+
+
+      <input
+        id="joinParticipantName"
+        class="join-name-input"
+        type="text"
+        placeholder="Your name"
+        autocomplete="name"
+      />
+
+
+      <button
+        class="dark-button"
+        type="button"
+        onclick="confirmJoin()"
+      >
+        Continue
+        <span>→</span>
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
+
 </main>
 
 
@@ -1071,14 +1914,20 @@
 
 
 <!-- =====================================================
-     SCRIPTS
+     SUPABASE
 ===================================================== -->
 
 <script
   src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ></script>
 
-<script src="app.js?v=4"></script>
+
+<!-- =====================================================
+     ROAM JAVASCRIPT
+===================================================== -->
+
+<script src="app.js?v=5"></script>
 
 </body>
+
 </html>
