@@ -1,61 +1,69 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
 
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0"
-  >
+  />
+
+  <meta
+    name="description"
+    content="Roam — an easy way to plan group hangouts."
+  />
 
   <title>Roam — Find Your People. Find Your Place.</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
   <link
     href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
     rel="stylesheet"
-  >
+  />
 
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
 
-  <!-- ==========================================
+  <!-- =========================
        NAVIGATION
-       ========================================== -->
+  ========================== -->
 
-  <nav class="navbar">
+  <header class="navbar">
 
     <div class="nav-inner">
 
       <button
         class="logo"
         onclick="showScreen('home')"
+        type="button"
       >
-        Roam<span>.</span>
+        <span class="logo-mark">R</span>
+        <span>Roam</span>
       </button>
 
       <button
-        class="nav-create"
+        class="btn btn-primary nav-create"
         onclick="startRoam()"
+        type="button"
       >
         Create a Roam
       </button>
 
     </div>
 
-  </nav>
+  </header>
 
 
   <main>
 
-
-    <!-- ==========================================
+    <!-- =========================
          HOME
-         ========================================== -->
+    ========================== -->
 
     <section
       id="home"
@@ -64,57 +72,108 @@
 
       <div class="hero">
 
-        <div class="hero-text">
+        <div class="hero-content">
 
-          <p class="eyebrow">
+          <span class="eyebrow">
             GROUP PLANS, WITHOUT THE GROUP CHAT CHAOS
-          </p>
+          </span>
 
           <h1>
             Find your people.
-            <br>
+            <br />
             Find your place.
           </h1>
 
           <p class="hero-description">
-            Roam makes planning group hangouts ridiculously easy.
-            Find when everyone is free, figure out the budget,
-            and discover the perfect place nearby.
+            Roam makes group hangouts easy.
+            Find a time everyone can make,
+            discover a place nearby, and
+            build the perfect plan.
           </p>
 
-          <button
-            class="primary-button large"
-            onclick="startRoam()"
-          >
-            Start Roaming →
-          </button>
+          <div class="hero-buttons">
+
+            <button
+              class="btn btn-primary btn-large"
+              onclick="startRoam()"
+              type="button"
+            >
+              Start Roaming →
+            </button>
+
+            <button
+              class="btn btn-secondary btn-large"
+              onclick="startRoam()"
+              type="button"
+            >
+              How it works
+            </button>
+
+          </div>
 
         </div>
 
 
+        <!-- HERO CARD -->
+
         <div class="hero-card">
 
-          <div class="hero-photo">
+          <div class="hero-card-top">
 
-            <div class="hero-photo-overlay">
+            <span>FRIDAY</span>
 
-              <span>
-                ROAMING SOON 🇮🇹
-              </span>
+            <span>ROAM #042</span>
 
-              <div class="hero-plan">
+          </div>
 
-                <strong>
-                  Saturday · 6:30 PM
-                </strong>
+          <div class="mini-calendar">
 
-                <small>
-                  8/10 people free
-                </small>
+            <div class="calendar-heading">
+              October
+            </div>
 
-              </div>
+            <div class="calendar-days">
+
+              <span>M</span>
+              <span>T</span>
+              <span>W</span>
+              <span>T</span>
+              <span>F</span>
+              <span>S</span>
+              <span>S</span>
 
             </div>
+
+            <div class="calendar-numbers">
+
+              <span></span>
+              <span></span>
+              <span>1</span>
+              <span>2</span>
+              <span class="today">3</span>
+              <span>4</span>
+              <span>5</span>
+
+              <span>6</span>
+              <span>7</span>
+              <span>8</span>
+              <span>9</span>
+              <span>10</span>
+              <span>11</span>
+              <span>12</span>
+
+            </div>
+
+          </div>
+
+          <div class="hero-card-footer">
+
+            <div>
+              <strong>8 friends</strong>
+              <span>are roaming</span>
+            </div>
+
+            <span class="hero-arrow">→</span>
 
           </div>
 
@@ -125,58 +184,91 @@
 
       <!-- FEATURES -->
 
-      <div class="features">
+      <div class="section-container">
 
-        <div class="feature">
+        <div class="section-heading">
 
-          <div class="feature-number">
-            01
-          </div>
+          <span class="eyebrow">
+            HOW ROAM WORKS
+          </span>
 
-          <h3>
-            Find the time
-          </h3>
-
-          <p>
-            Everyone adds when they're free.
-            Roam finds the best times for the group.
-          </p>
+          <h2>
+            Less planning.
+            More hanging out.
+          </h2>
 
         </div>
 
 
-        <div class="feature">
+        <div class="feature-grid">
 
-          <div class="feature-number">
-            02
-          </div>
+          <article class="feature-card">
 
-          <h3>
-            Know the budget
-          </h3>
+            <div class="feature-icon">
+              🗓️
+            </div>
 
-          <p>
-            Everyone privately chooses a budget.
-            Roam only shows the group average.
-          </p>
+            <span class="feature-number">
+              01
+            </span>
 
-        </div>
+            <h3>
+              Find the time
+            </h3>
+
+            <p>
+              Everyone adds when they're free.
+              Roam finds the best times for the
+              whole group.
+            </p>
+
+          </article>
 
 
-        <div class="feature">
+          <article class="feature-card">
 
-          <div class="feature-number">
-            03
-          </div>
+            <div class="feature-icon">
+              💸
+            </div>
 
-          <h3>
-            Pick the place
-          </h3>
+            <span class="feature-number">
+              02
+            </span>
 
-          <p>
-            Roam finds real places nearby based
-            on your time, budget, and vibe.
-          </p>
+            <h3>
+              Know the budget
+            </h3>
+
+            <p>
+              Everyone enters a budget privately.
+              Roam shows the group average so
+              nobody feels awkward.
+            </p>
+
+          </article>
+
+
+          <article class="feature-card">
+
+            <div class="feature-icon">
+              📍
+            </div>
+
+            <span class="feature-number">
+              03
+            </span>
+
+            <h3>
+              Pick the place
+            </h3>
+
+            <p>
+              Roam finds real places near you
+              based on your time, budget, and
+              group.
+            </p>
+
+          </article>
 
         </div>
 
@@ -185,32 +277,29 @@
     </section>
 
 
-    <!-- ==========================================
+    <!-- =========================
          CREATE ROAM
-         ========================================== -->
+    ========================== -->
 
     <section
       id="create"
       class="screen"
     >
 
-      <div class="page-container">
+      <div class="form-container">
 
-        <div class="section-heading">
+        <span class="eyebrow">
+          STEP 01
+        </span>
 
-          <p class="eyebrow">
-            STEP 01
-          </p>
+        <h2>
+          Let's start a Roam.
+        </h2>
 
-          <h2>
-            Let's make a Roam.
-          </h2>
-
-          <p>
-            Start with the basics.
-          </p>
-
-        </div>
+        <p class="screen-description">
+          Give your hangout a name and tell
+          us where you're starting from.
+        </p>
 
 
         <div class="form-card">
@@ -218,14 +307,14 @@
           <div class="form-group">
 
             <label for="roamName">
-              What's the hangout?
+              What's the plan called?
             </label>
 
             <input
               id="roamName"
               type="text"
-              placeholder="e.g. Saturday Night Out"
-            >
+              placeholder="Friday Night Roam"
+            />
 
           </div>
 
@@ -236,18 +325,18 @@
               Where are you?
             </label>
 
-            <div class="location-row">
+            <div class="location-input">
 
               <input
                 id="location"
                 type="text"
-                placeholder="City or neighborhood"
-              >
+                placeholder="St. Louis, MO"
+              />
 
               <button
-                id="useLocationBtn"
                 type="button"
                 class="location-button"
+                onclick="getUserLocation()"
               >
                 📍 Use my location
               </button>
@@ -258,7 +347,7 @@
               id="locationStatus"
               class="location-status"
             >
-              Roam can use your location to find nearby places.
+              Your location stays in your browser.
             </p>
 
           </div>
@@ -276,13 +365,14 @@
               min="2"
               max="100"
               value="10"
-            >
+            />
 
           </div>
 
 
           <button
-            class="primary-button"
+            type="button"
+            class="btn btn-primary btn-full"
             onclick="saveRoamDetails()"
           >
             Continue →
@@ -295,43 +385,41 @@
     </section>
 
 
-    <!-- ==========================================
+    <!-- =========================
          DAYS
-         ========================================== -->
+    ========================== -->
 
     <section
       id="days"
       class="screen"
     >
 
-      <div class="page-container">
+      <div class="form-container">
 
-        <div class="section-heading">
+        <span class="eyebrow">
+          STEP 02
+        </span>
 
-          <p class="eyebrow">
-            STEP 02
-          </p>
+        <h2>
+          When should we roam?
+        </h2>
 
-          <h2>
-            When should we roam?
-          </h2>
-
-          <p>
-            Pick the days that work for you.
-          </p>
-
-        </div>
+        <p class="screen-description">
+          Pick the days that work for you.
+        </p>
 
 
-        <div class="calendar-card">
+        <div class="form-card">
 
           <div
             id="dateGrid"
             class="date-grid"
           ></div>
 
+
           <button
-            class="primary-button"
+            type="button"
+            class="btn btn-primary btn-full"
             onclick="saveDates()"
           >
             Continue →
@@ -344,32 +432,29 @@
     </section>
 
 
-    <!-- ==========================================
+    <!-- =========================
          AVAILABILITY
-         ========================================== -->
+    ========================== -->
 
     <section
       id="availability"
       class="screen"
     >
 
-      <div class="page-container">
+      <div class="form-container">
 
-        <div class="section-heading">
+        <span class="eyebrow">
+          STEP 03
+        </span>
 
-          <p class="eyebrow">
-            STEP 03
-          </p>
+        <h2>
+          When are you free?
+        </h2>
 
-          <h2>
-            When are you free?
-          </h2>
-
-          <p>
-            Pick all the times you could hang out.
-          </p>
-
-        </div>
+        <p class="screen-description">
+          Add your name and choose every time
+          that works for you.
+        </p>
 
 
         <div class="form-card">
@@ -383,8 +468,8 @@
             <input
               id="participantName"
               type="text"
-              placeholder="e.g. Pranaya"
-            >
+              placeholder="Pranaya"
+            />
 
           </div>
 
@@ -392,7 +477,7 @@
           <div class="form-group">
 
             <label>
-              Your availability
+              Pick your available times
             </label>
 
             <div
@@ -404,7 +489,8 @@
 
 
           <button
-            class="primary-button"
+            type="button"
+            class="btn btn-primary btn-full"
             onclick="saveAvailability()"
           >
             Continue →
@@ -417,157 +503,171 @@
     </section>
 
 
-    <!-- ==========================================
+    <!-- =========================
          BUDGET
-         ========================================== -->
+    ========================== -->
 
     <section
       id="budget"
       class="screen"
     >
 
-      <div class="page-container">
+      <div class="form-container">
 
-        <div class="section-heading">
+        <span class="eyebrow">
+          STEP 04
+        </span>
 
-          <p class="eyebrow">
-            STEP 04
-          </p>
+        <h2>
+          What's your budget?
+        </h2>
 
-          <h2>
-            What's your budget?
-          </h2>
+        <p class="screen-description">
+          Pick the amount you're comfortable
+          spending. Your exact answer stays
+          private.
+        </p>
 
-          <p>
-            Don't worry — your exact answer stays private.
-          </p>
+
+        <div class="form-card">
+
+          <div class="budget-grid">
+
+            <button
+              type="button"
+              class="budget-option"
+              onclick="selectBudget(this, '0-20')"
+            >
+              <strong>
+                $0–20
+              </strong>
+
+              <span>
+                Keep it cheap
+              </span>
+            </button>
+
+
+            <button
+              type="button"
+              class="budget-option"
+              onclick="selectBudget(this, '20-40')"
+            >
+              <strong>
+                $20–40
+              </strong>
+
+              <span>
+                Casual
+              </span>
+            </button>
+
+
+            <button
+              type="button"
+              class="budget-option"
+              onclick="selectBudget(this, '40-60')"
+            >
+              <strong>
+                $40–60
+              </strong>
+
+              <span>
+                A little extra
+              </span>
+            </button>
+
+
+            <button
+              type="button"
+              class="budget-option"
+              onclick="selectBudget(this, '60-100')"
+            >
+              <strong>
+                $60–100
+              </strong>
+
+              <span>
+                Treat yourself
+              </span>
+            </button>
+
+
+            <button
+              type="button"
+              class="budget-option"
+              onclick="selectBudget(this, '100+')"
+            >
+              <strong>
+                $100+
+              </strong>
+
+              <span>
+                Go big
+              </span>
+            </button>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="btn btn-primary btn-full"
+            onclick="finishBudget()"
+          >
+            Find our Roam →
+          </button>
 
         </div>
-
-
-        <div class="budget-grid">
-
-          <button
-            class="budget-option"
-            data-budget="20"
-            onclick="selectBudget(this, 20)"
-          >
-            <strong>
-              $0–20
-            </strong>
-
-            <span>
-              Keep it cheap
-            </span>
-          </button>
-
-
-          <button
-            class="budget-option"
-            data-budget="40"
-            onclick="selectBudget(this, 40)"
-          >
-            <strong>
-              $20–40
-            </strong>
-
-            <span>
-              Casual
-            </span>
-          </button>
-
-
-          <button
-            class="budget-option"
-            data-budget="60"
-            onclick="selectBudget(this, 60)"
-          >
-            <strong>
-              $40–60
-            </strong>
-
-            <span>
-              Comfortable
-            </span>
-          </button>
-
-
-          <button
-            class="budget-option"
-            data-budget="100"
-            onclick="selectBudget(this, 100)"
-          >
-            <strong>
-              $60–100
-            </strong>
-
-            <span>
-              Treat yourself
-            </span>
-          </button>
-
-
-          <button
-            class="budget-option"
-            data-budget="150"
-            onclick="selectBudget(this, 150)"
-          >
-            <strong>
-              $100+
-            </strong>
-
-            <span>
-              Let's go all out
-            </span>
-          </button>
-
-        </div>
-
-
-        <button
-          class="primary-button"
-          onclick="finishBudget()"
-        >
-          Find our best time →
-        </button>
 
       </div>
 
     </section>
 
 
-    <!-- ==========================================
+    <!-- =========================
          RESULTS
-         ========================================== -->
+    ========================== -->
 
     <section
       id="results"
       class="screen"
     >
 
-      <div class="page-container">
+      <div class="results-container">
 
-        <div class="section-heading">
+        <span class="eyebrow">
+          YOUR ROAM
+        </span>
 
-          <p class="eyebrow">
-            YOUR ROAM
-          </p>
+        <h2>
+          We found some good times.
+        </h2>
 
-          <h2>
-            We found some good times.
-          </h2>
+        <p class="screen-description">
+          Based on everyone's availability.
+        </p>
+
+
+        <div class="average-budget-card">
+
+          <div>
+
+            <span>
+              GROUP BUDGET
+            </span>
+
+            <strong id="averageBudget">
+              $47
+            </strong>
+
+          </div>
 
           <p>
-            Pick the one that works best.
+            Average budget per person
           </p>
 
         </div>
-
-
-        <div
-          id="averageBudget"
-          class="budget-average"
-        ></div>
 
 
         <div
@@ -580,30 +680,48 @@
     </section>
 
 
-    <!-- ==========================================
+    <!-- =========================
          PLACES
-         ========================================== -->
+    ========================== -->
 
     <section
       id="places"
       class="screen"
     >
 
-      <div class="page-container">
+      <div class="places-container">
 
-        <div class="section-heading">
+        <span class="eyebrow">
+          STEP 05
+        </span>
 
-          <p class="eyebrow">
-            STEP 06
-          </p>
+        <h2>
+          Where should we go?
+        </h2>
 
-          <h2>
-            Let's find somewhere to go.
-          </h2>
+        <p class="screen-description">
+          Real places near you based on your
+          chosen time.
+        </p>
 
-          <p id="placesSubtitle">
-            Real places near you.
-          </p>
+
+        <div class="location-banner">
+
+          <span class="location-banner-icon">
+            📍
+          </span>
+
+          <div>
+
+            <strong>
+              Using your location
+            </strong>
+
+            <p>
+              Roam is looking for nearby places.
+            </p>
+
+          </div>
 
         </div>
 
@@ -613,65 +731,70 @@
           class="places-list"
         ></div>
 
-
-        <button
-          class="secondary-button"
-          onclick="showScreen('results')"
-        >
-          ← Back
-        </button>
-
       </div>
 
     </section>
 
 
-    <!-- ==========================================
+    <!-- =========================
          FINAL PLAN
-         ========================================== -->
+    ========================== -->
 
     <section
       id="final"
       class="screen"
     >
 
-      <div class="page-container">
+      <div class="final-container">
 
-        <div class="final-card">
+        <span class="eyebrow">
+          FINAL PLAN
+        </span>
 
-          <p class="eyebrow">
-            IT'S A PLAN
-          </p>
+        <h2>
+          You're ready to roam.
+        </h2>
 
-          <h2>
-            Your Roam is ready.
-          </h2>
-
-          <div
-            id="finalPlan"
-            class="final-plan"
-          ></div>
+        <p class="screen-description">
+          Here's the plan you can send to
+          everyone.
+        </p>
 
 
-          <div class="final-actions">
+        <div
+          id="finalPlan"
+          class="final-plan"
+        ></div>
 
-            <button
-              class="primary-button"
-              onclick="copyPlan()"
-            >
-              Copy plan
-            </button>
 
-            <button
-              class="secondary-button"
-              onclick="sharePlan()"
-            >
-              Share plan
-            </button>
+        <div class="final-actions">
 
-          </div>
+          <button
+            type="button"
+            class="btn btn-primary"
+            onclick="copyPlan()"
+          >
+            📋 Copy Plan
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="sharePlan()"
+          >
+            ↗ Share
+          </button>
 
         </div>
+
+
+        <button
+          type="button"
+          class="text-button"
+          onclick="showScreen('home')"
+        >
+          ← Start a new Roam
+        </button>
 
       </div>
 
@@ -680,24 +803,45 @@
   </main>
 
 
+  <!-- =========================
+       FOOTER
+  ========================== -->
+
+  <footer class="footer">
+
+    <div class="footer-inner">
+
+      <div class="footer-logo">
+        <span class="logo-mark">R</span>
+        <strong>Roam</strong>
+      </div>
+
+      <p>
+        Find your people. Find your place.
+      </p>
+
+      <span>
+        © 2026 Roam
+      </span>
+
+    </div>
+
+  </footer>
+
+
   <!--
     IMPORTANT:
+    There is intentionally NO Google Maps API here.
 
-    Replace YOUR_GOOGLE_MAPS_API_KEY with your Google Maps
-    JavaScript API key.
+    Roam gets the user's location using the browser's
+    built-in Geolocation API.
 
-    You need:
-    - Maps JavaScript API
-    - Places API (New)
+    Nearby places are found through OpenStreetMap
+    and Overpass in app.js.
   -->
-
-  <script
-    async
-    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&loading=async&libraries=places"
-  ></script>
-
 
   <script src="app.js"></script>
 
 </body>
 </html>
+```
