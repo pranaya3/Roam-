@@ -615,10 +615,21 @@ async function saveRoamDetails() {
       : "";
 
 
-  const location =
+  const inputLocation =
     locationElement
       ? locationElement.value.trim()
       : "";
+
+
+  /*
+    Use the typed location if there is one.
+    Otherwise use the location found by GPS.
+  */
+
+  const location =
+    inputLocation ||
+    state.location ||
+    "";
 
 
   if (!name) {
@@ -673,8 +684,32 @@ async function saveRoamDetails() {
 
   try {
 
+    /*
+      Make sure the organizer token exists.
+    */
+
+    state.organizerToken =
+      state.organizerToken ||
+      generateToken();
+
+
+    /*
+      Generate the new 5-word phrase.
+    */
+
     const code =
       await createUniqueRoomCode();
+
+
+    console.log(
+      "Attempting to create Roam:",
+      {
+        code,
+        name: state.roamName,
+        location: state.location,
+        groupSize: state.groupSize
+      }
+    );
 
 
     const {
@@ -717,7 +752,23 @@ async function saveRoamDetails() {
 
 
     if (error) {
+
+      console.error(
+        "SUPABASE CREATE ERROR:",
+        error
+      );
+
       throw error;
+
+    }
+
+
+    if (!data) {
+
+      throw new Error(
+        "Supabase created the request but returned no room."
+      );
+
     }
 
 
@@ -725,12 +776,13 @@ async function saveRoamDetails() {
       data.id;
 
     state.roomCode =
-      data.code;
+      normalizeInvitePhrase(
+        data.code
+      );
 
 
     /*
-      Save the code so it can
-      be used again on this device.
+      Save the code locally.
     */
 
     localStorage.setItem(
@@ -773,8 +825,21 @@ async function saveRoamDetails() {
     );
 
 
+    /*
+      IMPORTANT:
+      Show the actual Supabase error
+      instead of hiding it.
+    */
+
+    const message =
+      error?.message ||
+      error?.details ||
+      error?.hint ||
+      "Unknown database error.";
+
+
     showToast(
-      "Couldn't create your Roam."
+      `Couldn't create your Roam: ${message}`
     );
 
   }
@@ -795,7 +860,16 @@ async function createUniqueRoomCode() {
   ) {
 
     const code =
-      generateRoomCode();
+      normalizeInvitePhrase(
+        generateRoomCode()
+      );
+
+
+    if (!isValidInvitePhrase(code)) {
+
+      continue;
+
+    }
 
 
     const {
@@ -813,19 +887,28 @@ async function createUniqueRoomCode() {
 
 
     if (error) {
+
+      console.error(
+        "ROOM CODE CHECK ERROR:",
+        error
+      );
+
       throw error;
+
     }
 
 
     if (!data) {
+
       return code;
+
     }
 
   }
 
 
   throw new Error(
-    "Could not create unique room code."
+    "Could not create a unique 5-word Roam code."
   );
 
 }
@@ -1240,7 +1323,7 @@ async function saveDates() {
       );
 
       showToast(
-        "Couldn't save the dates."
+        `Couldn't save the dates: ${error.message || "Unknown error."}`
       );
 
       return;
@@ -1533,7 +1616,7 @@ async function finishBudget() {
 
 
       showToast(
-        "Couldn't save your answers."
+        `Couldn't save your answers: ${error.message || "Unknown error."}`
       );
 
       return;
@@ -1717,7 +1800,7 @@ async function selectActivity(
       );
 
       showToast(
-        "Couldn't save the activity."
+        `Couldn't save the activity: ${error.message || "Unknown error."}`
       );
 
       return;
@@ -1772,15 +1855,15 @@ async function generateResults() {
         data,
         error
       } =
-        await db
-          .from("participants")
-          .select(
-            "availability"
-          )
-          .eq(
-            "room_id",
-            state.roomId
-          );
+      await db
+        .from("participants")
+        .select(
+          "availability"
+        )
+        .eq(
+          "room_id",
+          state.roomId
+        );
 
 
       if (
@@ -2803,93 +2886,95 @@ function renderFallbackPlaces() {
 
 
   list.innerHTML =
-    choices
-      .map(
-        (name, index) => {
-
-          const card =
-            document.createElement(
-              "article"
-            );
+    "";
 
 
-          card.className =
-            "place-card";
+  choices.forEach(
+    (name, index) => {
+
+      const card =
+        document.createElement(
+          "article"
+        );
 
 
-          card.innerHTML = `
-
-            <div class="place-image">
-
-              <img
-                src="${getPlaceImage(
-                  state.activity,
-                  index
-                )}"
-                alt="${escapeHtml(name)}"
-              />
-
-            </div>
-
-            <div class="place-content">
-
-              <small>
-                ${escapeHtml(label)}
-              </small>
-
-              <h3>
-                ${escapeHtml(name)}
-              </h3>
-
-              <p class="place-info">
-                Search for this activity nearby.
-              </p>
-
-              <button
-                class="place-action"
-                type="button"
-              >
-                Choose this →
-              </button>
-
-            </div>
-
-          `;
+      card.className =
+        "place-card";
 
 
-          card
-            .querySelector(
-              ".place-action"
-            )
-            .addEventListener(
-              "click",
-              () => {
+      card.innerHTML = `
 
-                choosePlace({
+        <div class="place-image">
 
-                  name,
+          <img
+            src="${getPlaceImage(
+              state.activity,
+              index
+            )}"
+            alt="${escapeHtml(name)}"
+          />
 
-                  category:
-                    label,
+        </div>
 
-                  address:
-                    "Nearby",
+        <div class="place-content">
 
-                  distance:
-                    null
+          <small>
+            ${escapeHtml(label)}
+          </small>
 
-                });
+          <h3>
+            ${escapeHtml(name)}
+          </h3>
 
-              }
-            );
+          <p class="place-info">
+            Search for this activity nearby.
+          </p>
+
+          <button
+            class="place-action"
+            type="button"
+          >
+            Choose this →
+          </button>
+
+        </div>
+
+      `;
 
 
-          list.appendChild(
-            card
-          );
+      card
+        .querySelector(
+          ".place-action"
+        )
+        .addEventListener(
+          "click",
+          () => {
 
-        }
+            choosePlace({
+
+              name,
+
+              category:
+                label,
+
+              address:
+                "Nearby",
+
+              distance:
+                null
+
+            });
+
+          }
+        );
+
+
+      list.appendChild(
+        card
       );
+
+    }
+  );
 
 }
 
@@ -3524,7 +3609,7 @@ async function joinRoam() {
 
 
       showToast(
-        "Couldn't find that Roam."
+        `Couldn't find that Roam: ${error.message || "Unknown error."}`
       );
 
       return;
@@ -3618,7 +3703,7 @@ async function joinRoam() {
 
 
     showToast(
-      "Something went wrong joining."
+      `Something went wrong joining: ${error.message || "Unknown error."}`
     );
 
   }
@@ -3638,7 +3723,9 @@ function loadRoomIntoState(
     data.id;
 
   state.roomCode =
-    data.code;
+    normalizeInvitePhrase(
+      data.code
+    );
 
   state.roamName =
     data.name;
@@ -3824,7 +3911,7 @@ function showToast(
         );
 
       },
-      2600
+      4000
     );
 
 }
