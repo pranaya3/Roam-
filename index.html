@@ -1,25 +1,24 @@
+```html
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8">
 
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-
->
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
 
   <meta name="theme-color" content="#c65a32">
 
-<meta
-name="description"
-content="Roam — make plans with your people."
-
->
+  <meta
+    name="description"
+    content="Roam — make plans with your people."
+  >
 
   <title>Roam</title>
 
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -28,6 +27,7 @@ content="Roam — make plans with your people."
     rel="stylesheet"
   >
 
+  <!-- Roam CSS -->
   <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -39,206 +39,226 @@ content="Roam — make plans with your people."
 
   <header class="topbar">
 
-```
-<button
-  class="brand"
-  onclick="showScreen('home')"
-  type="button"
-  aria-label="Roam home"
->
-  Roam<span>.</span>
-</button>
+    <button
+      class="brand"
+      onclick="showScreen('home')"
+      type="button"
+      aria-label="Roam home"
+    >
+      Roam<span>.</span>
+    </button>
 
-<div class="topbar-right">
-
-  <button
-    class="join-button"
-    onclick="showJoinMessage()"
-    type="button"
-  >
-    Join a Roam
-  </button>
-
-  <div class="progress">
-    <span id="progressText">HOME</span>
-  </div>
-
-</div>
-```
-
-  </header>
-
-  <main>
-
-```
-<!-- ===================================================
-     HOME
-==================================================== -->
-
-<section
-  id="home"
-  class="screen active"
->
-
-  <div class="home-page">
-
-    <div class="home-copy">
-
-      <p class="tiny-label">
-        MAKE PLANS. GO SOMEWHERE.
-      </p>
-
-      <h1>
-        Got plans?
-        <em>Let's make some.</em>
-      </h1>
-
-      <p class="home-description">
-        Pick a day, choose a vibe, and let Roam figure out the rest.
-      </p>
+    <div class="topbar-right">
 
       <button
-        class="hero-button"
-        onclick="startRoam()"
+        class="join-button"
+        onclick="showJoinMessage()"
         type="button"
       >
-        Plan a hangout
-        <span>↗</span>
+        Join a Roam
       </button>
 
-      <div class="home-note">
-        Free · No account needed
+      <div class="progress">
+        <span id="progressText">HOME</span>
       </div>
 
     </div>
 
+  </header>
 
-    <div class="home-art">
 
-      <div class="art-label">
-        WHERE TO NEXT?
-      </div>
+  <main>
 
-      <div class="photo-frame">
+    <!-- ===================================================
+         HOME
+    ==================================================== -->
 
-        <img
-          src="https://images.unsplash.com/photo-1514890547357-a9ee288728e0?auto=format&fit=crop&w=1000&q=85"
-          alt="Venice canal"
-        >
+    <section
+      id="home"
+      class="screen active"
+    >
 
-        <div class="photo-stamp">
-          ROAM
+      <div class="home-page">
+
+        <div class="home-copy">
+
+          <p class="tiny-label">
+            MAKE PLANS. GO SOMEWHERE.
+          </p>
+
+          <h1>
+            Got plans?
+            <em>Let's make some.</em>
+          </h1>
+
+          <p class="home-description">
+            Pick a day, choose a vibe, and let Roam figure out the rest.
+          </p>
+
+          <button
+            class="hero-button"
+            onclick="startRoam()"
+            type="button"
+          >
+            Plan a hangout
+            <span>↗</span>
+          </button>
+
+          <div class="home-note">
+            Free · No account needed
+          </div>
+
+        </div>
+
+
+        <div class="home-art">
+
+          <div class="art-label">
+            WHERE TO NEXT?
+          </div>
+
+          <div class="photo-frame">
+
+            <img
+              src="https://images.unsplash.com/photo-1514890547357-a9ee288728e0?auto=format&fit=crop&w=1000&q=85"
+              alt="Venice canal"
+            >
+
+            <div class="photo-stamp">
+              ROAM
+            </div>
+
+          </div>
+
+          <div class="art-caption">
+            Your people.<br>
+            Your place.
+          </div>
+
         </div>
 
       </div>
 
-      <div class="art-caption">
-        Your people.<br>
-        Your place.
-      </div>
 
-    </div>
+      <div class="home-bottom">
 
-  </div>
+        <div class="home-bottom-item">
+          <span>01</span>
+          Find a time
+        </div>
 
+        <div class="home-bottom-item">
+          <span>02</span>
+          Pick a vibe
+        </div>
 
-  <div class="home-bottom">
-
-    <div class="home-bottom-item">
-      <span>01</span>
-      Find a time
-    </div>
-
-    <div class="home-bottom-item">
-      <span>02</span>
-      Pick a vibe
-    </div>
-
-    <div class="home-bottom-item">
-      <span>03</span>
-      Go somewhere
-    </div>
-
-  </div>
-
-</section>
-
-
-<!-- ===================================================
-     DETAILS
-==================================================== -->
-
-<section
-  id="details"
-  class="screen"
->
-
-  <div class="planner-page">
-
-    <div class="planner-intro">
-
-      <div class="section-number">
-        01
-      </div>
-
-      <p class="tiny-label">
-        THE PLAN
-      </p>
-
-      <h2>
-        What are<br>
-        <em>we doing?</em>
-      </h2>
-
-    </div>
-
-
-    <div class="planner-form">
-
-      <div class="field-large">
-
-        <label for="roamName">
-          Give it a name
-        </label>
-
-        <input
-          id="roamName"
-          type="text"
-          placeholder="Friday night..."
-          autocomplete="off"
-        >
+        <div class="home-bottom-item">
+          <span>03</span>
+          Go somewhere
+        </div>
 
       </div>
 
+    </section>
 
-      <div class="field-row">
 
-        <div class="field">
+    <!-- ===================================================
+         DETAILS
+    ==================================================== -->
 
-          <label for="location">
-            Where?
-          </label>
+    <section
+      id="details"
+      class="screen"
+    >
 
-          <div class="location-field">
+      <div class="planner-page">
+
+        <div class="planner-intro">
+
+          <div class="section-number">
+            01
+          </div>
+
+          <p class="tiny-label">
+            THE PLAN
+          </p>
+
+          <h2>
+            What are<br>
+            <em>we doing?</em>
+          </h2>
+
+        </div>
+
+
+        <div class="planner-form">
+
+          <div class="field-large">
+
+            <label for="roamName">
+              Give it a name
+            </label>
 
             <input
-              id="location"
+              id="roamName"
               type="text"
-              placeholder="City or neighborhood"
+              placeholder="Friday night..."
               autocomplete="off"
             >
 
-            <button
-              type="button"
-              onclick="getUserLocation()"
-              aria-label="Use my location"
-              title="Use my location"
-            >
-              ◎
-            </button>
-
           </div>
 
-          <div
-            id="locationStatus"
+
+          <div class="field-row">
+
+            <div class="field">
+
+              <label for="location">
+                Where?
+              </label>
+
+              <div class="location-field">
+
+                <input
+                  id="location"
+                  type="text"
+                  placeholder="City or neighborhood"
+                  autocomplete="off"
+                >
+
+                <button
+                  type="button"
+                  onclick="getUserLocation()"
+                  aria-label="Use my location"
+                  title="Use my location"
+                >
+                  ◎
+                </button>
+
+              </div>
+
+              <div
+                id="locationStatus"
+                class="location-status"
+                aria-live="polite"
+              ></div>
+
+            </div>
+
+
+            <div class="field">
+
+              <label>
+                How many?
+              </label>
+
+              <div class="number-control">
+
+                <button
+                  type="button"
+                  onclick="changeGroupSize(-1)"
+                  aria-label="Decrease group size"
+                >
+                  −
+                </butto
 ```
