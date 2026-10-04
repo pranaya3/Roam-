@@ -4,6 +4,7 @@
 
 create extension if not exists pgcrypto;
 
+
 -- =========================================================
 -- ROOMS
 -- =========================================================
@@ -11,27 +12,37 @@ create extension if not exists pgcrypto;
 create table if not exists public.rooms (
   id uuid primary key default gen_random_uuid(),
 
-  code text not null unique
-    check (code ~ '^[A-Z0-9]{5}$'),
+  -- Roam invite code
+  -- Example:
+  -- HAPPY SUNSET PIZZA MUSIC FRIENDS
+  code text not null unique,
 
+  -- Name of the Roam
   name text not null,
 
+  -- Location entered by organizer
   location_text text not null,
 
+  -- Optional GPS coordinates
   lat double precision,
 
   lng double precision,
 
+  -- Number of people expected
   group_size integer not null
     check (group_size between 2 and 50),
 
+  -- Dates selected by organizer
   candidate_dates jsonb not null
     default '[]'::jsonb,
 
+  -- Activity selected for the Roam
   activity text,
 
+  -- Private organizer identifier
   organizer_token text not null,
 
+  -- When the Roam was created
   created_at timestamptz not null
     default now()
 );
@@ -44,19 +55,25 @@ create table if not exists public.rooms (
 create table if not exists public.participants (
   id uuid primary key default gen_random_uuid(),
 
+  -- Roam this participant belongs to
   room_id uuid not null
     references public.rooms(id)
     on delete cascade,
 
+  -- Participant's name
   name text not null,
 
+  -- Private participant identifier
   participant_token text not null,
 
+  -- Availability information
   availability jsonb not null
     default '{}'::jsonb,
 
+  -- Anonymous budget amount
   budget numeric,
 
+  -- When participant joined
   created_at timestamptz not null
     default now()
 );
@@ -85,7 +102,7 @@ enable row level security;
 
 
 -- =========================================================
--- ROOMS POLICIES
+-- ROOM POLICIES
 -- =========================================================
 
 drop policy if exists "rooms public read by code"
