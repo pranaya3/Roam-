@@ -3,525 +3,45 @@
 
 <head>
 
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
 
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0"
-  />
+  >
 
   <meta
     name="description"
     content="Roam — an easy way to plan group hangouts."
-  />
+  >
 
   <title>Roam — Find Your People. Find Your Place.</title>
 
   <!-- =====================================================
-       FONTS
+       GOOGLE FONTS
   ====================================================== -->
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
 
   <link
     rel="preconnect"
     href="https://fonts.gstatic.com"
     crossorigin
-  />
+  >
 
   <link
-    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
     rel="stylesheet"
-  />
+  >
 
   <!-- =====================================================
-       ROAM CSS
+       ROAM STYLES
   ====================================================== -->
 
   <link
     rel="stylesheet"
     href="styles.css"
-  />
-
-  <!-- =====================================================
-       EXTRA STYLES FOR THE 5-WORD CODE SCREENS
-  ====================================================== -->
-
-  <style>
-
-    /* -----------------------------------------------------
-       SMALL EYEBROW
-    ----------------------------------------------------- */
-
-    .eyebrow {
-      display: inline-block;
-
-      color: var(--orange);
-
-      font-size: 10px;
-      font-weight: 800;
-
-      letter-spacing: 2px;
-    }
-
-
-    /* -----------------------------------------------------
-       ROAM CODE IN TOP BAR
-    ----------------------------------------------------- */
-
-    .roam-code-mini {
-      display: none;
-
-      color: var(--brown-soft);
-
-      font-size: 9px;
-      font-weight: 800;
-
-      letter-spacing: 1.2px;
-
-      white-space: nowrap;
-    }
-
-    .roam-code-mini.visible {
-      display: block;
-    }
-
-
-    /* -----------------------------------------------------
-       CREATED / INVITE SCREEN
-    ----------------------------------------------------- */
-
-    .created-page {
-      width: min(1050px, 90%);
-      min-height: calc(100vh - 78px);
-
-      margin: 0 auto;
-      padding: 70px 0 100px;
-
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .created-number {
-      width: 58px;
-      height: 58px;
-
-      margin-bottom: 28px;
-
-      display: grid;
-      place-items: center;
-
-      border: 1px solid var(--orange);
-      border-radius: 50%;
-
-      color: var(--orange);
-
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .created-page h2 {
-      max-width: 850px;
-
-      margin-top: 18px;
-
-      font-family: var(--display);
-      font-size: clamp(58px, 8vw, 105px);
-      font-weight: 500;
-
-      line-height: 0.92;
-      letter-spacing: -4px;
-    }
-
-    .created-page h2 em {
-      color: var(--orange);
-      font-weight: 500;
-    }
-
-    .created-description {
-      max-width: 520px;
-
-      margin-top: 28px;
-
-      color: var(--brown-soft);
-
-      font-size: 16px;
-      line-height: 1.6;
-    }
-
-    .invite-code-box {
-      margin-top: 45px;
-      padding: 35px;
-
-      background: var(--peach-light);
-
-      border: 1px solid var(--line);
-    }
-
-    .invite-code-label {
-      color: var(--brown-soft);
-
-      font-size: 10px;
-      font-weight: 800;
-
-      letter-spacing: 2px;
-    }
-
-    .invite-code {
-      margin-top: 15px;
-
-      color: var(--orange);
-
-      font-family: var(--display);
-
-      font-size: clamp(30px, 4.5vw, 58px);
-      font-weight: 600;
-
-      line-height: 1.15;
-      letter-spacing: 2px;
-
-      word-spacing: 12px;
-    }
-
-    .invite-code-note {
-      margin-top: 15px;
-
-      color: var(--brown-soft);
-
-      font-size: 12px;
-      line-height: 1.5;
-    }
-
-    .created-actions {
-      margin-top: 25px;
-
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .copy-code-button {
-      min-height: 56px;
-
-      padding: 0 25px;
-
-      background: var(--brown);
-      color: white;
-
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .copy-code-button:hover {
-      background: var(--orange);
-    }
-
-    .continue-code-button {
-      min-height: 56px;
-
-      padding: 0 25px;
-
-      background: var(--orange);
-      color: white;
-
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .continue-code-button:hover {
-      background: var(--orange-dark);
-    }
-
-
-    /* -----------------------------------------------------
-       JOIN SCREEN
-    ----------------------------------------------------- */
-
-    .join-page {
-      width: min(850px, 90%);
-
-      min-height: calc(100vh - 78px);
-
-      margin: 0 auto;
-      padding: 70px 0 100px;
-
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .join-page h2 {
-      margin-top: 18px;
-
-      font-family: var(--display);
-
-      font-size: clamp(58px, 8vw, 100px);
-      font-weight: 500;
-
-      line-height: 0.92;
-      letter-spacing: -4px;
-    }
-
-    .join-page h2 em {
-      color: var(--orange);
-      font-weight: 500;
-    }
-
-    .join-description {
-      max-width: 500px;
-
-      margin-top: 25px;
-
-      color: var(--brown-soft);
-
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
-    .join-form {
-      max-width: 700px;
-
-      margin-top: 45px;
-      padding: 35px;
-
-      background: var(--peach-light);
-    }
-
-    .join-form label {
-      display: block;
-
-      margin-bottom: 12px;
-
-      color: var(--brown-soft);
-
-      font-size: 10px;
-      font-weight: 800;
-
-      letter-spacing: 1.6px;
-      text-transform: uppercase;
-    }
-
-    .join-code-input {
-      width: 100%;
-
-      padding: 18px 0;
-
-      background: transparent;
-
-      border: 0;
-      border-bottom: 2px solid var(--brown);
-
-      outline: none;
-
-      color: var(--orange);
-
-      font-family: var(--display);
-      font-size: clamp(25px, 4vw, 45px);
-      font-weight: 600;
-
-      letter-spacing: 2px;
-      word-spacing: 8px;
-
-      text-transform: uppercase;
-    }
-
-    .join-code-input:focus {
-      border-color: var(--orange);
-    }
-
-    .join-code-input::placeholder {
-      color: rgba(58, 36, 28, 0.3);
-    }
-
-    .join-button-large {
-      width: 100%;
-
-      min-height: 56px;
-
-      margin-top: 30px;
-
-      background: var(--brown);
-      color: white;
-
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .join-button-large:hover {
-      background: var(--orange);
-    }
-
-    .join-help {
-      margin-top: 15px;
-
-      color: var(--brown-soft);
-
-      font-size: 11px;
-    }
-
-
-    /* -----------------------------------------------------
-       JOIN CONFIRMATION
-    ----------------------------------------------------- */
-
-    .join-confirm-page {
-      width: min(850px, 90%);
-
-      min-height: calc(100vh - 78px);
-
-      margin: 0 auto;
-      padding: 70px 0 100px;
-
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .join-confirm-page h2 {
-      max-width: 800px;
-
-      margin-top: 18px;
-
-      font-family: var(--display);
-
-      font-size: clamp(55px, 7vw, 90px);
-      font-weight: 500;
-
-      line-height: 0.95;
-      letter-spacing: -3px;
-    }
-
-    .join-confirm-page h2 em {
-      color: var(--orange);
-      font-weight: 500;
-    }
-
-    .join-room-name {
-      margin-top: 25px;
-
-      color: var(--brown-soft);
-
-      font-size: 15px;
-    }
-
-    .join-room-code {
-      margin-top: 15px;
-
-      color: var(--orange);
-
-      font-family: var(--display);
-
-      font-size: 25px;
-      font-weight: 600;
-
-      letter-spacing: 1px;
-    }
-
-    .join-confirm-form {
-      max-width: 600px;
-
-      margin-top: 40px;
-    }
-
-    .join-confirm-form label {
-      display: block;
-
-      margin-bottom: 10px;
-
-      color: var(--brown-soft);
-
-      font-size: 10px;
-      font-weight: 800;
-
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-    }
-
-    .join-name-input {
-      width: 100%;
-
-      padding: 15px 0;
-
-      background: transparent;
-
-      border: 0;
-      border-bottom: 2px solid var(--brown);
-
-      outline: none;
-
-      color: var(--brown);
-
-      font-size: 22px;
-    }
-
-    .join-name-input:focus {
-      border-color: var(--orange);
-    }
-
-
-    /* -----------------------------------------------------
-       MOBILE — NEW CODE SCREENS
-    ----------------------------------------------------- */
-
-    @media (max-width: 650px) {
-
-      .roam-code-mini {
-        display: none !important;
-      }
-
-      .created-page,
-      .join-page,
-      .join-confirm-page {
-        width: calc(100% - 40px);
-
-        min-height: calc(100vh - 68px);
-
-        padding: 45px 0 70px;
-      }
-
-      .created-page h2,
-      .join-page h2,
-      .join-confirm-page h2 {
-        font-size: clamp(50px, 15vw, 72px);
-        letter-spacing: -2px;
-      }
-
-      .invite-code-box {
-        margin-top: 35px;
-        padding: 25px 20px;
-      }
-
-      .invite-code {
-        font-size: 27px;
-        line-height: 1.4;
-        letter-spacing: 1px;
-        word-spacing: 5px;
-      }
-
-      .created-actions {
-        flex-direction: column;
-      }
-
-      .copy-code-button,
-      .continue-code-button {
-        width: 100%;
-      }
-
-      .join-form {
-        margin-top: 35px;
-        padding: 25px 20px;
-      }
-
-      .join-code-input {
-        font-size: 24px;
-        line-height: 1.4;
-        word-spacing: 4px;
-      }
-
-    }
-
-  </style>
+  >
 
 </head>
 
@@ -530,15 +50,15 @@
 
 
 <!-- =====================================================
-     NAVIGATION
+     TOP NAVIGATION
 ===================================================== -->
 
 <header class="topbar">
 
   <button
     class="brand"
-    onclick="showScreen('home')"
     type="button"
+    onclick="showScreen('home')"
     aria-label="Go to Roam home"
   >
     Roam<span>.</span>
@@ -547,21 +67,21 @@
 
   <div class="topbar-right">
 
-    <!-- The generated five-word code appears here
-         while someone is inside a Roam. -->
-
+    <!-- Small room code shown while planning -->
     <div
       id="roamCodeMini"
       class="roam-code-mini"
+      style="display:none;"
     >
-      ROAM
+      <span>ROAM</span>
+      <strong id="roamCodeMiniText"></strong>
     </div>
 
 
     <button
       class="join-button"
-      onclick="openJoinScreen()"
       type="button"
+      onclick="showJoinMessage()"
     >
       Join a Roam
     </button>
@@ -578,6 +98,7 @@
   </div>
 
 </header>
+
 
 
 <main>
@@ -600,12 +121,14 @@
         GROUP PLANS, WITHOUT THE CHAOS
       </span>
 
+
       <h1>
         Find your
         <em>people.</em>
         Find your
         <em>place.</em>
       </h1>
+
 
       <p class="home-description">
         Roam makes group hangouts easy.
@@ -614,14 +137,16 @@
         build the perfect plan.
       </p>
 
+
       <button
         class="hero-button"
-        onclick="startRoam()"
         type="button"
+        onclick="startRoam()"
       >
         Start a Roam
         <span>→</span>
       </button>
+
 
       <p class="home-note">
         Free. Simple. No group-chat chaos.
@@ -646,12 +171,7 @@
             display:flex;
             align-items:center;
             justify-content:center;
-            background:
-              linear-gradient(
-                135deg,
-                #c65a32,
-                #f4b39a
-              );
+            background:linear-gradient(135deg,#c65a32,#f4b39a);
             color:white;
             font-family:var(--display);
             font-size:55px;
@@ -684,10 +204,12 @@
       Find the time
     </div>
 
+
     <div class="home-bottom-item">
       <span>02</span>
       Set the budget
     </div>
+
 
     <div class="home-bottom-item">
       <span>03</span>
@@ -697,6 +219,7 @@
   </div>
 
 </section>
+
 
 
 <!-- =====================================================
@@ -716,6 +239,7 @@
         01
       </div>
 
+
       <h2>
         Let's start
         <em>a Roam.</em>
@@ -732,12 +256,14 @@
           What's the plan called?
         </label>
 
+
         <input
           id="roamName"
           type="text"
           placeholder="Friday Night Roam"
+          maxlength="80"
           autocomplete="off"
-        />
+        >
 
       </div>
 
@@ -748,25 +274,28 @@
           Where are you?
         </label>
 
+
         <div class="location-field">
 
           <input
             id="location"
             type="text"
             placeholder="St. Louis, MO"
-            autocomplete="street-address"
-          />
+            autocomplete="address-level2"
+          >
+
 
           <button
             type="button"
             onclick="getUserLocation()"
-            aria-label="Use my location"
+            aria-label="Use my current location"
             title="Use my location"
           >
             📍
           </button>
 
         </div>
+
 
         <p
           id="locationStatus"
@@ -780,11 +309,12 @@
 
       <div class="field-row">
 
-        <div class="field people-field">
+        <div class="field">
 
           <label>
             How many people?
           </label>
+
 
           <div class="people-control">
 
@@ -796,9 +326,11 @@
               −
             </button>
 
+
             <strong id="groupSizeDisplay">
               4
             </strong>
+
 
             <button
               type="button"
@@ -831,6 +363,7 @@
 </section>
 
 
+
 <!-- =====================================================
      ROAM CREATED
 ===================================================== -->
@@ -842,77 +375,86 @@
 
   <div class="created-page">
 
-    <div class="created-number">
-      ✓
-    </div>
+    <div class="created-copy">
+
+      <span class="tiny-label">
+        YOUR ROAM IS READY
+      </span>
 
 
-    <span class="tiny-label">
-      YOUR ROAM IS READY
-    </span>
+      <h2>
+        Get your friends
+        <em>together.</em>
+      </h2>
 
 
-    <h2>
-      Send this to
-      <em>your people.</em>
-    </h2>
-
-
-    <p class="created-description">
-      Your Roam has been created. Give this five-word code
-      to your friends so they can join the same plan.
-    </p>
-
-
-    <div class="invite-code-box">
-
-      <div class="invite-code-label">
-        YOUR ROAM CODE
-      </div>
-
-
-      <div
-        id="inviteCode"
-        class="invite-code"
-      >
-        HAPPY SUNSET PIZZA MUSIC FRIENDS
-      </div>
-
-
-      <p class="invite-code-note">
-        Your friends can enter this exact code from the
-        <strong>Join a Roam</strong> button at the top.
+      <p>
+        Share this five-word code with everyone
+        you want to invite.
       </p>
 
     </div>
 
 
-    <div class="created-actions">
+    <div class="invite-card">
 
-      <button
-        id="copyCodeButton"
-        class="copy-code-button"
-        type="button"
-        onclick="copyInviteCode()"
+      <span class="invite-label">
+        YOUR ROAM CODE
+      </span>
+
+
+      <div
+        id="invitePhrase"
+        class="invite-phrase"
       >
-        Copy code
-      </button>
+        HAPPY · SUNSET · PIZZA · MUSIC · FRIENDS
+      </div>
 
 
-      <button
-        class="continue-code-button"
-        type="button"
-        onclick="continueAfterCreation()"
-      >
-        Continue planning
-        <span> →</span>
-      </button>
+      <p class="invite-help">
+        Your friends can enter this code
+        to join your Roam.
+      </p>
+
+
+      <div class="invite-actions">
+
+        <button
+          class="dark-button"
+          type="button"
+          onclick="copyRoamCode()"
+        >
+          Copy code
+          <span>↗</span>
+        </button>
+
+
+        <button
+          class="share-button"
+          type="button"
+          onclick="shareRoamCode()"
+        >
+          Share
+        </button>
+
+      </div>
 
     </div>
+
+
+    <button
+      class="created-continue"
+      type="button"
+      onclick="continueAfterCreate()"
+    >
+      Continue planning
+      <span>→</span>
+    </button>
 
   </div>
 
 </section>
+
 
 
 <!-- =====================================================
@@ -933,6 +475,7 @@
         <div class="section-number">
           02
         </div>
+
 
         <h2>
           When should
@@ -973,6 +516,7 @@
 </section>
 
 
+
 <!-- =====================================================
      AVAILABILITY
 ===================================================== -->
@@ -991,6 +535,7 @@
         <div class="section-number">
           03
         </div>
+
 
         <h2>
           When are
@@ -1013,12 +558,14 @@
         Your name
       </label>
 
+
       <input
         id="participantName"
         type="text"
         placeholder="Your name"
+        maxlength="50"
         autocomplete="name"
-      />
+      >
 
     </div>
 
@@ -1056,6 +603,7 @@
 </section>
 
 
+
 <!-- =====================================================
      BUDGET
 ===================================================== -->
@@ -1074,6 +622,7 @@
         <div class="section-number">
           04
         </div>
+
 
         <h2>
           What's your
@@ -1098,7 +647,6 @@
         data-budget="20"
         onclick="selectBudget(this, 20)"
       >
-
         <strong>
           $0–20
         </strong>
@@ -1110,7 +658,6 @@
         <small>
           Budget friendly
         </small>
-
       </button>
 
 
@@ -1120,7 +667,6 @@
         data-budget="40"
         onclick="selectBudget(this, 40)"
       >
-
         <strong>
           $20–40
         </strong>
@@ -1132,7 +678,6 @@
         <small>
           Easy night out
         </small>
-
       </button>
 
 
@@ -1142,7 +687,6 @@
         data-budget="60"
         onclick="selectBudget(this, 60)"
       >
-
         <strong>
           $40–60
         </strong>
@@ -1154,7 +698,6 @@
         <small>
           Dinner + activity
         </small>
-
       </button>
 
 
@@ -1164,7 +707,6 @@
         data-budget="100"
         onclick="selectBudget(this, 100)"
       >
-
         <strong>
           $60–100
         </strong>
@@ -1176,7 +718,6 @@
         <small>
           Make it special
         </small>
-
       </button>
 
 
@@ -1186,7 +727,6 @@
         data-budget="150"
         onclick="selectBudget(this, 150)"
       >
-
         <strong>
           $100+
         </strong>
@@ -1198,7 +738,6 @@
         <small>
           No limits
         </small>
-
       </button>
 
     </div>
@@ -1224,6 +763,7 @@
 </section>
 
 
+
 <!-- =====================================================
      ACTIVITY
 ===================================================== -->
@@ -1243,6 +783,7 @@
           05
         </div>
 
+
         <h2>
           What do you
           <em>want to do?</em>
@@ -1260,7 +801,6 @@
 
     <div class="activity-grid">
 
-
       <button
         class="activity-card"
         type="button"
@@ -1268,6 +808,7 @@
       >
 
         <div class="activity-overlay"></div>
+
 
         <div class="activity-card-content">
 
@@ -1296,6 +837,7 @@
 
         <div class="activity-overlay"></div>
 
+
         <div class="activity-card-content">
 
           <small>
@@ -1322,6 +864,7 @@
       >
 
         <div class="activity-overlay"></div>
+
 
         <div class="activity-card-content">
 
@@ -1350,6 +893,7 @@
 
         <div class="activity-overlay"></div>
 
+
         <div class="activity-card-content">
 
           <small>
@@ -1376,6 +920,7 @@
       >
 
         <div class="activity-overlay"></div>
+
 
         <div class="activity-card-content">
 
@@ -1404,6 +949,7 @@
 
         <div class="activity-overlay"></div>
 
+
         <div class="activity-card-content">
 
           <small>
@@ -1430,6 +976,7 @@
       >
 
         <div class="activity-overlay"></div>
+
 
         <div class="activity-card-content">
 
@@ -1460,6 +1007,7 @@
           +
         </div>
 
+
         <div class="activity-card-content dark-content">
 
           <small>
@@ -1485,6 +1033,7 @@
 </section>
 
 
+
 <!-- =====================================================
      RESULTS
 ===================================================== -->
@@ -1504,6 +1053,7 @@
           YOUR ROAM
         </span>
 
+
         <h2>
           We found some
           <em>good times.</em>
@@ -1514,7 +1064,7 @@
 
       <div class="match-badge">
 
-        <strong id="matchCount">
+        <strong>
           3
         </strong>
 
@@ -1541,9 +1091,11 @@
           GROUP BUDGET
         </span>
 
+
         <strong id="averageBudget">
           —
         </strong>
+
 
         <small>
           Average per person
@@ -1568,6 +1120,7 @@
 </section>
 
 
+
 <!-- =====================================================
      PLACES
 ===================================================== -->
@@ -1586,6 +1139,7 @@
         <span class="eyebrow">
           STEP 06
         </span>
+
 
         <h2>
           Where should
@@ -1624,6 +1178,7 @@
 </section>
 
 
+
 <!-- =====================================================
      FINAL PLAN
 ===================================================== -->
@@ -1644,11 +1199,12 @@
 
       <h2>
         You're ready
-        <br />
+        <br>
 
         <span style="color:var(--orange)">
           to roam.
         </span>
+
       </h2>
 
 
@@ -1714,6 +1270,7 @@
           —
         </span>
 
+
         <span id="finalBudget">
           —
         </span>
@@ -1759,6 +1316,7 @@
 </section>
 
 
+
 <!-- =====================================================
      JOIN A ROAM
 ===================================================== -->
@@ -1770,66 +1328,74 @@
 
   <div class="join-page">
 
-    <div class="section-number">
-      ↗
+    <div class="join-copy">
+
+      <span class="tiny-label">
+        JOIN A FRIEND
+      </span>
+
+
+      <h2>
+        Jump into
+        <em>the plan.</em>
+      </h2>
+
+
+      <p>
+        Enter the five-word code your friend
+        gave you.
+      </p>
+
     </div>
 
 
-    <span class="tiny-label">
-      JOIN A FRIEND'S PLAN
-    </span>
-
-
-    <h2>
-      Join a
-      <em>Roam.</em>
-    </h2>
-
-
-    <p class="join-description">
-      Enter the five-word code your friend gave you.
-      You don't need an account — just the code.
-    </p>
-
-
-    <div class="join-form">
+    <div class="join-card">
 
       <label for="joinCode">
-        Five-word Roam code
+        Roam code
       </label>
 
 
       <input
         id="joinCode"
-        class="join-code-input"
         type="text"
-        placeholder="HAPPY SUNSET PIZZA MUSIC FRIENDS"
+        placeholder="HAPPY · SUNSET · PIZZA · MUSIC · FRIENDS"
         autocomplete="off"
         autocapitalize="characters"
         spellcheck="false"
-        maxlength="120"
-      />
+      >
+
+
+      <p class="join-code-help">
+        The code has five words.
+        Spaces are okay.
+      </p>
 
 
       <button
-        class="join-button-large"
+        class="dark-button"
         type="button"
         onclick="joinRoam()"
       >
-        Join this Roam
-        <span> →</span>
+        Join Roam
+        <span>→</span>
       </button>
 
 
-      <p class="join-help">
-        Example: HAPPY SUNSET PIZZA MUSIC FRIENDS
-      </p>
+      <button
+        class="back-link"
+        type="button"
+        onclick="showScreen('home')"
+      >
+        ← Never mind
+      </button>
 
     </div>
 
   </div>
 
 </section>
+
 
 
 <!-- =====================================================
@@ -1843,62 +1409,55 @@
 
   <div class="join-confirm-page">
 
-    <div class="section-number">
-      ✓
-    </div>
-
-
     <span class="tiny-label">
-      ROAM FOUND
+      YOU'RE IN
     </span>
 
 
     <h2>
       You're joining
-      <em id="joinRoomName">your friend's Roam.</em>
+      <em id="joinRoomName">
+        this Roam.
+      </em>
     </h2>
 
 
-    <p
-      id="joinRoomCode"
-      class="join-room-code"
-    >
-      HAPPY SUNSET PIZZA MUSIC FRIENDS
-    </p>
+    <div class="join-confirm-card">
+
+      <span>
+        ROAM CODE
+      </span>
 
 
-    <div class="join-confirm-form">
-
-      <label for="joinParticipantName">
-        What's your name?
-      </label>
+      <strong id="joinRoomCode">
+        —
+      </strong>
 
 
-      <input
-        id="joinParticipantName"
-        class="join-name-input"
-        type="text"
-        placeholder="Your name"
-        autocomplete="name"
-      />
-
-
-      <button
-        class="dark-button"
-        type="button"
-        onclick="confirmJoin()"
-      >
-        Continue
-        <span>→</span>
-      </button>
+      <p id="joinRoomLocation">
+        —
+      </p>
 
     </div>
+
+
+    <button
+      class="dark-button"
+      type="button"
+      onclick="continueJoin()"
+    >
+      Continue
+      <span>→</span>
+    </button>
 
   </div>
 
 </section>
 
+
+
 </main>
+
 
 
 <!-- =====================================================
@@ -1913,6 +1472,7 @@
 ></div>
 
 
+
 <!-- =====================================================
      SUPABASE
 ===================================================== -->
@@ -1922,12 +1482,13 @@
 ></script>
 
 
+
 <!-- =====================================================
-     ROAM JAVASCRIPT
+     ROAM APP
 ===================================================== -->
 
 <script src="app.js?v=5"></script>
 
-</body>
 
+</body>
 </html>
