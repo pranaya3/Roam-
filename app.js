@@ -1,11 +1,12 @@
+/* =========================================================
+   ROAM
+   Main application logic
+========================================================= */
+
 
 /* =========================================================
-   ROAM — APP.JS
-   ========================================================= */
-
-/* ---------------------------------------------------------
    SUPABASE
-   --------------------------------------------------------- */
+========================================================= */
 
 const SUPABASE_URL =
   "https://vvbgksamdlhkkchyhlyl.supabase.co";
@@ -13,1521 +14,2562 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
   "sb_publishable_WaNsM-y0X9VH8pgnAQYFkg_2o68bx6S";
 
-let db = null;
-
-if (
-  window.supabase &&
-  typeof window.supabase.createClient === "function"
-) {
-  db = window.supabase.createClient(
+const db =
+  window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
   );
-}
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    STATE
-   --------------------------------------------------------- */
+========================================================= */
 
 const state = {
+
   roomId: null,
+
   roomCode: null,
 
+  organizerToken: null,
+
+  participantToken: null,
+
+  joinedRoom: false,
+
   roamName: "",
+
   location: "",
 
-  lat: null,
-  lon: null,
+  latitude: null,
 
-  groupSize: 4,
+  longitude: null,
+
+  groupSize: Number(
+    localStorage.getItem("roamGroupSize") || 4
+  ),
 
   selectedDates: [],
 
-  availability: [],
+  selectedTimes: [],
+
+  participantName: "",
 
   budget: null,
 
-  activity: null,
+  activity: "",
 
-  selectedPlace: null,
+  selectedTime: null,
 
-  organizerToken: null,
-  participantToken: null,
+  selectedPlace: null
 
-  joinedRoom: false
 };
 
 
-/* ---------------------------------------------------------
-   HELPERS
-   --------------------------------------------------------- */
+/* =========================================================
+   CONFIGURATION
+========================================================= */
 
-function $(id) {
-  return document.getElementById(id);
-}
+const timeOptions = [
+  "10:00 AM",
+  "12:00 PM",
+  "2:00 PM",
+  "4:00 PM",
+  "5:00 PM",
+  "6:00 PM",
+  "7:00 PM",
+  "7:30 PM",
+  "8:00 PM",
+  "9:00 PM",
+  "10:00 PM",
+  "11:00 PM"
+];
 
 
-function showToast(message) {
-  const toast = $("toast");
+const activityData = {
 
-  if (!toast) {
-    alert(message);
+  eat: {
+    label: "Eat",
+    searchTerms: [
+      "restaurant",
+      "cafe"
+    ]
+  },
+
+  movies: {
+    label: "Movies",
+    searchTerms: [
+      "cinema"
+    ]
+  },
+
+  bowling: {
+    label: "Bowling",
+    searchTerms: [
+      "bowling_alley"
+    ]
+  },
+
+  coffee: {
+    label: "Coffee",
+    searchTerms: [
+      "cafe"
+    ]
+  },
+
+  outdoors: {
+    label: "Outdoors",
+    searchTerms: [
+      "park",
+      "garden"
+    ]
+  },
+
+  arts: {
+    label: "Arts",
+    searchTerms: [
+      "museum",
+      "gallery",
+      "arts_centre"
+    ]
+  },
+
+  games: {
+    label: "Games",
+    searchTerms: [
+      "amusement_arcade",
+      "bowling_alley"
+    ]
+  },
+
+  other: {
+    label: "Something else",
+    searchTerms: [
+      "attraction",
+      "community_centre"
+    ]
+  }
+
+};
+
+
+/* =========================================================
+   SCREEN NAVIGATION
+========================================================= */
+
+function showScreen(id) {
+
+  document
+    .querySelectorAll(".screen")
+    .forEach(screen => {
+
+      screen.classList.remove(
+        "active"
+      );
+
+    });
+
+
+  const screen =
+    document.getElementById(id);
+
+
+  if (!screen) {
+    console.error(
+      "Screen not found:",
+      id
+    );
+
     return;
   }
 
-  toast.textContent = message;
-  toast.classList.add("show");
 
-  clearTimeout(window.__roamToastTimer);
-
-  window.__roamToastTimer = setTimeout(() => {
-    toast.classList.remove("show");
-  }, 2800);
-}
-
-
-function generateToken() {
-  if (
-    window.crypto &&
-    typeof window.crypto.randomUUID === "function"
-  ) {
-    return window.crypto.randomUUID() +
-      "-" +
-      Date.now();
-  }
-
-  return (
-    Math.random().toString(36).substring(2) +
-    Date.now() +
-    Math.random().toString(36).substring(2)
+  screen.classList.add(
+    "active"
   );
-}
 
 
-function generateRoomCode() {
-  const characters =
-    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  updateProgress(id);
 
-  let code = "";
-
-  for (let i = 0; i < 5; i++) {
-    code += characters[
-      Math.floor(
-        Math.random() * characters.length
-      )
-    ];
-  }
-
-  return code;
-}
-
-
-function requireSupabase() {
-  if (!db) {
-    console.error(
-      "Supabase client was not created."
-    );
-
-    showToast(
-      "Roam couldn't connect to the database."
-    );
-
-    return false;
-  }
-
-  return true;
-}
-
-
-function formatMoney(value) {
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
-    return "—";
-  }
-
-  return "$" + Number(value).toFixed(0);
-}
-
-
-/* ---------------------------------------------------------
-   SCREEN NAVIGATION
-   --------------------------------------------------------- */
-
-function showScreen(screenName) {
-  const screens =
-    document.querySelectorAll(".screen");
-
-  screens.forEach((screen) => {
-    screen.classList.remove("active");
-  });
-
-  const target =
-    $("screen-" + screenName);
-
-  if (target) {
-    target.classList.add("active");
-  }
-
-  const progress =
-    $("progressText");
-
-  if (progress) {
-    progress.textContent =
-      screenName.toUpperCase();
-  }
 
   window.scrollTo({
     top: 0,
     behavior: "smooth"
   });
+
 }
 
 
-/* ---------------------------------------------------------
-   GROUP SIZE
-   --------------------------------------------------------- */
+function updateProgress(id) {
 
-function updateGroupSize(amount) {
+  const progress =
+    document.getElementById(
+      "progressText"
+    );
+
+
+  if (!progress) {
+    return;
+  }
+
+
+  const labels = {
+
+    home: "HOME",
+
+    details: "01 / PLAN",
+
+    dates: "02 / TIME",
+
+    availability: "03 / TIME",
+
+    budget: "04 / BUDGET",
+
+    activity: "05 / VIBE",
+
+    results: "06 / MATCH",
+
+    places: "PLACES",
+
+    final: "DONE"
+
+  };
+
+
+  progress.textContent =
+    labels[id] || "ROAM";
+
+}
+
+
+/* =========================================================
+   START / RESET
+========================================================= */
+
+function startRoam() {
+
+  state.roomId = null;
+
+  state.roomCode = null;
+
+  state.organizerToken =
+    generateToken();
+
+  state.participantToken =
+    null;
+
+  state.joinedRoom = false;
+
+  state.roamName = "";
+
+  state.location = "";
+
+  state.latitude = null;
+
+  state.longitude = null;
+
+  state.selectedDates = [];
+
+  state.selectedTimes = [];
+
+  state.participantName = "";
+
+  state.budget = null;
+
+  state.activity = "";
+
+  state.selectedTime = null;
+
+  state.selectedPlace = null;
+
+
+  document.getElementById(
+    "roamName"
+  ).value = "";
+
+
+  document.getElementById(
+    "location"
+  ).value = "";
+
+
+  document.getElementById(
+    "participantName"
+  ).value = "";
+
+
+  document.getElementById(
+    "groupSizeDisplay"
+  ).textContent =
+    state.groupSize;
+
+
+  document
+    .querySelectorAll(
+      ".budget-card"
+    )
+    .forEach(card => {
+
+      card.classList.remove(
+        "selected"
+      );
+
+    });
+
+
+  document.getElementById(
+    "budgetContinue"
+  ).disabled = true;
+
+
+  renderDates();
+
+
+  showScreen(
+    "details"
+  );
+
+}
+
+
+/* =========================================================
+   GROUP SIZE
+========================================================= */
+
+function changeGroupSize(amount) {
+
   state.groupSize += amount;
+
 
   if (state.groupSize < 2) {
     state.groupSize = 2;
   }
 
+
   if (state.groupSize > 50) {
     state.groupSize = 50;
   }
 
-  const display =
-    $("groupSizeDisplay");
 
-  if (display) {
-    display.textContent =
-      state.groupSize;
-  }
+  localStorage.setItem(
+    "roamGroupSize",
+    state.groupSize
+  );
+
+
+  document.getElementById(
+    "groupSizeDisplay"
+  ).textContent =
+    state.groupSize;
+
 }
 
 
-/* ---------------------------------------------------------
-   CREATE ROAM
-   --------------------------------------------------------- */
+/* =========================================================
+   DETAILS + CREATE ROOM
+========================================================= */
 
 async function saveRoamDetails() {
-  if (!requireSupabase()) {
+
+  const name =
+    document
+      .getElementById(
+        "roamName"
+      )
+      .value
+      .trim();
+
+
+  const location =
+    document
+      .getElementById(
+        "location"
+      )
+      .value
+      .trim();
+
+
+  if (!name) {
+
+    showToast(
+      "Give your plan a name."
+    );
+
     return;
   }
 
-  const nameInput =
-    $("roamName");
 
-  const locationInput =
-    $("location");
+  if (
+    !location &&
+    state.latitude === null
+  ) {
+
+    showToast(
+      "Add a location first."
+    );
+
+    return;
+  }
+
 
   state.roamName =
-    nameInput
-      ? nameInput.value.trim()
-      : "";
+    name;
 
   state.location =
-    locationInput
-      ? locationInput.value.trim()
-      : "";
+    location;
 
-  if (!state.roamName) {
-    showToast(
-      "Give your Roam a name."
-    );
-
-    return;
-  }
-
-  if (!state.location) {
-    showToast(
-      "Add a location."
-    );
-
-    return;
-  }
-
-  state.organizerToken =
-    generateToken();
-
-  let code = generateRoomCode();
 
   /*
-    Make a few attempts in case the random code
-    already exists.
+    If this is an existing joined Roam,
+    don't create another room.
   */
 
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const { data } =
-      await db
-        .from("rooms")
-        .select("id")
-        .eq("code", code)
-        .maybeSingle();
+  if (state.joinedRoom) {
 
-    if (!data) {
-      break;
-    }
+    renderDates();
 
-    code = generateRoomCode();
+    showScreen(
+      "dates"
+    );
+
+    return;
   }
 
-  const { data, error } =
-    await db
-      .from("rooms")
-      .insert({
-        code: code,
-        name: state.roamName,
-        location_text: state.location,
-        lat: state.lat,
-        lng: state.lon,
-        group_size: state.groupSize,
-        candidate_dates: [],
-        activity: null,
-        organizer_token:
-          state.organizerToken
-      })
-      .select()
-      .single();
 
-  if (error) {
+  try {
+
+    const code =
+      await createUniqueRoomCode();
+
+
+    const {
+      data,
+      error
+    } =
+      await db
+        .from("rooms")
+        .insert({
+
+          code,
+
+          name:
+            state.roamName,
+
+          location_text:
+            state.location,
+
+          lat:
+            state.latitude,
+
+          lng:
+            state.longitude,
+
+          group_size:
+            state.groupSize,
+
+          candidate_dates:
+            [],
+
+          activity:
+            null,
+
+          organizer_token:
+            state.organizerToken
+
+        })
+        .select()
+        .single();
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    state.roomId =
+      data.id;
+
+    state.roomCode =
+      data.code;
+
+
+    showToast(
+      `Roam created! Code: ${state.roomCode}`
+    );
+
+
+    renderDates();
+
+
+    showScreen(
+      "dates"
+    );
+
+
+  } catch (error) {
+
     console.error(
-      "Create Roam error:",
+      "CREATE ROOM ERROR:",
       error
     );
+
 
     showToast(
       "Couldn't create your Roam."
     );
 
-    return;
   }
 
-  state.roomId = data.id;
-  state.roomCode = data.code;
-
-  showToast(
-    `Your Roam code is ${state.roomCode}`
-  );
-
-  showScreen("dates");
 }
 
 
-/* ---------------------------------------------------------
-   DATES
-   --------------------------------------------------------- */
+async function createUniqueRoomCode() {
 
-function buildDateGrid() {
+  for (
+    let attempt = 0;
+    attempt < 10;
+    attempt++
+  ) {
+
+    const code =
+      generateRoomCode();
+
+
+    const {
+      data,
+      error
+    } =
+      await db
+        .from("rooms")
+        .select("id")
+        .eq(
+          "code",
+          code
+        )
+        .maybeSingle();
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    if (!data) {
+      return code;
+    }
+
+  }
+
+
+  throw new Error(
+    "Could not create unique room code."
+  );
+
+}
+
+
+function generateRoomCode() {
+
+  const chars =
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+
+  let code = "";
+
+
+  for (
+    let i = 0;
+    i < 5;
+    i++
+  ) {
+
+    code +=
+      chars[
+        Math.floor(
+          Math.random() *
+          chars.length
+        )
+      ];
+
+  }
+
+
+  return code;
+
+}
+
+
+function generateToken() {
+
+  if (
+    window.crypto &&
+    window.crypto.randomUUID
+  ) {
+
+    return (
+      window.crypto.randomUUID() +
+      "-" +
+      Date.now()
+    );
+
+  }
+
+
+  return (
+    Math.random()
+      .toString(36)
+      .slice(2) +
+    Date.now()
+  );
+
+}
+
+
+/* =========================================================
+   DATES
+========================================================= */
+
+function renderDates() {
+
   const grid =
-    $("dateGrid");
+    document.getElementById(
+      "dateGrid"
+    );
+
 
   if (!grid) {
     return;
   }
 
+
   grid.innerHTML = "";
+
 
   const today =
     new Date();
 
-  for (let i = 0; i < 14; i++) {
+
+  for (
+    let i = 0;
+    i < 10;
+    i++
+  ) {
+
     const date =
       new Date(today);
+
 
     date.setDate(
       today.getDate() + i
     );
 
-    const value =
-      date.toISOString()
+
+    const key =
+      date
+        .toISOString()
         .split("T")[0];
 
-    const button =
-      document.createElement("button");
 
-    button.type = "button";
-    button.className = "date-option";
+    const day =
+      date.toLocaleDateString(
+        undefined,
+        {
+          weekday: "short"
+        }
+      );
 
-    button.dataset.date =
-      value;
 
-    button.innerHTML = `
-      <span>
-        ${date.toLocaleDateString(
-          "en-US",
-          { weekday: "short" }
-        )}
-      </span>
+    const month =
+      date.toLocaleDateString(
+        undefined,
+        {
+          month: "short"
+        }
+      );
+
+
+    const card =
+      document.createElement(
+        "button"
+      );
+
+
+    card.type =
+      "button";
+
+
+    card.className =
+      "date-card";
+
+
+    if (
+      state.selectedDates
+        .includes(key)
+    ) {
+
+      card.classList.add(
+        "selected"
+      );
+
+    }
+
+
+    card.innerHTML = `
+      <small>
+        ${day.toUpperCase()}
+      </small>
+
       <strong>
         ${date.getDate()}
       </strong>
-      <small>
-        ${date.toLocaleDateString(
-          "en-US",
-          { month: "short" }
-        )}
-      </small>
+
+      <span>
+        ${month}
+      </span>
     `;
 
-    button.addEventListener(
+
+    card.addEventListener(
       "click",
       () => {
-        button.classList.toggle(
-          "selected"
-        );
 
-        const selected =
-          [...grid.querySelectorAll(
-            ".date-option.selected"
-          )]
-            .map(
-              (item) =>
-                item.dataset.date
-            );
+        if (
+          state.selectedDates
+            .includes(key)
+        ) {
 
-        state.selectedDates =
-          selected;
+          state.selectedDates =
+            state.selectedDates
+              .filter(
+                date =>
+                  date !== key
+              );
+
+          card.classList.remove(
+            "selected"
+          );
+
+        } else {
+
+          state.selectedDates.push(
+            key
+          );
+
+          card.classList.add(
+            "selected"
+          );
+
+        }
+
       }
     );
 
-    grid.appendChild(button);
+
+    grid.appendChild(
+      card
+    );
+
   }
+
 }
 
 
 async function saveDates() {
-  if (!state.roomId) {
-    showToast(
-      "Create or join a Roam first."
-    );
-
-    return;
-  }
 
   if (
-    state.selectedDates.length === 0
+    state.selectedDates
+      .length === 0
   ) {
+
     showToast(
-      "Choose at least one date."
+      "Pick at least one day."
     );
 
     return;
   }
 
-  if (!requireSupabase()) {
-    return;
-  }
 
-  const { error } =
-    await db
-      .from("rooms")
-      .update({
-        candidate_dates:
-          state.selectedDates
-      })
-      .eq(
-        "id",
-        state.roomId
+  if (
+    state.roomId &&
+    !state.joinedRoom
+  ) {
+
+    const {
+      error
+    } =
+      await db
+        .from("rooms")
+        .update({
+          candidate_dates:
+            state.selectedDates
+        })
+        .eq(
+          "id",
+          state.roomId
+        );
+
+
+    if (error) {
+
+      console.error(
+        "DATE SAVE ERROR:",
+        error
       );
 
-  if (error) {
-    console.error(
-      "Save dates error:",
-      error
-    );
+    }
 
-    showToast(
-      "Couldn't save the dates."
-    );
-
-    return;
   }
 
-  buildTimes();
+
+  renderTimes();
+
 
   showScreen(
     "availability"
   );
+
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    TIMES
-   --------------------------------------------------------- */
+========================================================= */
 
-function buildTimes() {
+function renderTimes() {
+
   const grid =
-    $("timeGrid");
+    document.getElementById(
+      "timeGrid"
+    );
 
-  if (!grid) {
-    return;
-  }
 
   grid.innerHTML = "";
 
-  const times = [
-    "9:00 AM",
-    "10:00 AM",
-    "11:00 AM",
-    "12:00 PM",
-    "1:00 PM",
-    "2:00 PM",
-    "3:00 PM",
-    "4:00 PM",
-    "5:00 PM",
-    "6:00 PM",
-    "7:00 PM",
-    "8:00 PM",
-    "9:00 PM"
-  ];
 
-  times.forEach((time) => {
-    const button =
-      document.createElement("button");
+  state.selectedTimes =
+    [];
 
-    button.type = "button";
-    button.className = "time-option";
 
-    button.textContent =
-      time;
+  timeOptions.forEach(
+    time => {
 
-    button.dataset.time =
-      time;
-
-    if (
-      state.availability.includes(
-        time
-      )
-    ) {
-      button.classList.add(
-        "selected"
-      );
-    }
-
-    button.addEventListener(
-      "click",
-      () => {
-        button.classList.toggle(
-          "selected"
+      const button =
+        document.createElement(
+          "button"
         );
 
-        state.availability =
-          [
-            ...grid.querySelectorAll(
-              ".time-option.selected"
-            )
-          ].map(
-            (item) =>
-              item.dataset.time
-          );
-      }
-    );
 
-    grid.appendChild(button);
-  });
+      button.type =
+        "button";
+
+
+      button.className =
+        "time-card";
+
+
+      button.textContent =
+        time;
+
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          if (
+            state.selectedTimes
+              .includes(time)
+          ) {
+
+            state.selectedTimes =
+              state.selectedTimes
+                .filter(
+                  item =>
+                    item !== time
+                );
+
+            button.classList.remove(
+              "selected"
+            );
+
+          } else {
+
+            state.selectedTimes.push(
+              time
+            );
+
+            button.classList.add(
+              "selected"
+            );
+
+          }
+
+        }
+      );
+
+
+      grid.appendChild(
+        button
+      );
+
+    }
+  );
+
 }
 
 
+/* =========================================================
+   AVAILABILITY
+========================================================= */
+
 function saveAvailability() {
-  const nameInput =
-    $("participantName");
 
   const name =
-    nameInput
-      ? nameInput.value.trim()
-      : "";
+    document
+      .getElementById(
+        "participantName"
+      )
+      .value
+      .trim();
+
 
   if (!name) {
+
     showToast(
-      "Enter your name."
+      "Add your name."
     );
 
     return;
   }
+
 
   if (
-    state.availability.length === 0
+    state.selectedTimes
+      .length === 0
   ) {
+
     showToast(
-      "Choose at least one time."
+      "Pick at least one time."
     );
 
     return;
   }
+
 
   state.participantName =
     name;
 
+
   showScreen(
     "budget"
   );
+
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    BUDGET
-   --------------------------------------------------------- */
+========================================================= */
 
-function selectBudget(amount) {
+function selectBudget(
+  button,
+  amount
+) {
+
   state.budget =
     Number(amount);
 
+
   document
     .querySelectorAll(
-      ".budget-option"
+      ".budget-card"
     )
-    .forEach((button) => {
-      button.classList.remove(
+    .forEach(card => {
+
+      card.classList.remove(
         "selected"
       );
 
-      if (
-        Number(button.dataset.budget) ===
-        Number(amount)
-      ) {
-        button.classList.add(
-          "selected"
-        );
-      }
     });
 
-  document
-    .querySelectorAll(
-      "[onclick^='selectBudget']"
-    )
-    .forEach((button) => {
-      const match =
-        button
-          .getAttribute("onclick")
-          ?.match(
-            /selectBudget\((\d+)\)/
-          );
 
-      if (
-        match &&
-        Number(match[1]) ===
-          Number(amount)
-      ) {
-        button.classList.add(
-          "selected"
-        );
-      }
-    });
+  button.classList.add(
+    "selected"
+  );
+
+
+  document.getElementById(
+    "budgetContinue"
+  ).disabled = false;
+
 }
 
 
 async function finishBudget() {
-  if (!requireSupabase()) {
+
+  if (!state.budget) {
+
+    showToast(
+      "Pick a budget."
+    );
+
     return;
   }
+
+
+  /*
+    Save participant information.
+  */
 
   if (
-    !state.participantName
+    state.roomId &&
+    state.participantName
   ) {
-    showToast(
-      "Enter your name first."
-    );
 
-    showScreen(
-      "availability"
-    );
+    try {
 
-    return;
+      state.participantToken =
+        state.participantToken ||
+        generateToken();
+
+
+      const {
+        error
+      } =
+        await db
+          .from("participants")
+          .insert({
+
+            room_id:
+              state.roomId,
+
+            name:
+              state.participantName,
+
+            participant_token:
+              state.participantToken,
+
+            availability: {
+
+              dates:
+                state.selectedDates,
+
+              times:
+                state.selectedTimes
+
+            },
+
+            budget:
+              state.budget
+
+          });
+
+
+      if (error) {
+
+        console.error(
+          "PARTICIPANT ERROR:",
+          error
+        );
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "PARTICIPANT SAVE ERROR:",
+        error
+      );
+
+    }
+
   }
 
-  if (
-    state.budget === null
-  ) {
-    showToast(
-      "Choose your budget."
-    );
-
-    return;
-  }
-
-  if (!state.roomId) {
-    showToast(
-      "No Roam is connected."
-    );
-
-    return;
-  }
-
-  state.participantToken =
-    state.participantToken ||
-    generateToken();
-
-  const { error } =
-    await db
-      .from("participants")
-      .insert({
-        room_id:
-          state.roomId,
-
-        name:
-          state.participantName,
-
-        participant_token:
-          state.participantToken,
-
-        availability: {
-          dates:
-            state.selectedDates,
-
-          times:
-            state.availability
-        },
-
-        budget:
-          state.budget
-      });
-
-  if (error) {
-    console.error(
-      "Participant save error:",
-      error
-    );
-
-    showToast(
-      "Couldn't save your response."
-    );
-
-    return;
-  }
 
   showScreen(
     "activity"
   );
+
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    ACTIVITY
-   --------------------------------------------------------- */
+========================================================= */
 
-function selectActivity(activity) {
+async function selectActivity(
+  activity
+) {
+
   state.activity =
     activity;
 
-  document
-    .querySelectorAll(
-      ".activity-option"
-    )
-    .forEach((button) => {
-      button.classList.remove(
-        "selected"
-      );
 
-      if (
-        button.dataset.activity ===
-        activity
-      ) {
-        button.classList.add(
-          "selected"
-        );
-      }
-    });
+  if (
+    state.roomId
+  ) {
 
-  document
-    .querySelectorAll(
-      "[onclick^='selectActivity']"
-    )
-    .forEach((button) => {
-      const match =
-        button
-          .getAttribute("onclick")
-          ?.match(
-            /selectActivity\('([^']+)'\)/
-          );
-
-      if (
-        match &&
-        match[1] === activity
-      ) {
-        button.classList.add(
-          "selected"
-        );
-      }
-    });
-
-  finishActivity();
-}
-
-
-async function finishActivity() {
-  if (!state.roomId) {
-    return;
-  }
-
-  if (!requireSupabase()) {
-    return;
-  }
-
-  const { error } =
-    await db
-      .from("rooms")
-      .update({
-        activity:
-          state.activity
-      })
-      .eq(
-        "id",
-        state.roomId
-      );
-
-  if (error) {
-    console.error(
-      "Activity update error:",
+    const {
       error
-    );
+    } =
+      await db
+        .from("rooms")
+        .update({
+          activity
+        })
+        .eq(
+          "id",
+          state.roomId
+        );
+
+
+    if (error) {
+
+      console.error(
+        "ACTIVITY SAVE ERROR:",
+        error
+      );
+
+    }
+
   }
 
-  await loadResults();
-}
 
+  generateResults();
 
-/* ---------------------------------------------------------
-   RESULTS
-   --------------------------------------------------------- */
-
-async function loadResults() {
-  if (!requireSupabase()) {
-    return;
-  }
 
   showScreen(
     "results"
   );
 
-  const resultsList =
-    $("resultsList");
+}
 
-  if (resultsList) {
-    resultsList.innerHTML = `
-      <div class="result-card">
-        <strong>Finding the best time...</strong>
-        <p>Roam is checking everyone's availability.</p>
-      </div>
-    `;
-  }
 
-  const {
-    data: participants,
-    error
-  } =
-    await db
-      .from("participants")
-      .select("*")
-      .eq(
-        "room_id",
-        state.roomId
-      );
+/* =========================================================
+   RESULTS
+========================================================= */
 
-  if (error) {
-    console.error(
-      "Results error:",
-      error
+async function generateResults() {
+
+  const list =
+    document.getElementById(
+      "resultsList"
     );
 
-    if (resultsList) {
-      resultsList.innerHTML = `
-        <div class="result-card">
-          <strong>Couldn't load the group yet.</strong>
-          <p>Please try again.</p>
-        </div>
-      `;
+
+  list.innerHTML = "";
+
+
+  /*
+    If this is a real room,
+    calculate times using participants.
+  */
+
+  let results = [];
+
+
+  if (state.roomId) {
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await db
+          .from("participants")
+          .select(
+            "availability"
+          )
+          .eq(
+            "room_id",
+            state.roomId
+          );
+
+
+      if (
+        !error &&
+        data &&
+        data.length
+      ) {
+
+        const scores = {};
+
+
+        data.forEach(
+          participant => {
+
+            const availability =
+              participant.availability ||
+              {};
+
+            const times =
+              availability.times ||
+              [];
+
+            times.forEach(
+              time => {
+
+                scores[time] =
+                  (
+                    scores[time] ||
+                    0
+                  ) + 1;
+
+              }
+            );
+
+          }
+        );
+
+
+        const ranked =
+          Object.entries(
+            scores
+          )
+            .sort(
+              (a, b) =>
+                b[1] - a[1]
+            )
+            .slice(0, 3);
+
+
+        ranked.forEach(
+          ([time, count]) => {
+
+            results.push({
+              date:
+                state.selectedDates[0],
+
+              time,
+
+              count
+
+            });
+
+          }
+        );
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "RESULT ERROR:",
+        error
+      );
+
     }
 
-    return;
   }
 
-  const timeScores = {};
 
-  participants.forEach(
-    (participant) => {
-      const availability =
-        participant.availability || {};
+  /*
+    Fallback if there isn't enough
+    group data yet.
+  */
 
-      const times =
-        Array.isArray(
-          availability.times
-        )
-          ? availability.times
-          : [];
+  if (
+    results.length === 0
+  ) {
 
-      times.forEach((time) => {
-        timeScores[time] =
-          (timeScores[time] || 0) + 1;
-      });
+    const dates =
+      state.selectedDates.length
+        ? state.selectedDates
+        : [
+            new Date()
+              .toISOString()
+              .split("T")[0]
+          ];
+
+
+    const times =
+      state.selectedTimes.length
+        ? state.selectedTimes
+        : [
+            "7:00 PM"
+          ];
+
+
+    dates
+      .slice(0, 3)
+      .forEach(
+        (date, index) => {
+
+          results.push({
+
+            date,
+
+            time:
+              times[
+                index %
+                times.length
+              ],
+
+            count:
+              1
+
+          });
+
+        }
+      );
+
+  }
+
+
+  state.selectedTime =
+    results[0];
+
+
+  results.forEach(
+    (result, index) => {
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+
+      card.className =
+        "result-card";
+
+
+      if (index === 0) {
+
+        card.classList.add(
+          "best"
+        );
+
+      }
+
+
+      const date =
+        new Date(
+          `${result.date}T12:00:00`
+        );
+
+
+      const day =
+        date.toLocaleDateString(
+          undefined,
+          {
+            weekday: "long"
+          }
+        );
+
+
+      const dateText =
+        date.toLocaleDateString(
+          undefined,
+          {
+            month: "short",
+            day: "numeric"
+          }
+        );
+
+
+      card.innerHTML = `
+
+        <div class="result-day">
+          ${day.toUpperCase()}
+          ·
+          ${dateText.toUpperCase()}
+        </div>
+
+        <div class="result-time">
+          ${result.time}
+        </div>
+
+        <div class="result-meta">
+          ${result.count}
+          ${result.count === 1 ? "person" : "people"}
+          available
+          ·
+          ${activityData[state.activity]?.label || "Hangout"}
+        </div>
+
+      `;
+
+
+      list.appendChild(
+        card
+      );
+
     }
   );
 
-  const rankedTimes =
-    Object.entries(timeScores)
-      .sort(
-        (a, b) =>
-          b[1] - a[1]
-      )
-      .slice(0, 3);
 
-  if (rankedTimes.length === 0) {
-    rankedTimes.push([
-      "No shared time yet",
-      0
-    ]);
-  }
-
-  if (resultsList) {
-    resultsList.innerHTML =
-      rankedTimes
-        .map(
-          ([time, count], index) => `
-            <div class="result-card">
-              <span class="result-rank">
-                ${index + 1}
-              </span>
-              <div>
-                <strong>${time}</strong>
-                <p>
-                  ${count}
-                  ${count === 1 ? "person" : "people"}
-                  available
-                </p>
-              </div>
-            </div>
-          `
-        )
-        .join("");
-  }
+  /*
+    Calculate average budget.
+  */
 
   await loadAverageBudget();
 
-  state.bestTime =
-    rankedTimes[0][0];
-
-  if (
-    state.selectedDates.length > 0
-  ) {
-    state.bestDate =
-      state.selectedDates[0];
-  }
-
-  await loadPlaces();
 }
 
 
-async function loadAverageBudget() {
-  const averageElement =
-    $("averageBudget");
+/* =========================================================
+   AVERAGE BUDGET
+========================================================= */
 
-  if (
-    !averageElement ||
-    !state.roomId ||
-    !requireSupabase()
-  ) {
+async function loadAverageBudget() {
+
+  const element =
+    document.getElementById(
+      "averageBudget"
+    );
+
+
+  if (!state.roomId) {
+
+    element.textContent =
+      state.budget
+        ? `$${state.budget}`
+        : "—";
+
     return;
   }
 
-  const {
-    data,
-    error
-  } =
-    await db.rpc(
-      "get_room_average_budget",
-      {
-        room_uuid:
-          state.roomId
-      }
-    );
 
-  if (error) {
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await db.rpc(
+        "get_room_average_budget",
+        {
+          room_uuid:
+            state.roomId
+        }
+      );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    const average =
+      Array.isArray(data)
+        ? data[0]?.average_budget
+        : data?.average_budget;
+
+
+    element.textContent =
+      average !== null &&
+      average !== undefined
+        ? `$${Math.round(
+            Number(average)
+          )}`
+        : "—";
+
+
+  } catch (error) {
+
     console.error(
-      "Average budget error:",
+      "AVERAGE BUDGET ERROR:",
       error
     );
 
-    averageElement.textContent =
-      "—";
 
-    return;
+    element.textContent =
+      state.budget
+        ? `$${state.budget}`
+        : "—";
+
   }
 
-  const average =
-    Array.isArray(data)
-      ? data[0]?.average_budget
-      : data?.average_budget;
-
-  averageElement.textContent =
-    formatMoney(average);
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    PLACES
-   --------------------------------------------------------- */
+========================================================= */
 
-const activityLabels = {
-  eat: "Food",
-  movies: "Movies",
-  bowling: "Bowling",
-  coffee: "Coffee",
-  outdoors: "Outdoors",
-  arts: "Arts",
-  games: "Games",
-  other: "Things to do"
-};
-
-
-const activityQueries = {
-  eat: [
-    "restaurant"
-  ],
-
-  movies: [
-    "cinema"
-  ],
-
-  bowling: [
-    "bowling_alley"
-  ],
-
-  coffee: [
-    "cafe"
-  ],
-
-  outdoors: [
-    "park",
-    "garden",
-    "nature_reserve"
-  ],
-
-  arts: [
-    "museum",
-    "art_gallery",
-    "arts_centre"
-  ],
-
-  games: [
-    "bowling_alley",
-    "leisure"
-  ],
-
-  other: [
-    "attraction",
-    "community_centre",
-    "arts_centre"
-  ]
-};
-
-
-async function loadPlaces() {
-  const placesList =
-    $("placesList");
-
-  const loading =
-    $("placesLoading");
-
-  if (loading) {
-    loading.style.display =
-      "block";
-  }
-
-  if (placesList) {
-    placesList.innerHTML = "";
-  }
+async function showPlaces() {
 
   showScreen(
     "places"
   );
 
-  if (
-    state.lat === null ||
-    state.lon === null
-  ) {
-    if (loading) {
-      loading.style.display =
-        "none";
-    }
 
-    renderFallbackPlaces();
-
-    return;
-  }
-
-  const types =
-    activityQueries[
-      state.activity
-    ] ||
-    activityQueries.other;
-
-  const radius =
-    5000;
-
-  const queries =
-    types
-      .map(
-        (type) => `
-          nwr[
-            amenity=${type}
-          ](
-            around:${radius},
-            ${state.lat},
-            ${state.lon}
-          );
-        `
-      )
-      .join("");
-
-  const overpassQuery = `
-    [out:json][timeout:20];
-    (
-      ${queries}
+  const list =
+    document.getElementById(
+      "placesList"
     );
-    out center tags;
-  `;
+
+
+  const loading =
+    document.getElementById(
+      "placesLoading"
+    );
+
+
+  list.innerHTML =
+    "";
+
+
+  loading.classList.add(
+    "active"
+  );
+
+
+  const subtitle =
+    document.getElementById(
+      "placesSubtitle"
+    );
+
+
+  subtitle.textContent =
+    state.location
+      ? `Places near ${state.location}.`
+      : "Real places near you.";
+
 
   try {
-    const response =
-      await fetch(
-        "https://overpass-api.de/api/interpreter",
-        {
-          method: "POST",
 
-          headers: {
-            "Content-Type":
-              "text/plain"
-          },
+    let latitude =
+      state.latitude;
 
-          body:
-            overpassQuery
-        }
-      );
+    let longitude =
+      state.longitude;
 
-    if (!response.ok) {
-      throw new Error(
-        "Overpass request failed"
-      );
+
+    if (
+      latitude === null ||
+      longitude === null
+    ) {
+
+      const coordinates =
+        await geocodeLocation(
+          state.location
+        );
+
+
+      if (coordinates) {
+
+        latitude =
+          coordinates.lat;
+
+        longitude =
+          coordinates.lon;
+
+      }
+
     }
 
-    const json =
-      await response.json();
+
+    if (
+      latitude === null ||
+      longitude === null
+    ) {
+
+      throw new Error(
+        "Location not found."
+      );
+
+    }
+
 
     const places =
-      (json.elements || [])
-        .filter(
-          (place) =>
-            place.tags &&
-            place.tags.name
-        )
-        .slice(0, 12)
-        .map((place) => {
-          const lat =
-            place.lat ??
-            place.center?.lat;
+      await findNearbyPlaces(
+        latitude,
+        longitude,
+        state.activity
+      );
 
-          const lon =
-            place.lon ??
-            place.center?.lon;
 
-          return {
-            name:
-              place.tags.name,
+    loading.classList.remove(
+      "active"
+    );
 
-            type:
-              place.tags.amenity ||
-              place.tags.tourism ||
-              place.tags.leisure ||
-              "Place",
-
-            lat,
-            lon
-          };
-        });
-
-    if (loading) {
-      loading.style.display =
-        "none";
-    }
-
-    if (places.length === 0) {
-      renderFallbackPlaces();
-
-      return;
-    }
 
     renderPlaces(
       places
     );
 
+
   } catch (error) {
+
     console.error(
-      "Places error:",
+      "PLACES ERROR:",
       error
     );
 
-    if (loading) {
-      loading.style.display =
-        "none";
-    }
+
+    loading.classList.remove(
+      "active"
+    );
+
 
     renderFallbackPlaces();
+
   }
+
 }
 
 
-function renderPlaces(places) {
-  const list =
-    $("placesList");
+/* =========================================================
+   GEOCODING
+========================================================= */
 
-  if (!list) {
-    return;
+async function geocodeLocation(
+  location
+) {
+
+  if (!location) {
+    return null;
   }
 
-  list.innerHTML =
-    places
+
+  const url =
+    "https://nominatim.openstreetmap.org/search?" +
+    new URLSearchParams({
+
+      q:
+        location,
+
+      format:
+        "json",
+
+      limit:
+        "1"
+
+    });
+
+
+  const response =
+    await fetch(url);
+
+
+  if (!response.ok) {
+    throw new Error(
+      "Geocoding failed."
+    );
+  }
+
+
+  const data =
+    await response.json();
+
+
+  if (!data.length) {
+    return null;
+  }
+
+
+  return {
+
+    lat:
+      Number(
+        data[0].lat
+      ),
+
+    lon:
+      Number(
+        data[0].lon
+      )
+
+  };
+
+}
+
+
+/* =========================================================
+   NEARBY PLACES
+========================================================= */
+
+async function findNearbyPlaces(
+  latitude,
+  longitude,
+  activity
+) {
+
+  const config =
+    activityData[activity] ||
+    activityData.other;
+
+
+  const queries =
+    config.searchTerms
       .map(
-        (place, index) => `
-          <button
-            type="button"
-            class="place-card"
-            onclick="selectPlace(${index})"
-          >
-            <span class="place-number">
-              ${index + 1}
-            </span>
+        term => `
 
-            <span class="place-info">
-              <strong>
-                ${escapeHtml(place.name)}
-              </strong>
+          nwr[
+            amenity=${term}
+          ](
+            around:7000,
+            ${latitude},
+            ${longitude}
+          );
 
-              <small>
-                ${escapeHtml(
-                  activityLabels[
-                    state.activity
-                  ] ||
-                  "Nearby"
-                )}
-              </small>
-            </span>
-
-            <span class="place-arrow">
-              →
-            </span>
-          </button>
         `
       )
       .join("");
 
-  state.places =
-    places;
+
+  const query = `
+
+    [out:json][timeout:20];
+
+    (
+      ${queries}
+    );
+
+    out center tags;
+
+  `;
+
+
+  const response =
+    await fetch(
+      "https://overpass-api.de/api/interpreter",
+      {
+        method: "POST",
+        body: query
+      }
+    );
+
+
+  if (!response.ok) {
+
+    throw new Error(
+      "Overpass request failed."
+    );
+
+  }
+
+
+  const json =
+    await response.json();
+
+
+  return cleanPlaces(
+    json.elements || [],
+    latitude,
+    longitude
+  );
+
 }
 
+
+/* =========================================================
+   CLEAN PLACES
+========================================================= */
+
+function cleanPlaces(
+  elements,
+  userLat,
+  userLon
+) {
+
+  const seen =
+    new Set();
+
+
+  const places =
+    [];
+
+
+  elements.forEach(
+    element => {
+
+      const tags =
+        element.tags || {};
+
+
+      const name =
+        tags.name;
+
+
+      if (!name) {
+        return;
+      }
+
+
+      const key =
+        name.toLowerCase();
+
+
+      if (seen.has(key)) {
+        return;
+      }
+
+
+      seen.add(key);
+
+
+      const lat =
+        element.lat ??
+        element.center?.lat;
+
+
+      const lon =
+        element.lon ??
+        element.center?.lon;
+
+
+      places.push({
+
+        name,
+
+        category:
+          tags.amenity ||
+          tags.leisure ||
+          tags.tourism ||
+          "Place",
+
+        address:
+          tags["addr:street"]
+            ? `${tags["addr:housenumber"] || ""} ${tags["addr:street"]}`.trim()
+            : "Nearby",
+
+        distance:
+          lat !== undefined &&
+          lon !== undefined
+            ? calculateDistance(
+                userLat,
+                userLon,
+                lat,
+                lon
+              )
+            : null,
+
+        lat,
+
+        lon
+
+      });
+
+    }
+  );
+
+
+  places.sort(
+    (a, b) =>
+      (a.distance ?? 999) -
+      (b.distance ?? 999)
+  );
+
+
+  return places.slice(
+    0,
+    9
+  );
+
+}
+
+
+/* =========================================================
+   DISTANCE
+========================================================= */
+
+function calculateDistance(
+  lat1,
+  lon1,
+  lat2,
+  lon2
+) {
+
+  const R =
+    3958.8;
+
+
+  const dLat =
+    toRadians(
+      lat2 - lat1
+    );
+
+
+  const dLon =
+    toRadians(
+      lon2 - lon1
+    );
+
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(
+      toRadians(lat1)
+    ) *
+    Math.cos(
+      toRadians(lat2)
+    ) *
+    Math.sin(dLon / 2) ** 2;
+
+
+  const c =
+    2 *
+    Math.atan2(
+      Math.sqrt(a),
+      Math.sqrt(1 - a)
+    );
+
+
+  return R * c;
+
+}
+
+
+function toRadians(
+  degrees
+) {
+
+  return (
+    degrees *
+    Math.PI /
+    180
+  );
+
+}
+
+
+/* =========================================================
+   RENDER PLACES
+========================================================= */
+
+function renderPlaces(
+  places
+) {
+
+  const list =
+    document.getElementById(
+      "placesList"
+    );
+
+
+  list.innerHTML =
+    "";
+
+
+  if (!places.length) {
+
+    renderFallbackPlaces();
+
+    return;
+
+  }
+
+
+  places.forEach(
+    (place, index) => {
+
+      const card =
+        document.createElement(
+          "article"
+        );
+
+
+      card.className =
+        "place-card";
+
+
+      const image =
+        getPlaceImage(
+          state.activity,
+          index
+        );
+
+
+      const distance =
+        place.distance !== null
+          ? `${place.distance.toFixed(1)} mi`
+          : "Nearby";
+
+
+      card.innerHTML = `
+
+        <div class="place-image">
+
+          <img
+            src="${image}"
+            alt="${escapeHtml(place.name)}"
+            loading="lazy"
+          />
+
+        </div>
+
+
+        <div class="place-content">
+
+          <small>
+            ${escapeHtml(
+              formatCategory(
+                place.category
+              )
+            )}
+          </small>
+
+
+          <h3>
+            ${escapeHtml(
+              place.name
+            )}
+          </h3>
+
+
+          <p class="place-info">
+            ${distance}
+            ·
+            ${escapeHtml(
+              place.address
+            )}
+          </p>
+
+
+          <button
+            class="place-action"
+            type="button"
+          >
+            Choose this place →
+          </button>
+
+        </div>
+
+      `;
+
+
+      card
+        .querySelector(
+          ".place-action"
+        )
+        .addEventListener(
+          "click",
+          () => {
+
+            choosePlace(
+              place
+            );
+
+          }
+        );
+
+
+      list.appendChild(
+        card
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   FALLBACK PLACES
+========================================================= */
 
 function renderFallbackPlaces() {
+
   const list =
-    $("placesList");
+    document.getElementById(
+      "placesList"
+    );
 
-  if (!list) {
-    return;
-  }
 
-  const activity =
-    activityLabels[
+  const label =
+    activityData[
       state.activity
-    ] ||
+    ]?.label ||
     "Things to do";
 
-  list.innerHTML = `
-    <div class="result-card">
-      <strong>
-        Find ${escapeHtml(activity.toLowerCase())} nearby
-      </strong>
 
-      <p>
-        Roam couldn't load nearby places right now.
-        Try again or use the location button first.
-      </p>
-    </div>
-  `;
+  const names = {
+
+    eat: [
+      "Nearby restaurant",
+      "Local food spot",
+      "Restaurant nearby"
+    ],
+
+    movies: [
+      "Nearby cinema",
+      "Local theater",
+      "Movie house"
+    ],
+
+    bowling: [
+      "Nearby bowling alley",
+      "Bowling center",
+      "Local bowling"
+    ],
+
+    coffee: [
+      "Nearby coffee shop",
+      "Local cafe",
+      "Coffee house"
+    ],
+
+    outdoors: [
+      "Nearby park",
+      "Local outdoor spot",
+      "Nature area"
+    ],
+
+    arts: [
+      "Nearby museum",
+      "Local gallery",
+      "Arts center"
+    ],
+
+    games: [
+      "Nearby game spot",
+      "Game lounge",
+      "Activity center"
+    ],
+
+    other: [
+      "Nearby activity",
+      "Local attraction",
+      "Something to explore"
+    ]
+
+  };
+
+
+  const choices =
+    names[
+      state.activity
+    ] ||
+    names.other;
+
+
+  list.innerHTML =
+    choices
+      .map(
+        (name, index) => `
+
+          <article class="place-card">
+
+            <div class="place-image">
+
+              <img
+                src="${getPlaceImage(
+                  state.activity,
+                  index
+                )}"
+                alt="${name}"
+              />
+
+            </div>
+
+            <div class="place-content">
+
+              <small>
+                ${label}
+              </small>
+
+              <h3>
+                ${name}
+              </h3>
+
+              <p class="place-info">
+                Search for this activity nearby.
+              </p>
+
+              <button
+                class="place-action"
+                type="button"
+                onclick="choosePlace({
+                  name: '${escapeJs(name)}',
+                  category: '${escapeJs(label)}',
+                  address: 'Nearby',
+                  distance: null
+                })"
+              >
+                Choose this →
+              </button>
+
+            </div>
+
+          </article>
+
+        `
+      )
+      .join("");
+
 }
 
 
-function selectPlace(index) {
-  if (
-    !state.places ||
-    !state.places[index]
-  ) {
-    return;
-  }
+/* =========================================================
+   PLACE IMAGES
+========================================================= */
+
+function getPlaceImage(
+  activity,
+  index
+) {
+
+  const images = {
+
+    eat:
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80",
+
+    movies:
+      "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=900&q=80",
+
+    bowling:
+      "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=900&q=80",
+
+    coffee:
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=900&q=80",
+
+    outdoors:
+      "https://images.unsplash.com/photo-1473445361085-b9a07f55608b?auto=format&fit=crop&w=900&q=80",
+
+    arts:
+      "https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=900&q=80",
+
+    games:
+      "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=900&q=80",
+
+    other:
+      "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=900&q=80"
+
+  };
+
+
+  return (
+    images[activity] ||
+    images.other
+  );
+
+}
+
+
+/* =========================================================
+   CHOOSE PLACE
+========================================================= */
+
+function choosePlace(
+  place
+) {
 
   state.selectedPlace =
-    state.places[index];
+    place;
+
 
   buildFinalPlan();
+
 
   showScreen(
     "final"
   );
+
 }
 
 
-function escapeHtml(value) {
-  return String(value || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-
-/* ---------------------------------------------------------
+/* =========================================================
    FINAL PLAN
-   --------------------------------------------------------- */
+========================================================= */
 
 function buildFinalPlan() {
-  const dateElement =
-    $("finalDate");
-
-  const timeElement =
-    $("finalTime");
-
-  const activityElement =
-    $("finalActivity");
-
-  const placeElement =
-    $("finalPlace");
-
-  const peopleElement =
-    $("finalPeople");
-
-  const budgetElement =
-    $("finalBudget");
-
-  if (dateElement) {
-    dateElement.textContent =
-      formatDate(
-        state.bestDate ||
-        state.selectedDates[0]
-      );
-  }
-
-  if (timeElement) {
-    timeElement.textContent =
-      state.bestTime ||
-      "Time TBD";
-  }
-
-  if (activityElement) {
-    activityElement.textContent =
-      activityLabels[
-        state.activity
-      ] ||
-      "Hangout";
-  }
-
-  if (placeElement) {
-    placeElement.textContent =
-      state.selectedPlace?.name ||
-      "Place TBD";
-  }
-
-  if (peopleElement) {
-    peopleElement.textContent =
-      state.groupSize;
-  }
-
-  if (budgetElement) {
-    budgetElement.textContent =
-      state.averageBudget
-        ? formatMoney(
-            state.averageBudget
-          )
-        : "Group budget";
-  }
-}
-
-
-function formatDate(dateString) {
-  if (!dateString) {
-    return "Date TBD";
-  }
 
   const date =
-    new Date(
-      dateString + "T00:00:00"
-    );
+    state.selectedTime?.date ||
+    state.selectedDates[0];
 
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
-    return dateString;
-  }
-
-  return date.toLocaleDateString(
-    "en-US",
-    {
-      weekday: "long",
-      month: "long",
-      day: "numeric"
-    }
-  );
-}
-
-
-function createPlanText() {
-  const date =
-    formatDate(
-      state.bestDate ||
-      state.selectedDates[0]
-    );
 
   const time =
-    state.bestTime ||
-    "Time TBD";
+    state.selectedTime?.time ||
+    state.selectedTime?.time ||
+    state.selectedTimes[0] ||
+    "7:00 PM";
+
+
+  const dateObject =
+    new Date(
+      `${date}T12:00:00`
+    );
+
+
+  const weekday =
+    dateObject.toLocaleDateString(
+      undefined,
+      {
+        weekday: "long"
+      }
+    );
+
+
+  const dateText =
+    dateObject.toLocaleDateString(
+      undefined,
+      {
+        month: "long",
+        day: "numeric"
+      }
+    );
+
+
+  document.getElementById(
+    "finalDate"
+  ).textContent =
+    `${weekday.toUpperCase()} · ${dateText.toUpperCase()}`;
+
+
+  document.getElementById(
+    "finalTime"
+  ).textContent =
+    time;
+
+
+  document.getElementById(
+    "finalActivity"
+  ).textContent =
+    activityData[
+      state.activity
+    ]?.label ||
+    "Hangout";
+
+
+  document.getElementById(
+    "finalPlace"
+  ).textContent =
+    state.selectedPlace?.name ||
+    "Your chosen place";
+
+
+  document.getElementById(
+    "finalPeople"
+  ).textContent =
+    `${state.groupSize} PEOPLE`;
+
+
+  document.getElementById(
+    "finalBudget"
+  ).textContent =
+    `~$${state.budget || 0} EACH`;
+
+}
+
+
+/* =========================================================
+   COPY / SHARE
+========================================================= */
+
+function getPlanText() {
+
+  const date =
+    state.selectedTime?.date ||
+    state.selectedDates[0];
+
+
+  const time =
+    state.selectedTime?.time ||
+    state.selectedTimes[0] ||
+    "7:00 PM";
+
+
+  const dateObject =
+    new Date(
+      `${date}T12:00:00`
+    );
+
+
+  const dateText =
+    dateObject.toLocaleDateString(
+      undefined,
+      {
+        weekday: "long",
+        month: "long",
+        day: "numeric"
+      }
+    );
+
 
   const activity =
-    activityLabels[
+    activityData[
       state.activity
-    ] ||
-    "hangout";
+    ]?.label ||
+    "Hangout";
+
 
   const place =
     state.selectedPlace?.name ||
-    "a nearby spot";
+    "our chosen place";
 
-  const people =
-    state.groupSize ||
-    "the group";
 
   return `
 Roam plan ✦
 
-${state.roamName || "Hangout"}
+${state.roamName}
 
-${date}
+${dateText}
 ${time}
 
 ${activity}
 ${place}
 
-Group: ${people} people
+${state.groupSize} people
+About $${state.budget || 0} each
 
 Roam code: ${state.roomCode || "—"}
-`.trim();
+  `.trim();
+
 }
 
 
 async function copyPlan() {
+
   const text =
-    createPlanText();
+    getPlanText();
+
 
   try {
+
     await navigator.clipboard.writeText(
       text
     );
 
+
     showToast(
-      "Plan copied!"
+      "Plan copied."
     );
 
-  } catch (error) {
-    console.error(
-      "Clipboard error:",
-      error
-    );
+
+  } catch {
 
     window.prompt(
       "Copy your Roam plan:",
       text
     );
+
   }
+
 }
 
 
 async function sharePlan() {
+
   const text =
-    createPlanText();
+    getPlanText();
+
 
   if (
     navigator.share
   ) {
+
     try {
+
       await navigator.share({
+
         title:
           state.roamName ||
           "Roam plan",
 
         text
+
       });
 
       return;
 
-    } catch (error) {
-      if (
-        error.name ===
-        "AbortError"
-      ) {
-        return;
-      }
+    } catch {
+
+      return;
+
     }
+
   }
 
-  await copyPlan();
+
+  copyPlan();
+
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    LOCATION
-   --------------------------------------------------------- */
+========================================================= */
 
 function getUserLocation() {
+
   if (
     !navigator.geolocation
   ) {
+
     showToast(
       "Location isn't supported here."
     );
 
     return;
+
   }
 
-  showToast(
-    "Finding your location..."
-  );
+
+  const status =
+    document.getElementById(
+      "locationStatus"
+    );
+
+
+  status.textContent =
+    "Finding you...";
+
 
   navigator.geolocation.getCurrentPosition(
-    (position) => {
-      state.lat =
+
+    async position => {
+
+      state.latitude =
         position.coords.latitude;
 
-      state.lon =
+      state.longitude =
         position.coords.longitude;
 
-      showToast(
-        "Location found!"
-      );
+
+      try {
+
+        const address =
+          await reverseGeocode(
+            state.latitude,
+            state.longitude
+          );
+
+
+        if (address) {
+
+          state.location =
+            address;
+
+
+          document.getElementById(
+            "location"
+          ).value =
+            address;
+
+        }
+
+
+        status.textContent =
+          "Location found.";
+
+      } catch {
+
+        status.textContent =
+          "Location found.";
+
+      }
+
     },
 
-    (error) => {
+    error => {
+
       console.error(
-        "Location error:",
+        "LOCATION ERROR:",
         error
       );
 
+
+      status.textContent =
+        "Couldn't access your location.";
+
+
       showToast(
-        "Couldn't get your location."
+        "Enter your city instead."
       );
+
     },
 
     {
@@ -1540,10 +2582,458 @@ function getUserLocation() {
       maximumAge:
         60000
     }
+
   );
+
 }
 
 
-/* ---------------------------------------------------------
-   JOIN A RO
-```
+async function reverseGeocode(
+  latitude,
+  longitude
+) {
+
+  const url =
+    "https://nominatim.openstreetmap.org/reverse?" +
+    new URLSearchParams({
+
+      lat:
+        latitude,
+
+      lon:
+        longitude,
+
+      format:
+        "json"
+
+    });
+
+
+  const response =
+    await fetch(url);
+
+
+  if (!response.ok) {
+    throw new Error(
+      "Reverse geocoding failed."
+    );
+  }
+
+
+  const data =
+    await response.json();
+
+
+  const address =
+    data.address || {};
+
+
+  return (
+    address.city ||
+    address.town ||
+    address.village ||
+    address.suburb ||
+    null
+  );
+
+}
+
+
+/* =========================================================
+   JOIN A ROAM
+========================================================= */
+
+async function showJoinMessage() {
+
+  console.log(
+    "ROAM: Join clicked"
+  );
+
+
+  const codeInput =
+    window.prompt(
+      "Enter the 5-character Roam code:"
+    );
+
+
+  if (!codeInput) {
+    return;
+  }
+
+
+  const code =
+    codeInput
+      .trim()
+      .toUpperCase();
+
+
+  if (
+    !/^[A-Z0-9]{5}$/.test(code)
+  ) {
+
+    showToast(
+      "Roam codes are 5 characters."
+    );
+
+    return;
+
+  }
+
+
+  showToast(
+    "Finding that Roam..."
+  );
+
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await db
+        .from("rooms")
+        .select("*")
+        .eq(
+          "code",
+          code
+        )
+        .maybeSingle();
+
+
+    console.log(
+      "ROAM JOIN RESPONSE:",
+      data,
+      error
+    );
+
+
+    if (error) {
+
+      console.error(
+        "JOIN ERROR:",
+        error
+      );
+
+
+      showToast(
+        "Couldn't find that Roam."
+      );
+
+
+      return;
+
+    }
+
+
+    if (!data) {
+
+      showToast(
+        "That Roam code doesn't exist."
+      );
+
+
+      return;
+
+    }
+
+
+    /*
+      Load room information.
+    */
+
+    state.roomId =
+      data.id;
+
+    state.roomCode =
+      data.code;
+
+    state.roamName =
+      data.name;
+
+    state.location =
+      data.location_text;
+
+    state.latitude =
+      data.lat;
+
+    state.longitude =
+      data.lng;
+
+    state.groupSize =
+      data.group_size;
+
+    state.selectedDates =
+      Array.isArray(
+        data.candidate_dates
+      )
+        ? data.candidate_dates
+        : [];
+
+    state.activity =
+      data.activity || "";
+
+    state.joinedRoom =
+      true;
+
+    state.participantToken =
+      generateToken();
+
+
+    /*
+      Put room information
+      into the page.
+    */
+
+    document.getElementById(
+      "roamName"
+    ).value =
+      state.roamName;
+
+
+    document.getElementById(
+      "location"
+    ).value =
+      state.location;
+
+
+    document.getElementById(
+      "groupSizeDisplay"
+    ).textContent =
+      state.groupSize;
+
+
+    /*
+      If the organizer already
+      selected dates, use them.
+    */
+
+    renderDates();
+
+
+    showToast(
+      `Joined ${state.roamName}!`
+    );
+
+
+    showScreen(
+      "availability"
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "JOIN CRASHED:",
+      error
+    );
+
+
+    showToast(
+      "Something went wrong joining."
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   UTILITIES
+========================================================= */
+
+function formatCategory(
+  category
+) {
+
+  return String(
+    category || "Place"
+  )
+    .replaceAll(
+      "_",
+      " "
+    )
+    .replace(
+      /\b\w/g,
+      letter =>
+        letter.toUpperCase()
+    );
+
+}
+
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value || ""
+  )
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+
+}
+
+
+function escapeJs(
+  value
+) {
+
+  return String(
+    value || ""
+  )
+    .replaceAll(
+      "\\",
+      "\\\\"
+    )
+    .replaceAll(
+      "'",
+      "\\'"
+    );
+
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimer;
+
+
+function showToast(
+  message
+) {
+
+  const toast =
+    document.getElementById(
+      "toast"
+    );
+
+
+  if (!toast) {
+    alert(message);
+    return;
+  }
+
+
+  toast.textContent =
+    message;
+
+
+  toast.classList.add(
+    "show"
+  );
+
+
+  clearTimeout(
+    toastTimer
+  );
+
+
+  toastTimer =
+    setTimeout(
+      () => {
+
+        toast.classList.remove(
+          "show"
+        );
+
+      },
+      2600
+    );
+
+}
+
+
+/* =========================================================
+   STARTUP
+========================================================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    document.getElementById(
+      "groupSizeDisplay"
+    ).textContent =
+      state.groupSize;
+
+
+    renderDates();
+
+
+    updateProgress(
+      "home"
+    );
+
+  }
+);
+
+
+/* =========================================================
+   GLOBAL FUNCTIONS
+========================================================= */
+
+window.showScreen =
+  showScreen;
+
+window.startRoam =
+  startRoam;
+
+window.changeGroupSize =
+  changeGroupSize;
+
+window.saveRoamDetails =
+  saveRoamDetails;
+
+window.saveDates =
+  saveDates;
+
+window.saveAvailability =
+  saveAvailability;
+
+window.selectBudget =
+  selectBudget;
+
+window.finishBudget =
+  finishBudget;
+
+window.selectActivity =
+  selectActivity;
+
+window.showPlaces =
+  showPlaces;
+
+window.choosePlace =
+  choosePlace;
+
+window.copyPlan =
+  copyPlan;
+
+window.sharePlan =
+  sharePlan;
+
+window.getUserLocation =
+  getUserLocation;
+
+window.showJoinMessage =
+  showJoinMessage;
