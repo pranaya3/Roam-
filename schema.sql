@@ -1,5 +1,13 @@
+-- =========================================================
+-- ROAM DATABASE
+-- =========================================================
+
 create extension if not exists pgcrypto;
 
+
+-- =========================================================
+-- ROOMS
+-- =========================================================
 
 create table if not exists public.rooms (
 
@@ -39,12 +47,21 @@ create table if not exists public.rooms (
   created_at timestamptz
     not null
     default now()
+
 );
 
+
+-- =========================================================
+-- REMOVE OLD 5-CHARACTER CODE RULE
+-- =========================================================
 
 alter table public.rooms
 drop constraint if exists rooms_code_check;
 
+
+-- =========================================================
+-- PARTICIPANTS
+-- =========================================================
 
 create table if not exists public.participants (
 
@@ -72,8 +89,13 @@ create table if not exists public.participants (
   created_at timestamptz
     not null
     default now()
+
 );
 
+
+-- =========================================================
+-- INDEXES
+-- =========================================================
 
 create index if not exists rooms_code_idx
 on public.rooms(code);
@@ -83,6 +105,10 @@ create index if not exists participants_room_idx
 on public.participants(room_id);
 
 
+-- =========================================================
+-- ROW LEVEL SECURITY
+-- =========================================================
+
 alter table public.rooms
 enable row level security;
 
@@ -91,6 +117,10 @@ alter table public.participants
 enable row level security;
 
 
+-- =========================================================
+-- ROOM POLICIES
+-- =========================================================
+
 drop policy if exists
 "rooms public read by code"
 on public.rooms;
@@ -98,6 +128,7 @@ on public.rooms;
 
 create policy
 "rooms public read by code"
+
 on public.rooms
 
 for select
@@ -114,6 +145,7 @@ on public.rooms;
 
 create policy
 "rooms public create"
+
 on public.rooms
 
 for insert
@@ -132,6 +164,7 @@ on public.rooms;
 
 create policy
 "rooms organizer update"
+
 on public.rooms
 
 for update
@@ -143,6 +176,10 @@ using (true)
 with check (true);
 
 
+-- =========================================================
+-- PARTICIPANT POLICIES
+-- =========================================================
+
 drop policy if exists
 "participants public read"
 on public.participants;
@@ -150,6 +187,7 @@ on public.participants;
 
 create policy
 "participants public read"
+
 on public.participants
 
 for select
@@ -166,6 +204,7 @@ on public.participants;
 
 create policy
 "participants create"
+
 on public.participants
 
 for insert
@@ -184,6 +223,7 @@ on public.participants;
 
 create policy
 "participants update"
+
 on public.participants
 
 for update
@@ -194,6 +234,10 @@ using (true)
 
 with check (true);
 
+
+-- =========================================================
+-- AVERAGE BUDGET FUNCTION
+-- =========================================================
 
 create or replace function
 public.get_room_average_budget(
@@ -226,6 +270,10 @@ as $$
 
 $$;
 
+
+-- =========================================================
+-- FUNCTION PERMISSIONS
+-- =========================================================
 
 revoke all
 
