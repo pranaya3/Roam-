@@ -31,9 +31,7 @@ body {
       transparent 28%
     ),
     var(--cream);
-
   color: var(--brown);
-
   font-family: "DM Sans", sans-serif;
 }
 
@@ -46,10 +44,13 @@ button {
   cursor: pointer;
 }
 
+/* =========================
+   NAVIGATION
+========================= */
+
 .topbar {
   width: min(1240px, calc(100% - 64px));
   margin: 0 auto;
-
   padding: 28px 0;
 
   display: flex;
@@ -60,7 +61,6 @@ button {
 .brand {
   border: 0;
   background: transparent;
-
   color: var(--orange);
 
   font-family: "Playfair Display", serif;
@@ -83,11 +83,18 @@ button {
   font-weight: 600;
 
   box-shadow: 0 8px 25px rgba(60, 35, 20, 0.05);
+
+  transition: 0.2s ease;
 }
 
 .nav-join:hover {
   background: var(--white);
+  transform: translateY(-1px);
 }
+
+/* =========================
+   SCREENS
+========================= */
 
 .screen {
   display: none;
@@ -98,7 +105,9 @@ button {
   display: block;
 }
 
-/* HOME */
+/* =========================
+   HOME
+========================= */
 
 .hero {
   width: min(1240px, calc(100% - 64px));
@@ -177,6 +186,10 @@ button {
   display: block;
 }
 
+/* =========================
+   BUTTONS
+========================= */
+
 .btn {
   border: 0;
 
@@ -196,6 +209,16 @@ button {
   transform: translateY(-2px);
 }
 
+.btn:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.45;
+
+  transform: none;
+
+  box-shadow: none;
+}
+
 .btn.primary {
   background: var(--orange);
   color: white;
@@ -204,7 +227,7 @@ button {
     0 10px 25px rgba(217, 87, 43, 0.2);
 }
 
-.btn.primary:hover {
+.btn.primary:hover:not(:disabled) {
   background: var(--orange-dark);
 }
 
@@ -221,7 +244,9 @@ button {
   margin-top: 30px;
 }
 
-/* GENERAL */
+/* =========================
+   GENERAL LAYOUT
+========================= */
 
 .shell {
   width: min(700px, calc(100% - 40px));
@@ -276,6 +301,10 @@ button {
   box-shadow: var(--shadow);
 }
 
+/* =========================
+   FORM
+========================= */
+
 .form {
   display: flex;
   flex-direction: column;
@@ -291,7 +320,8 @@ button {
   font-size: 14px;
 }
 
-.form input {
+.form input,
+.custom-place input {
   width: 100%;
 
   border: 1px solid var(--border);
@@ -305,9 +335,12 @@ button {
   color: var(--brown);
 
   outline: none;
+
+  transition: 0.2s ease;
 }
 
-.form input:focus {
+.form input:focus,
+.custom-place input:focus {
   border-color: var(--orange);
 
   box-shadow:
@@ -337,6 +370,12 @@ button {
   font-size: 13px;
 
   font-weight: 600;
+
+  transition: 0.2s ease;
+}
+
+.small-btn:hover {
+  border-color: var(--orange);
 }
 
 .status {
@@ -363,7 +402,33 @@ button {
   color: var(--orange);
 }
 
-/* DATES */
+/* =========================
+   AVAILABILITY NOTE
+========================= */
+
+.availability-note {
+  margin-bottom: 22px;
+
+  padding: 15px 17px;
+
+  border-radius: 15px;
+
+  background: var(--cream-2);
+
+  color: var(--muted);
+
+  font-size: 14px;
+
+  line-height: 1.55;
+}
+
+.availability-note strong {
+  color: var(--brown);
+}
+
+/* =========================
+   DATES
+========================= */
 
 .date-grid {
   display: grid;
@@ -434,7 +499,9 @@ button {
     0 0 0 2px rgba(217, 87, 43, 0.08);
 }
 
-/* TIMES */
+/* =========================
+   TIMES
+========================= */
 
 .time-grid {
   display: grid;
@@ -451,7 +518,27 @@ button {
   padding: 15px;
 }
 
-/* BUDGET */
+/* =========================
+   BUDGET
+========================= */
+
+.private-note {
+  margin-bottom: 22px;
+
+  padding: 15px 17px;
+
+  border-radius: 15px;
+
+  background: #fff5ee;
+
+  border: 1px solid #f2ded2;
+
+  color: var(--muted);
+
+  font-size: 14px;
+
+  line-height: 1.55;
+}
 
 .budget-grid {
   display: grid;
@@ -461,7 +548,7 @@ button {
 
   gap: 12px;
 
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .budget-card {
@@ -485,7 +572,9 @@ button {
   font-size: 13px;
 }
 
-/* ACTIVITY */
+/* =========================
+   ACTIVITY
+========================= */
 
 .activity-grid {
   display: grid;
@@ -546,6 +635,79 @@ button {
     0 12px 30px rgba(217, 87, 43, 0.13);
 }
 
+/* =========================
+   CUSTOM PLACE
+========================= */
+
+.custom-place {
+  margin-top: 22px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.94),
+      rgba(255, 241, 229, 0.92)
+    );
+
+  border-color: #efd3c3;
+}
+
+.custom-place[hidden] {
+  display: none;
+}
+
+.custom-place-heading {
+  margin-bottom: 20px;
+}
+
+.custom-place-heading .eyebrow {
+  margin-bottom: 8px;
+}
+
+.custom-place-heading h3 {
+  margin: 0;
+
+  font-family: "Playfair Display", serif;
+
+  font-size: 28px;
+
+  line-height: 1.15;
+}
+
+.custom-place-heading p:last-child {
+  margin: 9px 0 0;
+
+  color: var(--muted);
+
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+.custom-place label {
+  display: block;
+
+  margin-top: 15px;
+
+  margin-bottom: 7px;
+
+  font-size: 14px;
+
+  font-weight: 700;
+}
+
+.optional {
+  color: var(--muted);
+
+  font-weight: 500;
+
+  margin-left: 4px;
+}
+
+/* =========================
+   ACTIONS
+========================= */
+
 .actions {
   margin-top: 26px;
 
@@ -556,7 +718,9 @@ button {
   gap: 14px;
 }
 
-/* CODE */
+/* =========================
+   CODE
+========================= */
 
 .success {
   text-align: center;
@@ -590,7 +754,9 @@ button {
   letter-spacing: 0.12em;
 }
 
-/* JOIN */
+/* =========================
+   JOIN
+========================= */
 
 .mini {
   margin: 20px 0;
@@ -610,7 +776,9 @@ button {
   color: var(--muted);
 }
 
-/* PLACES */
+/* =========================
+   PLACES
+========================= */
 
 .places {
   display: grid;
@@ -640,6 +808,14 @@ button {
   color: var(--brown);
 
   text-align: left;
+
+  transition: 0.2s ease;
+}
+
+.place-card:hover {
+  border-color: var(--orange);
+
+  transform: translateY(-1px);
 }
 
 .place-card.selected {
@@ -706,7 +882,9 @@ button {
   color: var(--brown);
 }
 
-/* FINAL */
+/* =========================
+   FINAL PLAN
+========================= */
 
 .final {
   padding: 40px;
@@ -754,7 +932,9 @@ button {
   flex: 1;
 }
 
-/* TOAST */
+/* =========================
+   TOAST
+========================= */
 
 .toast {
   position: fixed;
@@ -790,9 +970,12 @@ button {
     translate(-50%, 0);
 }
 
-/* MOBILE */
+/* =========================
+   MOBILE
+========================= */
 
 @media (max-width: 850px) {
+
   .hero {
     grid-template-columns: 1fr;
 
@@ -818,6 +1001,7 @@ button {
 }
 
 @media (max-width: 600px) {
+
   .topbar {
     width: min(100% - 32px, 1240px);
 
@@ -913,5 +1097,9 @@ button {
 
   .plan-row strong {
     text-align: left;
+  }
+
+  .custom-place-heading h3 {
+    font-size: 25px;
   }
 }
