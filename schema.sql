@@ -36,9 +36,7 @@ create table if not exists public.rooms (
 
   group_size integer
     not null
-    check (
-      group_size between 2 and 50
-    ),
+    check (group_size between 2 and 50),
 
   candidate_dates jsonb
     not null
@@ -56,8 +54,7 @@ create table if not exists public.rooms (
 
 
 /* =========================================================
-   REMOVE OLD 5-CHARACTER CODE RULE
-   Roam now uses one-word codes.
+   REMOVE OLD 5-CHARACTER CODE RESTRICTION
 ========================================================= */
 
 alter table public.rooms
@@ -116,13 +113,12 @@ on public.participants(room_id);
 alter table public.rooms
 enable row level security;
 
-
 alter table public.participants
 enable row level security;
 
 
 /* =========================================================
-   ROOMS — PUBLIC READ
+   ROOM POLICIES
 ========================================================= */
 
 drop policy if exists
@@ -141,9 +137,9 @@ to anon, authenticated
 using (true);
 
 
-/* =========================================================
-   ROOMS — PUBLIC CREATE
-========================================================= */
+/* ---------------------------------------------------------
+   CREATE ROOM
+--------------------------------------------------------- */
 
 drop policy if exists
 "rooms public create"
@@ -163,9 +159,9 @@ with check (
 );
 
 
-/* =========================================================
-   ROOMS — ORGANIZER UPDATE
-========================================================= */
+/* ---------------------------------------------------------
+   UPDATE ROOM
+--------------------------------------------------------- */
 
 drop policy if exists
 "rooms organizer update"
@@ -186,8 +182,13 @@ with check (true);
 
 
 /* =========================================================
-   PARTICIPANTS — PUBLIC READ
+   PARTICIPANT POLICIES
 ========================================================= */
+
+
+/* ---------------------------------------------------------
+   READ PARTICIPANTS
+--------------------------------------------------------- */
 
 drop policy if exists
 "participants public read"
@@ -205,9 +206,9 @@ to anon, authenticated
 using (true);
 
 
-/* =========================================================
-   PARTICIPANTS — CREATE
-========================================================= */
+/* ---------------------------------------------------------
+   CREATE PARTICIPANT
+--------------------------------------------------------- */
 
 drop policy if exists
 "participants create"
@@ -227,9 +228,9 @@ with check (
 );
 
 
-/* =========================================================
-   PARTICIPANTS — UPDATE
-========================================================= */
+/* ---------------------------------------------------------
+   UPDATE PARTICIPANT
+--------------------------------------------------------- */
 
 drop policy if exists
 "participants update"
