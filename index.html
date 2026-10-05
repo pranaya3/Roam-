@@ -2,13 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>Roam — Make the plan</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
 
   <link
     href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
@@ -16,7 +23,10 @@
   >
 
   <!-- Roam styles -->
-  <link rel="stylesheet" href="styles.css">
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
 </head>
 
 <body>
@@ -247,12 +257,12 @@
             WHEN
           </p>
 
-          <h2>
-            When could everyone hang out?
+          <h2 id="datesHeading">
+            Which days could your group hang out?
           </h2>
 
-          <p>
-            Pick the days that could work.
+          <p id="datesDescription">
+            Select every day that could work for your group.
           </p>
 
         </div>
@@ -302,21 +312,28 @@
         <div class="heading">
 
           <p class="eyebrow">
-            YOUR AVAILABILITY
+            AVAILABILITY
           </p>
 
           <h2>
-            When are you free?
+            What times are you available?
           </h2>
 
           <p>
-            Choose all the times that work for you.
+            Select every time you could hang out.
           </p>
 
         </div>
 
 
         <div class="card">
+
+          <div
+            class="availability-note"
+          >
+            You're choosing <strong>your availability</strong>.
+            Roam will compare everyone's answers to find the best times.
+          </div>
 
           <div
             class="time-grid"
@@ -360,15 +377,15 @@
         <div class="heading">
 
           <p class="eyebrow">
-            BUDGET
+            OPTIONAL
           </p>
 
           <h2>
-            What feels comfortable?
+            What's comfortable for you?
           </h2>
 
           <p>
-            Your exact number is kept private.
+            Your budget stays private. You can skip this.
           </p>
 
         </div>
@@ -377,18 +394,36 @@
         <div class="card">
 
           <div
+            class="private-note"
+          >
+            🔒 Your exact budget is private and won't appear
+            in the final Roam plan.
+          </div>
+
+
+          <div
             class="budget-grid"
             id="budgetGrid"
           ></div>
+
 
           <button
             class="btn primary full"
             id="budgetNext"
             type="button"
-            disabled
           >
             Continue
           </button>
+
+
+          <button
+            class="text-btn"
+            id="skipBudget"
+            type="button"
+          >
+            Skip budget
+          </button>
+
 
           <button
             class="text-btn"
@@ -427,7 +462,7 @@
           </h2>
 
           <p>
-            Pick the vibe for your Roam.
+            Pick an activity — or choose your own place.
           </p>
 
         </div>
@@ -437,6 +472,62 @@
           class="activity-grid"
           id="activityGrid"
         ></div>
+
+
+        <!-- CUSTOM PLACE -->
+
+        <div
+          class="custom-place card"
+          id="customPlaceBox"
+          hidden
+        >
+
+          <div class="custom-place-heading">
+
+            <p class="eyebrow">
+              YOUR PLACE
+            </p>
+
+            <h3>
+              Already know where you want to go?
+            </h3>
+
+            <p>
+              Add the place yourself and Roam will use it.
+            </p>
+
+          </div>
+
+
+          <label for="customPlace">
+            Place name
+          </label>
+
+          <input
+            id="customPlace"
+            type="text"
+            maxlength="120"
+            placeholder="The Grove, St. Louis"
+            autocomplete="off"
+          >
+
+
+          <label for="customPlaceAddress">
+            Address
+            <span class="optional">
+              Optional
+            </span>
+          </label>
+
+          <input
+            id="customPlaceAddress"
+            type="text"
+            maxlength="180"
+            placeholder="1234 Example Street"
+            autocomplete="street-address"
+          >
+
+        </div>
 
 
         <div class="actions">
@@ -796,13 +887,12 @@
        SCRIPTS
   ========================== -->
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
 
-  <!-- Roam configuration -->
   <script src="config.js"></script>
 
-  <!-- Roam application -->
   <script src="app.js"></script>
 
 </body>
