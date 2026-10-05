@@ -1,23 +1,22 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Roam — Make the plan</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
   <link
     href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
     rel="stylesheet"
-  />
+  >
 
-  <link rel="stylesheet" href="styles.css" />
+  <!-- Roam styles -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -27,17 +26,23 @@
   ========================== -->
 
   <header class="topbar">
-    <button class="brand" id="brandHome" type="button">
+
+    <button
+      class="brand"
+      id="homeBtn"
+      type="button"
+    >
       Roam
     </button>
 
     <button
       class="nav-join"
-      id="navJoin"
+      id="joinNavBtn"
       type="button"
     >
       Join a Roam
     </button>
+
   </header>
 
 
@@ -49,22 +54,24 @@
 
     <section
       class="screen active"
-      id="homeScreen"
+      id="home"
     >
 
       <div class="hero">
 
         <div class="hero-copy">
 
-          <p class="eyebrow">GROUP PLANS, MADE EASY</p>
+          <p class="eyebrow">
+            GROUP PLANS, MADE EASY
+          </p>
 
           <h1>
-            Okay, so…<br />
+            Okay, so…<br>
             what are we doing?
           </h1>
 
           <p class="hero-text">
-            Everyone wants to hang out.
+            Everyone wants to hang out.<br>
             Nobody wants to actually make the plan.
           </p>
 
@@ -77,8 +84,8 @@
           </p>
 
           <button
-            class="btn btn-primary"
-            id="startRoamBtn"
+            class="btn primary"
+            id="startBtn"
             type="button"
           >
             Start a Roam
@@ -86,11 +93,14 @@
 
         </div>
 
+
         <div class="hero-photo">
+
           <img
             src="https://images.unsplash.com/photo-1529260830199-42c24126f198?auto=format&fit=crop&w=1400&q=85"
             alt="Venice, Italy"
-          />
+          >
+
         </div>
 
       </div>
@@ -99,18 +109,21 @@
 
 
     <!-- =========================
-         CREATE ROAM
+         CREATE
     ========================== -->
 
     <section
       class="screen"
-      id="createScreen"
+      id="create"
     >
 
-      <div class="flow-shell">
+      <div class="shell">
 
-        <div class="flow-heading">
-          <p class="eyebrow">LET'S START</p>
+        <div class="heading">
+
+          <p class="eyebrow">
+            LET'S START
+          </p>
 
           <h2>
             Make a Roam.
@@ -119,10 +132,11 @@
           <p>
             A few quick details and you're ready to go.
           </p>
+
         </div>
 
 
-        <div class="card form-card">
+        <div class="card form">
 
           <label for="roamName">
             What's the plan called?
@@ -131,27 +145,29 @@
           <input
             id="roamName"
             type="text"
+            maxlength="80"
             placeholder="Saturday with the group"
             autocomplete="off"
-          />
+          >
 
 
           <label for="location">
             Where are you hanging out?
           </label>
 
-          <div class="location-input">
+          <div class="location-row">
 
             <input
               id="location"
               type="text"
+              maxlength="120"
               placeholder="St. Louis, MO"
               autocomplete="off"
-            />
+            >
 
             <button
-              id="locationBtn"
-              class="location-btn"
+              class="small-btn"
+              id="locateBtn"
               type="button"
             >
               Use my location
@@ -160,7 +176,7 @@
           </div>
 
           <p
-            class="field-status"
+            class="status"
             id="locationStatus"
           ></p>
 
@@ -175,20 +191,33 @@
             min="2"
             max="50"
             value="4"
-          />
+          >
+
+
+          <label for="organizerName">
+            Your name
+          </label>
+
+          <input
+            id="organizerName"
+            type="text"
+            maxlength="50"
+            placeholder="Your name"
+            autocomplete="name"
+          >
 
 
           <button
-            class="btn btn-primary full-width"
-            id="createContinue"
+            class="btn primary full"
+            id="createNext"
             type="button"
           >
             Continue
           </button>
 
           <button
-            class="btn btn-text"
-            id="createBack"
+            class="text-btn"
+            data-back="home"
             type="button"
           >
             Back
@@ -207,13 +236,16 @@
 
     <section
       class="screen"
-      id="datesScreen"
+      id="dates"
     >
 
-      <div class="flow-shell">
+      <div class="shell">
 
-        <div class="flow-heading">
-          <p class="eyebrow">WHEN</p>
+        <div class="heading">
+
+          <p class="eyebrow">
+            WHEN
+          </p>
 
           <h2>
             When could everyone hang out?
@@ -222,6 +254,7 @@
           <p>
             Pick the days that could work.
           </p>
+
         </div>
 
 
@@ -233,15 +266,15 @@
           ></div>
 
           <button
-            class="btn btn-primary full-width"
-            id="datesContinue"
+            class="btn primary full"
+            id="datesNext"
             type="button"
           >
             Continue
           </button>
 
           <button
-            class="btn btn-text"
+            class="text-btn"
             id="datesBack"
             type="button"
           >
@@ -256,26 +289,28 @@
 
 
     <!-- =========================
-         AVAILABILITY
+         TIMES
     ========================== -->
 
     <section
       class="screen"
-      id="availabilityScreen"
+      id="times"
     >
 
-      <div class="flow-shell">
+      <div class="shell">
 
-        <div class="flow-heading">
+        <div class="heading">
 
-          <p class="eyebrow">YOUR AVAILABILITY</p>
+          <p class="eyebrow">
+            YOUR AVAILABILITY
+          </p>
 
           <h2>
             When are you free?
           </h2>
 
           <p>
-            Choose the times that work for you.
+            Choose all the times that work for you.
           </p>
 
         </div>
@@ -289,16 +324,16 @@
           ></div>
 
           <button
-            class="btn btn-primary full-width"
-            id="availabilityContinue"
+            class="btn primary full"
+            id="timesNext"
             type="button"
           >
             Continue
           </button>
 
           <button
-            class="btn btn-text"
-            id="availabilityBack"
+            class="text-btn"
+            id="timesBack"
             type="button"
           >
             Back
@@ -317,21 +352,23 @@
 
     <section
       class="screen"
-      id="budgetScreen"
+      id="budget"
     >
 
-      <div class="flow-shell">
+      <div class="shell">
 
-        <div class="flow-heading">
+        <div class="heading">
 
-          <p class="eyebrow">BUDGET</p>
+          <p class="eyebrow">
+            BUDGET
+          </p>
 
           <h2>
             What feels comfortable?
           </h2>
 
           <p>
-            Your exact number stays private.
+            Your exact number is kept private.
           </p>
 
         </div>
@@ -342,50 +379,11 @@
           <div
             class="budget-grid"
             id="budgetGrid"
-          >
-
-            <button
-              class="budget-option"
-              data-budget="15"
-              type="button"
-            >
-              <strong>$</strong>
-              <span>Under $20</span>
-            </button>
-
-            <button
-              class="budget-option"
-              data-budget="30"
-              type="button"
-            >
-              <strong>$$</strong>
-              <span>$20–40</span>
-            </button>
-
-            <button
-              class="budget-option"
-              data-budget="50"
-              type="button"
-            >
-              <strong>$$$</strong>
-              <span>$40–60</span>
-            </button>
-
-            <button
-              class="budget-option"
-              data-budget="75"
-              type="button"
-            >
-              <strong>$$$$</strong>
-              <span>$60+</span>
-            </button>
-
-          </div>
-
+          ></div>
 
           <button
-            class="btn btn-primary full-width"
-            id="budgetContinue"
+            class="btn primary full"
+            id="budgetNext"
             type="button"
             disabled
           >
@@ -393,7 +391,7 @@
           </button>
 
           <button
-            class="btn btn-text"
+            class="text-btn"
             id="budgetBack"
             type="button"
           >
@@ -413,14 +411,16 @@
 
     <section
       class="screen"
-      id="activityScreen"
+      id="activity"
     >
 
-      <div class="flow-shell wide">
+      <div class="shell wide">
 
-        <div class="flow-heading">
+        <div class="heading">
 
-          <p class="eyebrow">THE FUN PART</p>
+          <p class="eyebrow">
+            THE FUN PART
+          </p>
 
           <h2>
             What do you want to do?
@@ -436,111 +436,14 @@
         <div
           class="activity-grid"
           id="activityGrid"
-        >
+        ></div>
+
+
+        <div class="actions">
 
           <button
-            class="activity-card"
-            data-activity="Food & drinks"
-            type="button"
-          >
-
-            <img
-              src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80"
-              alt="Food and drinks"
-            />
-
-            <span>Food & drinks</span>
-
-          </button>
-
-
-          <button
-            class="activity-card"
-            data-activity="Outdoors"
-            type="button"
-          >
-
-            <img
-              src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80"
-              alt="Outdoor activity"
-            />
-
-            <span>Outdoors</span>
-
-          </button>
-
-
-          <button
-            class="activity-card"
-            data-activity="Arts & culture"
-            type="button"
-          >
-
-            <img
-              src="https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=800&q=80"
-              alt="Art gallery"
-            />
-
-            <span>Arts & culture</span>
-
-          </button>
-
-
-          <button
-            class="activity-card"
-            data-activity="Games & fun"
-            type="button"
-          >
-
-            <img
-              src="https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80"
-              alt="Games"
-            />
-
-            <span>Games & fun</span>
-
-          </button>
-
-
-          <button
-            class="activity-card"
-            data-activity="Coffee & chill"
-            type="button"
-          >
-
-            <img
-              src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80"
-              alt="Coffee"
-            />
-
-            <span>Coffee & chill</span>
-
-          </button>
-
-
-          <button
-            class="activity-card"
-            data-activity="Something different"
-            type="button"
-          >
-
-            <img
-              src="https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=800&q=80"
-              alt="Friends hanging out"
-            />
-
-            <span>Something different</span>
-
-          </button>
-
-        </div>
-
-
-        <div class="flow-actions">
-
-          <button
-            class="btn btn-primary"
-            id="activityContinue"
+            class="btn primary"
+            id="activityNext"
             type="button"
             disabled
           >
@@ -548,7 +451,7 @@
           </button>
 
           <button
-            class="btn btn-text"
+            class="text-btn"
             id="activityBack"
             type="button"
           >
@@ -563,17 +466,17 @@
 
 
     <!-- =========================
-         ROAM CREATED
+         ROAM CODE
     ========================== -->
 
     <section
       class="screen"
-      id="resultsScreen"
+      id="code"
     >
 
-      <div class="flow-shell">
+      <div class="shell narrow">
 
-        <div class="success-card">
+        <div class="success card">
 
           <p class="eyebrow">
             IT'S READY
@@ -589,16 +492,16 @@
 
 
           <div
-            class="join-code"
-            id="roomCodeDisplay"
+            class="code"
+            id="roomCode"
           >
             -----
           </div>
 
 
           <button
-            class="btn btn-primary full-width"
-            id="copyCodeBtn"
+            class="btn primary full"
+            id="copyCode"
             type="button"
           >
             Copy code
@@ -606,8 +509,8 @@
 
 
           <button
-            class="btn btn-secondary full-width"
-            id="viewRoamBtn"
+            class="btn secondary full"
+            id="viewRoam"
             type="button"
           >
             View my Roam
@@ -626,14 +529,16 @@
 
     <section
       class="screen"
-      id="joinScreen"
+      id="join"
     >
 
-      <div class="flow-shell">
+      <div class="shell">
 
-        <div class="flow-heading">
+        <div class="heading">
 
-          <p class="eyebrow">JOIN A ROAM</p>
+          <p class="eyebrow">
+            JOIN A ROAM
+          </p>
 
           <h2>
             Got a code?
@@ -646,7 +551,7 @@
         </div>
 
 
-        <div class="card form-card">
+        <div class="card form">
 
           <label for="joinCode">
             Roam code
@@ -655,15 +560,15 @@
           <input
             id="joinCode"
             type="text"
-            maxlength="20"
+            maxlength="24"
             placeholder="ORANGE"
             autocomplete="off"
-          />
+          >
 
 
           <button
-            class="btn btn-primary full-width"
-            id="joinFindBtn"
+            class="btn primary full"
+            id="findRoam"
             type="button"
           >
             Find Roam
@@ -671,8 +576,8 @@
 
 
           <button
-            class="btn btn-text"
-            id="joinBack"
+            class="text-btn"
+            data-back="home"
             type="button"
           >
             Back
@@ -691,28 +596,36 @@
 
     <section
       class="screen"
-      id="joinConfirmScreen"
+      id="joinConfirm"
     >
 
-      <div class="flow-shell">
+      <div class="shell narrow">
 
-        <div class="card join-confirm-card">
+        <div class="card form">
 
           <p class="eyebrow">
             YOU FOUND IT
           </p>
 
-          <h2 id="joinRoomName">
+          <h2 id="joinTitle">
             Roam
           </h2>
 
-          <p id="joinRoomLocation">
+          <p id="joinLocation">
             Location
           </p>
 
-          <div class="mini-detail">
-            <span>Code</span>
-            <strong id="joinRoomCode">-----</strong>
+
+          <div class="mini">
+
+            <span>
+              Code
+            </span>
+
+            <strong id="joinCodeDisplay">
+              -----
+            </strong>
+
           </div>
 
 
@@ -723,14 +636,15 @@
           <input
             id="joinName"
             type="text"
+            maxlength="50"
             placeholder="Your name"
             autocomplete="name"
-          />
+          >
 
 
           <button
-            class="btn btn-primary full-width"
-            id="joinContinue"
+            class="btn primary full"
+            id="joinNext"
             type="button"
           >
             Join
@@ -738,8 +652,8 @@
 
 
           <button
-            class="btn btn-text"
-            id="joinConfirmBack"
+            class="text-btn"
+            data-back="join"
             type="button"
           >
             Back
@@ -758,14 +672,16 @@
 
     <section
       class="screen"
-      id="placesScreen"
+      id="places"
     >
 
-      <div class="flow-shell wide">
+      <div class="shell wide">
 
-        <div class="flow-heading">
+        <div class="heading">
 
-          <p class="eyebrow">YOUR OPTIONS</p>
+          <p class="eyebrow">
+            YOUR OPTIONS
+          </p>
 
           <h2>
             Pick a place.
@@ -779,18 +695,27 @@
 
 
         <div
-          class="places-grid"
+          class="places"
           id="placesList"
         ></div>
 
 
         <button
-          class="btn btn-primary"
-          id="placesContinue"
+          class="btn primary"
+          id="placesNext"
           type="button"
           disabled
         >
           Pick this place
+        </button>
+
+
+        <button
+          class="text-btn"
+          id="placesBack"
+          type="button"
+        >
+          Back
         </button>
 
       </div>
@@ -804,44 +729,44 @@
 
     <section
       class="screen"
-      id="finalScreen"
+      id="final"
     >
 
-      <div class="flow-shell">
+      <div class="shell narrow">
 
-        <div class="final-card">
+        <div class="card final">
 
           <p class="eyebrow">
             ROAM PLAN
           </p>
 
-          <h2 id="finalTitle">
+          <h2 id="finalHeading">
             You're going out.
           </h2>
 
 
           <div
-            class="final-plan"
             id="finalPlan"
+            class="plan"
           ></div>
 
 
           <div class="final-actions">
 
             <button
-              class="btn btn-primary"
-              id="copyPlanBtn"
+              class="btn primary"
+              id="copyPlan"
               type="button"
             >
               Copy plan
             </button>
 
             <button
-              class="btn btn-secondary"
-              id="newRoamBtn"
+              class="btn secondary"
+              id="doneBtn"
               type="button"
             >
-              Start another
+              Done
             </button>
 
           </div>
@@ -867,9 +792,17 @@
   ></div>
 
 
-  <!-- Supabase MUST load before app.js -->
+  <!-- =========================
+       SCRIPTS
+  ========================== -->
+
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- Roam configuration -->
+  <script src="config.js"></script>
+
+  <!-- Roam application -->
   <script src="app.js"></script>
 
 </body>
