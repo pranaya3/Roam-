@@ -1,6 +1,6 @@
 /* =========================================================
    ROAM — APP.JS
-   Supabase + free OpenStreetMap/Overpass places
+   Supabase + Free OpenStreetMap / Overpass Places
 ========================================================= */
 
 
@@ -8,14 +8,20 @@
    SUPABASE
 ========================================================= */
 
-const SUPABASE_URL = "https://vvbgksamdlhkkchyhlyl.supabase.co";
+const SUPABASE_URL =
+  "https://vvbgksamdlhkkchyhlyl.supabase.co";
 
-// Use your existing Supabase Publishable key here.
-const SUPABASE_KEY = "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
+// Paste your Supabase Publishable key here.
+const SUPABASE_KEY =
+  "sb_publishable_WaNsM-y0X9VH8pgnAQYFkg_2o68bx6S";
 
 const supabaseClient =
-  window.supabase && SUPABASE_KEY !== "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE"
-    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  window.supabase &&
+  SUPABASE_KEY !== "sb_publishable_WaNsM-y0X9VH8pgnAQYFkg_2o68bx6S"
+    ? window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+      )
     : null;
 
 
@@ -50,7 +56,9 @@ const state = {
   roomCode: null,
 
   organizerToken: null,
-  participantToken: null
+  participantToken: null,
+
+  participantSaved: false
 };
 
 
@@ -138,727 +146,7 @@ const activityData = {
 
 
 /* =========================================================
-   INITIALIZATION
-========================================================= */
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  state.organizerToken = getToken("roam_organizer_token");
-  state.participantToken = getToken("roam_participant_token");
-
-  if (!state.organizerToken) {
-    state.organizerToken = createToken();
-    localStorage.setItem(
-      "roam_organizer_token",
-      state.organizerToken
-    );
-  }
-
-  if (!state.participantToken) {
-    state.participantToken = createToken();
-    localStorage.setItem(
-      "roam_participant_token",
-      state.participantToken
-    );
-  }
-
-  setupGroupSize();
-
-  buildDates();
-
-  updateProgress();
-
-  showScreen("home");
-});
-
-
-/* =========================================================
-   TOKEN HELPERS
-========================================================= */
-
-function createToken() {
-  if (window.crypto && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-
-  return (
-    "roam-" +
-    Date.now() +
-    "-" +
-    Math.random().toString(36).slice(2)
-  );
-}
-
-function getToken(key) {
-  return localStorage.getItem(key);
-}
-
-
-/* =========================================================
-   SCREEN NAVIGATION
-========================================================= */
-
-function showScreen(screenId) {
-
-  document.querySelectorAll(".screen").forEach(screen => {
-    screen.classList.remove("active");
-  });
-
-  const screen = document.getElementById(screenId);
-
-  if (!screen) {
-    console.warn("Screen not found:", screenId);
-    return;
-  }
-
-  screen.classList.add("active");
-
-  state.currentScreen = screenId;
-
-  updateProgress();
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
-}
-
-
-function goHome() {
-  showScreen("home");
-}
-
-
-function openCreate() {
-  showScreen("create");
-}
-
-
-function openJoin() {
-  showScreen("join");
-}
-
-
-function goBack(screenId) {
-  showScreen(screenId);
-}
-
-
-/* =========================================================
-   PROGRESS BAR
-========================================================= */
-
-function updateProgress() {
-
-  const progress = document.getElementById("progress");
-
-  if (!progress) return;
-
-  const steps = {
-    home: 0,
-    create: 15,
-    dates: 30,
-    availability: 45,
-    budget: 60,
-    activity: 72,
-    results: 82,
-    places: 91,
-    final: 100,
-    join: 20,
-    "join-confirm": 40
-  };
-
-  progress.style.width =
-    `${steps[state.currentScreen] || 0}%`;
-}
-
-
-/* =========================================================
-   GROUP SIZE
-========================================================= */
-
-function setupGroupSize() {
-
-  const input = document.getElementById("groupSize");
-
-  if (!input) return;
-
-  input.value = state.groupSize;
-
-  input.addEventListener("change", () => {
-
-    let value = parseInt(input.value, 10);
-
-    if (Number.isNaN(value)) {
-      value = 4;
-    }
-
-    value = Math.max(2, Math.min(50, value));
-
-    state.groupSize = value;
-    input.value = value;
-  });
-}
-
-
-function changeGroupSize(amount) {
-
-  const input = document.getElementById("groupSize");
-
-  if (!input) return;
-
-  let value = parseInt(input.value, 10) || 4;
-
-  value += amount;
-
-  value = Math.max(2, Math.min(50, value));
-
-  input.value = value;
-
-  state.groupSize = value;
-}
-
-
-/* =========================================================
-   CREATE ROAM
-========================================================= */
-
-function saveRoamDetails() {
-
-  const nameInput =
-    document.getElementById("roamName");
-
-  const locationInput =
-    document.getElementById("location");
-
-  const groupInput =
-    document.getElementById("groupSize");
-
-  if (!nameInput || !locationInput) return;
-
-  const name = nameInput.value.trim();
-  const location = locationInput.value.trim();
-
-  if (!name) {
-    showToast("Give your Roam a name.");
-    nameInput.focus();
-    return;
-  }
-
-  if (!location) {
-    showToast("Add a starting location.");
-    locationInput.focus();
-    return;
-  }
-
-  state.roamName = name;
-  state.location = location;
-
-  if (groupInput) {
-    state.groupSize =
-      Math.max(
-        2,
-        Math.min(
-          50,
-          parseInt(groupInput.value, 10) || 4
-        )
-      );
-  }
-
-  showScreen("dates");
-}
-
-
-/* =========================================================
-   DATE BUILDER
-========================================================= */
-
-function buildDates() {
-
-  const grid =
-    document.getElementById("dateGrid");
-
-  if (!grid) return;
-
-  grid.innerHTML = "";
-
-  const today = new Date();
-
-  for (let i = 1; i <= 14; i++) {
-
-    const date = new Date(today);
-
-    date.setDate(today.getDate() + i);
-
-    const dayName = date.toLocaleDateString(
-      "en-US",
-      { weekday: "short" }
-    );
-
-    const monthName = date.toLocaleDateString(
-      "en-US",
-      { month: "short" }
-    );
-
-    const dayNumber = date.getDate();
-
-    const isoDate =
-      date.toISOString().split("T")[0];
-
-    const button =
-      document.createElement("button");
-
-    button.type = "button";
-    button.className = "date-option";
-
-    button.dataset.date = isoDate;
-
-    button.innerHTML = `
-      <strong>${dayName}</strong>
-      <span>${monthName} ${dayNumber}</span>
-    `;
-
-    button.addEventListener("click", () => {
-
-      if (state.selectedDates.includes(isoDate)) {
-
-        state.selectedDates =
-          state.selectedDates.filter(
-            d => d !== isoDate
-          );
-
-        button.classList.remove("selected");
-
-      } else {
-
-        state.selectedDates.push(isoDate);
-
-        button.classList.add("selected");
-      }
-    });
-
-    grid.appendChild(button);
-  }
-}
-
-
-/* =========================================================
-   SAVE DATES
-========================================================= */
-
-function saveDates() {
-
-  if (state.selectedDates.length === 0) {
-    showToast("Pick at least one date.");
-    return;
-  }
-
-  state.selectedDates.sort();
-
-  buildTimes();
-
-  showScreen("availability");
-}
-
-
-/* =========================================================
-   TIME BUILDER
-========================================================= */
-
-function buildTimes() {
-
-  const grid =
-    document.getElementById("timeGrid");
-
-  if (!grid) return;
-
-  grid.innerHTML = "";
-
-  const times = [
-    "9:00 AM",
-    "10:00 AM",
-    "11:00 AM",
-    "12:00 PM",
-    "1:00 PM",
-    "2:00 PM",
-    "3:00 PM",
-    "4:00 PM",
-    "5:00 PM",
-    "6:00 PM",
-    "7:00 PM",
-    "8:00 PM",
-    "9:00 PM"
-  ];
-
-  state.selectedTimes = [];
-
-  times.forEach(time => {
-
-    const button =
-      document.createElement("button");
-
-    button.type = "button";
-    button.className = "time-option";
-
-    button.textContent = time;
-
-    button.addEventListener("click", () => {
-
-      if (state.selectedTimes.includes(time)) {
-
-        state.selectedTimes =
-          state.selectedTimes.filter(
-            t => t !== time
-          );
-
-        button.classList.remove("selected");
-
-      } else {
-
-        state.selectedTimes.push(time);
-
-        button.classList.add("selected");
-      }
-    });
-
-    grid.appendChild(button);
-  });
-}
-
-
-/* =========================================================
-   SAVE AVAILABILITY
-========================================================= */
-
-function saveAvailability() {
-
-  const input =
-    document.getElementById("participantName");
-
-  const name =
-    input ? input.value.trim() : "";
-
-  if (!name) {
-    showToast("Add your name.");
-    input?.focus();
-    return;
-  }
-
-  if (state.selectedTimes.length === 0) {
-    showToast("Pick at least one time.");
-    return;
-  }
-
-  state.participantName = name;
-
-  showScreen("budget");
-}
-
-
-/* =========================================================
-   BUDGET
-========================================================= */
-
-function selectBudget(amount) {
-
-  const numericAmount =
-    Number(amount);
-
-  if (!Number.isFinite(numericAmount)) {
-    return;
-  }
-
-  state.budget = numericAmount;
-
-  document
-    .querySelectorAll(".budget-option")
-    .forEach(button => {
-
-      const buttonAmount =
-        Number(button.dataset.budget);
-
-      button.classList.toggle(
-        "selected",
-        buttonAmount === numericAmount
-      );
-    });
-}
-
-
-async function saveBudget() {
-
-  if (!state.budget) {
-    showToast("Pick a budget.");
-    return;
-  }
-
-  showScreen("activity");
-}
-
-
-/* =========================================================
-   ACTIVITY
-========================================================= */
-
-function selectActivity(element, activity) {
-
-  if (!activityData[activity]) {
-    return;
-  }
-
-  state.activity = activity;
-
-  document
-    .querySelectorAll(".activity-card")
-    .forEach(card => {
-      card.classList.remove("selected");
-    });
-
-  if (element) {
-    element.classList.add("selected");
-  }
-
-  buildResults();
-}
-
-
-/* =========================================================
-   BUILD RESULTS
-========================================================= */
-
-async function buildResults() {
-
-  if (!state.activity) {
-    showToast("Choose an activity.");
-    return;
-  }
-
-  showScreen("results");
-
-  const list =
-    document.getElementById("resultsList");
-
-  if (list) {
-
-    list.innerHTML = `
-      <div class="loading-state">
-        <div class="loading-spinner"></div>
-        Finding the best times...
-      </div>
-    `;
-  }
-
-  await saveRoom();
-
-  await calculateAverageBudget();
-
-  const bestTimes =
-    calculateBestTimes();
-
-  renderBestTimes(bestTimes);
-}
-
-
-/* =========================================================
-   FIND BEST TIMES
-========================================================= */
-
-function calculateBestTimes() {
-
-  if (!state.selectedTimes.length) {
-    return [];
-  }
-
-  const sorted =
-    [...state.selectedTimes]
-      .sort((a, b) =>
-        convertTimeToMinutes(a) -
-        convertTimeToMinutes(b)
-      );
-
-  return sorted.slice(0, 3);
-}
-
-
-function convertTimeToMinutes(time) {
-
-  const match =
-    time.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
-
-  if (!match) return 0;
-
-  let hours =
-    parseInt(match[1], 10);
-
-  const minutes =
-    parseInt(match[2], 10);
-
-  const period =
-    match[3].toUpperCase();
-
-  if (period === "PM" && hours !== 12) {
-    hours += 12;
-  }
-
-  if (period === "AM" && hours === 12) {
-    hours = 0;
-  }
-
-  return hours * 60 + minutes;
-}
-
-
-/* =========================================================
-   RENDER BEST TIMES
-========================================================= */
-
-function renderBestTimes(times) {
-
-  const list =
-    document.getElementById("resultsList");
-
-  if (!list) return;
-
-  if (!times.length) {
-
-    list.innerHTML = `
-      <div class="loading-state">
-        No times found.
-      </div>
-    `;
-
-    return;
-  }
-
-  list.innerHTML = "";
-
-  times.forEach((time, index) => {
-
-    const date =
-      state.selectedDates[
-        index % state.selectedDates.length
-      ];
-
-    const card =
-      document.createElement("button");
-
-    card.type = "button";
-    card.className = "result-card";
-
-    card.innerHTML = `
-      <div>
-        <strong>${formatDate(date)}</strong>
-        <span>${time}</span>
-      </div>
-
-      <div class="result-arrow">→</div>
-    `;
-
-    card.addEventListener("click", () => {
-
-      state.selectedTime = {
-        date,
-        time
-      };
-
-      loadNearbyPlaces();
-    });
-
-    list.appendChild(card);
-  });
-}
-
-
-/* =========================================================
-   FORMAT DATE
-========================================================= */
-
-function formatDate(isoDate) {
-
-  if (!isoDate) return "";
-
-  const date =
-    new Date(`${isoDate}T12:00:00`);
-
-  return date.toLocaleDateString(
-    "en-US",
-    {
-      weekday: "long",
-      month: "long",
-      day: "numeric"
-    }
-  );
-}
-
-
-/* =========================================================
-   SUPABASE — SAVE ROOM
-========================================================= */
-
-async function saveRoom() {
-
-  if (!supabaseClient) {
-    console.warn(
-      "Supabase is not configured. Add your Publishable key to app.js."
-    );
-
-    return;
-  }
-
-  if (state.roomId) {
-    return state.roomId;
-  }
-
-  try {
-
-    const code =
-      await generateUniqueRoamCode();
-
-    const roomPayload = {
-      code,
-      name: state.roamName,
-      location_text: state.location,
-      lat: state.lat,
-      lng: state.lng,
-      group_size: state.groupSize,
-      candidate_dates: state.selectedDates,
-      activity: state.activity,
-      organizer_token: state.organizerToken
-    };
-
-    const {
-      data,
-      error
-    } = await supabaseClient
-      .from("rooms")
-      .insert(roomPayload)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Supabase room error:", error);
-      showToast("Could not save your Roam.");
-      return null;
-    }
-
-    state.roomId = data.id;
-    state.roomCode = data.code;
-
-    return data.id;
-
-  } catch (error) {
-
-    console.error(error);
-
-    showToast("Something went wrong saving your Roam.");
-
-    return null;
-  }
-}
-
-
-/* =========================================================
-   ONE-WORD ROAM CODE
+   ROAM WORDS
 ========================================================= */
 
 const roamWords = [
@@ -895,43 +183,1259 @@ const roamWords = [
 ];
 
 
-async function generateUniqueRoamCode() {
+/* =========================================================
+   INITIALIZATION
+========================================================= */
 
-  if (!supabaseClient) {
-    return randomRoamWord();
+document.addEventListener("DOMContentLoaded", () => {
+
+  state.organizerToken =
+    getToken("roam_organizer_token");
+
+  state.participantToken =
+    getToken("roam_participant_token");
+
+
+  if (!state.organizerToken) {
+
+    state.organizerToken =
+      createToken();
+
+    localStorage.setItem(
+      "roam_organizer_token",
+      state.organizerToken
+    );
   }
 
-  for (let attempt = 0; attempt < 15; attempt++) {
+
+  if (!state.participantToken) {
+
+    state.participantToken =
+      createToken();
+
+    localStorage.setItem(
+      "roam_participant_token",
+      state.participantToken
+    );
+  }
+
+
+  setupGroupSize();
+
+  buildDates();
+
+  updateProgress();
+
+  showScreen("home");
+});
+
+
+/* =========================================================
+   TOKEN HELPERS
+========================================================= */
+
+function createToken() {
+
+  if (
+    window.crypto &&
+    crypto.randomUUID
+  ) {
+    return crypto.randomUUID();
+  }
+
+  return (
+    "roam-" +
+    Date.now() +
+    "-" +
+    Math.random()
+      .toString(36)
+      .slice(2)
+  );
+}
+
+
+function getToken(key) {
+
+  return localStorage.getItem(key);
+}
+
+
+/* =========================================================
+   SCREEN NAVIGATION
+========================================================= */
+
+function showScreen(screenId) {
+
+  document
+    .querySelectorAll(".screen")
+    .forEach(screen => {
+
+      screen.classList.remove("active");
+
+    });
+
+
+  const screen =
+    document.getElementById(screenId);
+
+
+  if (!screen) {
+
+    console.warn(
+      "Screen not found:",
+      screenId
+    );
+
+    return;
+  }
+
+
+  screen.classList.add("active");
+
+  state.currentScreen =
+    screenId;
+
+
+  updateProgress();
+
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+
+
+function goHome() {
+
+  showScreen("home");
+}
+
+
+function openCreate() {
+
+  showScreen("create");
+}
+
+
+function openJoin() {
+
+  showScreen("join");
+}
+
+
+function goBack(screenId) {
+
+  showScreen(screenId);
+}
+
+
+/* =========================================================
+   PROGRESS BAR
+========================================================= */
+
+function updateProgress() {
+
+  const progress =
+    document.getElementById("progress");
+
+
+  if (!progress) return;
+
+
+  const steps = {
+
+    home: 0,
+
+    create: 15,
+
+    dates: 30,
+
+    availability: 45,
+
+    budget: 60,
+
+    activity: 72,
+
+    results: 82,
+
+    places: 91,
+
+    final: 100,
+
+    join: 20,
+
+    "join-confirm": 40
+  };
+
+
+  progress.style.width =
+    `${steps[state.currentScreen] || 0}%`;
+}
+
+
+/* =========================================================
+   GROUP SIZE
+========================================================= */
+
+function setupGroupSize() {
+
+  const input =
+    document.getElementById(
+      "groupSize"
+    );
+
+
+  if (!input) return;
+
+
+  input.value =
+    state.groupSize;
+
+
+  input.addEventListener(
+    "change",
+    () => {
+
+      let value =
+        parseInt(
+          input.value,
+          10
+        );
+
+
+      if (Number.isNaN(value)) {
+
+        value = 4;
+      }
+
+
+      value =
+        Math.max(
+          2,
+          Math.min(
+            50,
+            value
+          )
+        );
+
+
+      state.groupSize =
+        value;
+
+      input.value =
+        value;
+    }
+  );
+}
+
+
+function changeGroupSize(amount) {
+
+  const input =
+    document.getElementById(
+      "groupSize"
+    );
+
+
+  if (!input) return;
+
+
+  let value =
+    parseInt(
+      input.value,
+      10
+    ) || 4;
+
+
+  value += amount;
+
+
+  value =
+    Math.max(
+      2,
+      Math.min(
+        50,
+        value
+      )
+    );
+
+
+  input.value =
+    value;
+
+  state.groupSize =
+    value;
+}
+
+
+/* =========================================================
+   CREATE ROAM
+========================================================= */
+
+function saveRoamDetails() {
+
+  const nameInput =
+    document.getElementById(
+      "roamName"
+    );
+
+  const locationInput =
+    document.getElementById(
+      "location"
+    );
+
+  const groupInput =
+    document.getElementById(
+      "groupSize"
+    );
+
+
+  if (
+    !nameInput ||
+    !locationInput
+  ) {
+    return;
+  }
+
+
+  const name =
+    nameInput.value.trim();
+
+  const location =
+    locationInput.value.trim();
+
+
+  if (!name) {
+
+    showToast(
+      "Give your Roam a name."
+    );
+
+    nameInput.focus();
+
+    return;
+  }
+
+
+  if (!location) {
+
+    showToast(
+      "Add a starting location."
+    );
+
+    locationInput.focus();
+
+    return;
+  }
+
+
+  state.roamName =
+    name;
+
+  state.location =
+    location;
+
+
+  if (groupInput) {
+
+    state.groupSize =
+      Math.max(
+        2,
+        Math.min(
+          50,
+          parseInt(
+            groupInput.value,
+            10
+          ) || 4
+        )
+      );
+  }
+
+
+  showScreen("dates");
+}
+
+
+/* =========================================================
+   DATE BUILDER
+========================================================= */
+
+function buildDates() {
+
+  const grid =
+    document.getElementById(
+      "dateGrid"
+    );
+
+
+  if (!grid) return;
+
+
+  grid.innerHTML = "";
+
+
+  const today =
+    new Date();
+
+
+  for (
+    let i = 1;
+    i <= 14;
+    i++
+  ) {
+
+    const date =
+      new Date(today);
+
+
+    date.setDate(
+      today.getDate() + i
+    );
+
+
+    const dayName =
+      date.toLocaleDateString(
+        "en-US",
+        {
+          weekday: "short"
+        }
+      );
+
+
+    const monthName =
+      date.toLocaleDateString(
+        "en-US",
+        {
+          month: "short"
+        }
+      );
+
+
+    const dayNumber =
+      date.getDate();
+
+
+    const isoDate =
+      date
+        .toISOString()
+        .split("T")[0];
+
+
+    const button =
+      document.createElement(
+        "button"
+      );
+
+
+    button.type =
+      "button";
+
+    button.className =
+      "date-option";
+
+    button.dataset.date =
+      isoDate;
+
+
+    button.innerHTML = `
+      <strong>${dayName}</strong>
+      <span>${monthName} ${dayNumber}</span>
+    `;
+
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        if (
+          state.selectedDates
+            .includes(isoDate)
+        ) {
+
+          state.selectedDates =
+            state.selectedDates.filter(
+              date =>
+                date !== isoDate
+            );
+
+          button.classList.remove(
+            "selected"
+          );
+
+        } else {
+
+          state.selectedDates.push(
+            isoDate
+          );
+
+          button.classList.add(
+            "selected"
+          );
+        }
+      }
+    );
+
+
+    grid.appendChild(button);
+  }
+}
+
+
+/* =========================================================
+   SAVE DATES
+========================================================= */
+
+function saveDates() {
+
+  if (
+    state.selectedDates.length === 0
+  ) {
+
+    showToast(
+      "Pick at least one date."
+    );
+
+    return;
+  }
+
+
+  state.selectedDates.sort();
+
+
+  buildTimes();
+
+
+  showScreen(
+    "availability"
+  );
+}
+
+
+/* =========================================================
+   TIME BUILDER
+========================================================= */
+
+function buildTimes() {
+
+  const grid =
+    document.getElementById(
+      "timeGrid"
+    );
+
+
+  if (!grid) return;
+
+
+  grid.innerHTML = "";
+
+
+  const times = [
+
+    "9:00 AM",
+    "10:00 AM",
+    "11:00 AM",
+    "12:00 PM",
+    "1:00 PM",
+    "2:00 PM",
+    "3:00 PM",
+    "4:00 PM",
+    "5:00 PM",
+    "6:00 PM",
+    "7:00 PM",
+    "8:00 PM",
+    "9:00 PM"
+  ];
+
+
+  state.selectedTimes =
+    [];
+
+
+  times.forEach(
+    time => {
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+
+      button.type =
+        "button";
+
+      button.className =
+        "time-option";
+
+      button.textContent =
+        time;
+
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          if (
+            state.selectedTimes
+              .includes(time)
+          ) {
+
+            state.selectedTimes =
+              state.selectedTimes.filter(
+                selected =>
+                  selected !== time
+              );
+
+            button.classList.remove(
+              "selected"
+            );
+
+          } else {
+
+            state.selectedTimes.push(
+              time
+            );
+
+            button.classList.add(
+              "selected"
+            );
+          }
+        }
+      );
+
+
+      grid.appendChild(button);
+    }
+  );
+}
+
+
+/* =========================================================
+   SAVE AVAILABILITY
+========================================================= */
+
+function saveAvailability() {
+
+  const input =
+    document.getElementById(
+      "participantName"
+    );
+
+
+  const name =
+    input
+      ? input.value.trim()
+      : "";
+
+
+  if (!name) {
+
+    showToast(
+      "Add your name."
+    );
+
+    input?.focus();
+
+    return;
+  }
+
+
+  if (
+    state.selectedTimes.length === 0
+  ) {
+
+    showToast(
+      "Pick at least one time."
+    );
+
+    return;
+  }
+
+
+  state.participantName =
+    name;
+
+
+  showScreen("budget");
+}
+
+
+/* =========================================================
+   BUDGET
+========================================================= */
+
+function selectBudget(amount) {
+
+  const numericAmount =
+    Number(amount);
+
+
+  if (
+    !Number.isFinite(
+      numericAmount
+    )
+  ) {
+    return;
+  }
+
+
+  state.budget =
+    numericAmount;
+
+
+  document
+    .querySelectorAll(
+      ".budget-option"
+    )
+    .forEach(button => {
+
+      const buttonAmount =
+        Number(
+          button.dataset.budget
+        );
+
+
+      button.classList.toggle(
+        "selected",
+        buttonAmount ===
+          numericAmount
+      );
+    });
+}
+
+
+async function saveBudget() {
+
+  if (!state.budget) {
+
+    showToast(
+      "Pick a budget."
+    );
+
+    return;
+  }
+
+
+  showScreen(
+    "activity"
+  );
+}
+
+
+/* =========================================================
+   ACTIVITY
+========================================================= */
+
+function selectActivity(
+  element,
+  activity
+) {
+
+  if (
+    !activityData[activity]
+  ) {
+    return;
+  }
+
+
+  state.activity =
+    activity;
+
+
+  document
+    .querySelectorAll(
+      ".activity-card"
+    )
+    .forEach(card => {
+
+      card.classList.remove(
+        "selected"
+      );
+    });
+
+
+  if (element) {
+
+    element.classList.add(
+      "selected"
+    );
+  }
+
+
+  buildResults();
+}
+
+
+/* =========================================================
+   BUILD RESULTS
+========================================================= */
+
+async function buildResults() {
+
+  if (!state.activity) {
+
+    showToast(
+      "Choose an activity."
+    );
+
+    return;
+  }
+
+
+  showScreen(
+    "results"
+  );
+
+
+  const list =
+    document.getElementById(
+      "resultsList"
+    );
+
+
+  if (list) {
+
+    list.innerHTML = `
+      <div class="loading-state">
+        <div class="loading-spinner"></div>
+        Finding the best times...
+      </div>
+    `;
+  }
+
+
+  /*
+    The room must exist before the participant
+    can be saved.
+  */
+
+  const roomId =
+    await saveRoom();
+
+
+  if (!roomId) {
+
+    /*
+      If Supabase is not configured,
+      continue locally.
+    */
+  }
+
+
+  /*
+    Save the organizer as the first
+    participant after the room exists.
+  */
+
+  await saveParticipant();
+
+
+  await calculateAverageBudget();
+
+
+  const bestTimes =
+    calculateBestTimes();
+
+
+  renderBestTimes(
+    bestTimes
+  );
+}
+
+
+/* =========================================================
+   FIND BEST TIMES
+========================================================= */
+
+function calculateBestTimes() {
+
+  if (
+    !state.selectedTimes.length
+  ) {
+    return [];
+  }
+
+
+  const sorted =
+    [
+      ...state.selectedTimes
+    ].sort(
+      (a, b) =>
+        convertTimeToMinutes(a) -
+        convertTimeToMinutes(b)
+    );
+
+
+  return sorted.slice(
+    0,
+    3
+  );
+}
+
+
+function convertTimeToMinutes(
+  time
+) {
+
+  const match =
+    time.match(
+      /^(\d+):(\d+)\s*(AM|PM)$/i
+    );
+
+
+  if (!match) {
+    return 0;
+  }
+
+
+  let hours =
+    parseInt(
+      match[1],
+      10
+    );
+
+
+  const minutes =
+    parseInt(
+      match[2],
+      10
+    );
+
+
+  const period =
+    match[3].toUpperCase();
+
+
+  if (
+    period === "PM" &&
+    hours !== 12
+  ) {
+    hours += 12;
+  }
+
+
+  if (
+    period === "AM" &&
+    hours === 12
+  ) {
+    hours = 0;
+  }
+
+
+  return (
+    hours * 60 +
+    minutes
+  );
+}
+
+
+/* =========================================================
+   RENDER BEST TIMES
+========================================================= */
+
+function renderBestTimes(
+  times
+) {
+
+  const list =
+    document.getElementById(
+      "resultsList"
+    );
+
+
+  if (!list) return;
+
+
+  if (!times.length) {
+
+    list.innerHTML = `
+      <div class="loading-state">
+        No times found.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  list.innerHTML =
+    "";
+
+
+  times.forEach(
+    (time, index) => {
+
+      const date =
+        state.selectedDates[
+          index %
+          state.selectedDates.length
+        ];
+
+
+      const card =
+        document.createElement(
+          "button"
+        );
+
+
+      card.type =
+        "button";
+
+      card.className =
+        "result-card";
+
+
+      card.innerHTML = `
+        <div>
+          <strong>
+            ${formatDate(date)}
+          </strong>
+
+          <span>
+            ${escapeHtml(time)}
+          </span>
+        </div>
+
+        <div class="result-arrow">
+          →
+        </div>
+      `;
+
+
+      card.addEventListener(
+        "click",
+        () => {
+
+          state.selectedTime = {
+            date,
+            time
+          };
+
+
+          loadNearbyPlaces();
+        }
+      );
+
+
+      list.appendChild(
+        card
+      );
+    }
+  );
+}
+
+
+/* =========================================================
+   FORMAT DATE
+========================================================= */
+
+function formatDate(
+  isoDate
+) {
+
+  if (!isoDate) {
+    return "";
+  }
+
+
+  const date =
+    new Date(
+      `${isoDate}T12:00:00`
+    );
+
+
+  return date.toLocaleDateString(
+    "en-US",
+    {
+      weekday: "long",
+      month: "long",
+      day: "numeric"
+    }
+  );
+}
+
+
+/* =========================================================
+   SUPABASE — SAVE ROOM
+========================================================= */
+
+async function saveRoom() {
+
+  if (!supabaseClient) {
+
+    console.warn(
+      "Supabase is not configured. Add your Publishable key to app.js."
+    );
+
+    return null;
+  }
+
+
+  if (state.roomId) {
+
+    return state.roomId;
+  }
+
+
+  try {
 
     const code =
-      randomRoamWord();
+      await generateUniqueRoamCode();
+
+
+    const roomPayload = {
+
+      code,
+
+      name:
+        state.roamName,
+
+      location_text:
+        state.location,
+
+      lat:
+        state.lat,
+
+      lng:
+        state.lng,
+
+      group_size:
+        state.groupSize,
+
+      candidate_dates:
+        state.selectedDates,
+
+      activity:
+        state.activity,
+
+      organizer_token:
+        state.organizerToken
+    };
+
 
     const {
       data,
       error
-    } = await supabaseClient
-      .from("rooms")
-      .select("id")
-      .eq("code", code)
-      .limit(1);
+    } =
+      await supabaseClient
+        .from("rooms")
+        .insert(
+          roomPayload
+        )
+        .select()
+        .single();
+
 
     if (error) {
+
+      console.error(
+        "Supabase room error:",
+        error
+      );
+
+      showToast(
+        "Could not save your Roam."
+      );
+
+      return null;
+    }
+
+
+    state.roomId =
+      data.id;
+
+    state.roomCode =
+      data.code;
+
+
+    return data.id;
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    showToast(
+      "Something went wrong saving your Roam."
+    );
+
+
+    return null;
+  }
+}
+
+
+/* =========================================================
+   GENERATE UNIQUE ROAM CODE
+========================================================= */
+
+async function generateUniqueRoamCode() {
+
+  if (!supabaseClient) {
+
+    return randomRoamWord();
+  }
+
+
+  for (
+    let attempt = 0;
+    attempt < 15;
+    attempt++
+  ) {
+
+    const code =
+      randomRoamWord();
+
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("rooms")
+        .select("id")
+        .eq(
+          "code",
+          code
+        )
+        .limit(1);
+
+
+    if (error) {
+
       console.warn(
         "Could not check code:",
         error
       );
 
+
       return code;
     }
 
-    if (!data || data.length === 0) {
+
+    if (
+      !data ||
+      data.length === 0
+    ) {
+
       return code;
     }
   }
 
+
+  /*
+    Very unlikely fallback.
+    Keeps the code readable while
+    making it unique.
+  */
+
   return (
     randomRoamWord() +
-    Math.floor(Math.random() * 100)
+    Math.floor(
+      Math.random() * 100
+    )
   );
 }
 
@@ -940,7 +1444,8 @@ function randomRoamWord() {
 
   return roamWords[
     Math.floor(
-      Math.random() * roamWords.length
+      Math.random() *
+      roamWords.length
     )
   ];
 }
@@ -952,39 +1457,100 @@ function randomRoamWord() {
 
 async function saveParticipant() {
 
-  if (!supabaseClient || !state.roomId) {
+  if (
+    !supabaseClient ||
+    !state.roomId
+  ) {
+
     return;
   }
 
+
+  /*
+    Prevent accidentally saving the
+    same participant multiple times
+    during the same flow.
+  */
+
+  if (
+    state.participantSaved
+  ) {
+
+    return;
+  }
+
+
   const availability = {
-    dates: state.selectedDates,
-    times: state.selectedTimes
+
+    dates:
+      state.selectedDates,
+
+    times:
+      state.selectedTimes
   };
+
 
   try {
 
     const {
       error
-    } = await supabaseClient
-      .from("participants")
-      .insert({
-        room_id: state.roomId,
-        name: state.participantName,
-        participant_token: state.participantToken,
-        availability,
-        budget: state.budget
-      });
+    } =
+      await supabaseClient
+        .from("participants")
+        .insert({
+
+          room_id:
+            state.roomId,
+
+          name:
+            state.participantName,
+
+          participant_token:
+            state.participantToken,
+
+          availability,
+
+          budget:
+            state.budget
+        });
+
 
     if (error) {
-      console.error(
-        "Participant save error:",
-        error
-      );
+
+      /*
+        A participant might already exist
+        if the user refreshes/re-enters.
+      */
+
+      if (
+        error.code === "23505"
+      ) {
+
+        console.warn(
+          "Participant already exists."
+        );
+
+      } else {
+
+        console.error(
+          "Participant save error:",
+          error
+        );
+      }
+
+      return;
     }
+
+
+    state.participantSaved =
+      true;
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "Participant save failed:",
+      error
+    );
   }
 }
 
@@ -995,35 +1561,49 @@ async function saveParticipant() {
 
 async function calculateAverageBudget() {
 
-  if (!supabaseClient || !state.roomId) {
+  if (
+    !supabaseClient ||
+    !state.roomId
+  ) {
+
     state.averageBudget =
-      state.budget || null;
+      state.budget ||
+      null;
+
 
     updateAverageBudget();
+
     return;
   }
+
 
   try {
 
     const {
       data,
       error
-    } = await supabaseClient
-      .rpc(
-        "get_room_average_budget",
-        {
-          room_uuid: state.roomId
-        }
-      );
+    } =
+      await supabaseClient
+        .rpc(
+          "get_room_average_budget",
+          {
+            room_uuid:
+              state.roomId
+          }
+        );
+
 
     if (error) {
+
       console.error(
         "Budget average error:",
         error
       );
 
+
       state.averageBudget =
-        state.budget || null;
+        state.budget ||
+        null;
 
     } else {
 
@@ -1034,11 +1614,16 @@ async function calculateAverageBudget() {
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
+
 
     state.averageBudget =
-      state.budget || null;
+      state.budget ||
+      null;
   }
+
 
   updateAverageBudget();
 }
@@ -1047,18 +1632,32 @@ async function calculateAverageBudget() {
 function updateAverageBudget() {
 
   const element =
-    document.getElementById("averageBudget");
+    document.getElementById(
+      "averageBudget"
+    );
 
-  if (!element) return;
 
-  if (!state.averageBudget) {
-    element.textContent = "—";
+  if (!element) {
     return;
   }
 
+
+  if (
+    !state.averageBudget
+  ) {
+
+    element.textContent =
+      "—";
+
+    return;
+  }
+
+
   element.textContent =
     `$${Math.round(
-      Number(state.averageBudget)
+      Number(
+        state.averageBudget
+      )
     )}`;
 }
 
@@ -1069,47 +1668,70 @@ function updateAverageBudget() {
 
 async function loadNearbyPlaces() {
 
-  showScreen("places");
+  showScreen(
+    "places"
+  );
+
 
   const subtitle =
-    document.getElementById("placesSubtitle");
+    document.getElementById(
+      "placesSubtitle"
+    );
+
 
   const list =
-    document.getElementById("placesList");
+    document.getElementById(
+      "placesList"
+    );
+
 
   const activity =
-    activityData[state.activity];
+    activityData[
+      state.activity
+    ];
 
-  if (subtitle && activity) {
+
+  if (
+    subtitle &&
+    activity
+  ) {
 
     subtitle.textContent =
       `Nearby ${activity.label.toLowerCase()} spots.`;
   }
+
 
   if (list) {
 
     list.innerHTML = `
       <div class="loading-state">
         <div class="loading-spinner"></div>
-        Finding nearby ${(
-          activity?.label || "places"
-        ).toLowerCase()}...
+        Finding nearby ${
+          (
+            activity?.label ||
+            "places"
+          ).toLowerCase()
+        }...
       </div>
     `;
   }
+
 
   try {
 
     await ensureCoordinates();
 
+
     if (
       state.lat === null ||
       state.lng === null
     ) {
+
       throw new Error(
         "Location is unavailable."
       );
     }
+
 
     const places =
       await fetchCategoryPlaces(
@@ -1118,9 +1740,14 @@ async function loadNearbyPlaces() {
         state.activity
       );
 
-    state.places = places;
 
-    renderPlaces(places);
+    state.places =
+      places;
+
+
+    renderPlaces(
+      places
+    );
 
   } catch (error) {
 
@@ -1128,6 +1755,7 @@ async function loadNearbyPlaces() {
       "Place search error:",
       error
     );
+
 
     if (list) {
 
@@ -1149,28 +1777,40 @@ async function loadNearbyPlaces() {
 function getUserLocation() {
 
   const status =
-    document.getElementById("locationStatus");
+    document.getElementById(
+      "locationStatus"
+    );
 
-  if (!navigator.geolocation) {
+
+  if (
+    !navigator.geolocation
+  ) {
 
     if (status) {
+
       status.textContent =
         "Location is not supported by this browser.";
     }
+
 
     showToast(
       "Your browser does not support location."
     );
 
+
     return;
   }
 
+
   if (status) {
+
     status.textContent =
       "Finding your location...";
   }
 
+
   navigator.geolocation.getCurrentPosition(
+
     async position => {
 
       state.lat =
@@ -1179,10 +1819,13 @@ function getUserLocation() {
       state.lng =
         position.coords.longitude;
 
+
       if (status) {
+
         status.textContent =
           "Location found.";
       }
+
 
       try {
 
@@ -1192,15 +1835,21 @@ function getUserLocation() {
             state.lng
           );
 
+
         if (location) {
 
           state.location =
             location;
 
+
           const input =
-            document.getElementById("location");
+            document.getElementById(
+              "location"
+            );
+
 
           if (input) {
+
             input.value =
               location;
           }
@@ -1215,9 +1864,13 @@ function getUserLocation() {
       }
     },
 
+
     error => {
 
-      console.error(error);
+      console.error(
+        error
+      );
+
 
       if (status) {
 
@@ -1225,15 +1878,22 @@ function getUserLocation() {
           "Couldn't get your location.";
       }
 
+
       showToast(
         "Please allow location access."
       );
     },
 
+
     {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 300000
+      enableHighAccuracy:
+        true,
+
+      timeout:
+        10000,
+
+      maximumAge:
+        300000
     }
   );
 }
@@ -1249,12 +1909,16 @@ async function ensureCoordinates() {
     state.lat !== null &&
     state.lng !== null
   ) {
+
     return;
   }
 
+
   if (!state.location) {
+
     return;
   }
+
 
   try {
 
@@ -1263,10 +1927,18 @@ async function ensureCoordinates() {
         state.location
       );
 
-    if (!result) return;
 
-    state.lat = result.lat;
-    state.lng = result.lng;
+    if (!result) {
+
+      return;
+    }
+
+
+    state.lat =
+      result.lat;
+
+    state.lng =
+      result.lng;
 
   } catch (error) {
 
@@ -1282,28 +1954,41 @@ async function ensureCoordinates() {
    NOMINATIM REVERSE GEOCODE
 ========================================================= */
 
-async function reverseGeocode(lat, lng) {
+async function reverseGeocode(
+  lat,
+  lng
+) {
 
   const url =
     "https://nominatim.openstreetmap.org/reverse" +
-    `?format=jsonv2&lat=${encodeURIComponent(lat)}` +
+    `?format=jsonv2` +
+    `&lat=${encodeURIComponent(lat)}` +
     `&lon=${encodeURIComponent(lng)}`;
 
+
   const response =
-    await fetch(url, {
-      headers: {
-        Accept: "application/json"
+    await fetch(
+      url,
+      {
+        headers: {
+          Accept:
+            "application/json"
+        }
       }
-    });
+    );
+
 
   if (!response.ok) {
+
     throw new Error(
       `Reverse geocode failed: ${response.status}`
     );
   }
 
+
   const data =
     await response.json();
+
 
   return (
     data.display_name ||
@@ -1316,37 +2001,61 @@ async function reverseGeocode(lat, lng) {
    NOMINATIM GEOCODE
 ========================================================= */
 
-async function geocodeLocation(query) {
+async function geocodeLocation(
+  query
+) {
 
   const url =
     "https://nominatim.openstreetmap.org/search" +
-    `?format=jsonv2&q=${encodeURIComponent(query)}` +
-    "&limit=1";
+    `?format=jsonv2` +
+    `&q=${encodeURIComponent(query)}` +
+    `&limit=1`;
+
 
   const response =
-    await fetch(url, {
-      headers: {
-        Accept: "application/json"
+    await fetch(
+      url,
+      {
+        headers: {
+          Accept:
+            "application/json"
+        }
       }
-    });
+    );
+
 
   if (!response.ok) {
+
     throw new Error(
       `Geocode failed: ${response.status}`
     );
   }
 
+
   const data =
     await response.json();
 
+
   if (!data.length) {
+
     return null;
   }
 
+
   return {
-    lat: Number(data[0].lat),
-    lng: Number(data[0].lon),
-    displayName: data[0].display_name
+
+    lat:
+      Number(
+        data[0].lat
+      ),
+
+    lng:
+      Number(
+        data[0].lon
+      ),
+
+    displayName:
+      data[0].display_name
   };
 }
 
@@ -1362,25 +2071,34 @@ async function fetchCategoryPlaces(
 ) {
 
   const config =
-    activityData[activity];
+    activityData[
+      activity
+    ];
+
 
   if (!config) {
+
     return [];
   }
 
+
   /*
-    Search only for tags belonging to the selected
-    activity. This prevents restaurants appearing
-    when the user selected bowling, cinemas, etc.
+    Search radius:
+    10 km / approximately 6.2 miles.
   */
 
-  const radius = 10000;
+  const radius =
+    10000;
+
 
   const selectors =
-    config.queries.map(
-      ([key, value]) =>
-        `nwr["${key}"="${value}"](around:${radius},${lat},${lng});`
-    ).join("\n");
+    config.queries
+      .map(
+        ([key, value]) =>
+          `nwr["${key}"="${value}"](around:${radius},${lat},${lng});`
+      )
+      .join("\n");
+
 
   const query = `
     [out:json][timeout:25];
@@ -1390,46 +2108,73 @@ async function fetchCategoryPlaces(
     out center tags;
   `;
 
+
+  /*
+    Try two public Overpass servers.
+  */
+
   const endpoints = [
+
     "https://overpass-api.de/api/interpreter",
+
     "https://overpass.kumi.systems/api/interpreter"
   ];
 
-  let lastError = null;
 
-  for (const endpoint of endpoints) {
+  let lastError =
+    null;
+
+
+  for (
+    const endpoint of endpoints
+  ) {
 
     try {
 
       const response =
-        await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/x-www-form-urlencoded"
-          },
-          body:
-            `data=${encodeURIComponent(query)}`
-        });
+        await fetch(
+          endpoint,
+          {
+            method:
+              "POST",
+
+            headers: {
+              "Content-Type":
+                "application/x-www-form-urlencoded"
+            },
+
+            body:
+              `data=${encodeURIComponent(
+                query
+              )}`
+          }
+        );
+
 
       if (!response.ok) {
+
         throw new Error(
           `Overpass error: ${response.status}`
         );
       }
 
+
       const data =
         await response.json();
 
+
       return cleanPlaces(
-        data.elements || [],
+        data.elements ||
+          [],
         lat,
         lng
       );
 
     } catch (error) {
 
-      lastError = error;
+      lastError =
+        error;
+
 
       console.warn(
         "Overpass endpoint failed:",
@@ -1439,8 +2184,13 @@ async function fetchCategoryPlaces(
     }
   }
 
-  throw lastError ||
-    new Error("Place search failed.");
+
+  throw (
+    lastError ||
+    new Error(
+      "Place search failed."
+    )
+  );
 }
 
 
@@ -1448,76 +2198,129 @@ async function fetchCategoryPlaces(
    CLEAN PLACES
 ========================================================= */
 
-function cleanPlaces(elements, userLat, userLng) {
+function cleanPlaces(
+  elements,
+  userLat,
+  userLng
+) {
 
-  const seen = new Set();
+  const seen =
+    new Set();
 
-  const places = [];
 
-  elements.forEach(element => {
+  const places =
+    [];
 
-    const tags =
-      element.tags || {};
 
-    const name =
-      tags.name ||
-      tags["name:en"];
+  elements.forEach(
+    element => {
 
-    if (!name) return;
+      const tags =
+        element.tags ||
+        {};
 
-    const lat =
-      element.lat ??
-      element.center?.lat;
 
-    const lng =
-      element.lon ??
-      element.center?.lon;
+      const name =
+        tags.name ||
+        tags["name:en"];
 
-    if (
-      typeof lat !== "number" ||
-      typeof lng !== "number"
-    ) {
-      return;
-    }
 
-    const key =
-      `${name.toLowerCase()}|${lat.toFixed(5)}|${lng.toFixed(5)}`;
+      if (!name) {
 
-    if (seen.has(key)) {
-      return;
-    }
+        return;
+      }
 
-    seen.add(key);
 
-    const distance =
-      calculateDistance(
-        userLat,
-        userLng,
+      const lat =
+        element.lat ??
+        element.center?.lat;
+
+
+      const lng =
+        element.lon ??
+        element.center?.lon;
+
+
+      if (
+        typeof lat !==
+          "number" ||
+        typeof lng !==
+          "number"
+      ) {
+
+        return;
+      }
+
+
+      const key =
+        `${name.toLowerCase()}|${lat.toFixed(5)}|${lng.toFixed(5)}`;
+
+
+      if (
+        seen.has(key)
+      ) {
+
+        return;
+      }
+
+
+      seen.add(key);
+
+
+      const distance =
+        calculateDistance(
+          userLat,
+          userLng,
+          lat,
+          lng
+        );
+
+
+      places.push({
+
+        id:
+          element.id,
+
+        name,
+
         lat,
-        lng
-      );
 
-    places.push({
-      id: element.id,
-      name,
-      lat,
-      lng,
-      distance,
-      address:
-        buildAddress(tags),
-      category:
-        getPlaceCategory(tags),
-      googleMapsUrl:
-        createMapsLink(name, lat, lng)
-    });
-  });
+        lng,
+
+        distance,
+
+        address:
+          buildAddress(
+            tags
+          ),
+
+        category:
+          getPlaceCategory(
+            tags
+          ),
+
+        googleMapsUrl:
+          createMapsLink(
+            name,
+            lat,
+            lng
+          )
+      });
+    }
+  );
+
 
   places.sort(
     (a, b) =>
-      a.distance - b.distance
+      a.distance -
+      b.distance
   );
 
-  return places.slice(0, 10);
+
+  return places.slice(
+    0,
+    10
+  );
 }
 
 
@@ -1525,43 +2328,153 @@ function cleanPlaces(elements, userLat, userLng) {
    PLACE CATEGORY
 ========================================================= */
 
-function getPlaceCategory(tags) {
+function getPlaceCategory(
+  tags
+) {
 
-  if (tags.amenity === "restaurant") {
+  if (
+    tags.amenity ===
+    "restaurant"
+  ) {
+
     return "Restaurant";
   }
 
-  if (tags.amenity === "cafe") {
+
+  if (
+    tags.amenity ===
+    "fast_food"
+  ) {
+
+    return "Food";
+  }
+
+
+  if (
+    tags.amenity ===
+    "cafe"
+  ) {
+
     return "Cafe";
   }
 
-  if (tags.amenity === "cinema") {
+
+  if (
+    tags.amenity ===
+    "cinema"
+  ) {
+
     return "Cinema";
   }
 
-  if (tags.leisure === "bowling_alley") {
+
+  if (
+    tags.leisure ===
+    "bowling_alley"
+  ) {
+
     return "Bowling";
   }
 
-  if (tags.leisure === "park") {
+
+  if (
+    tags.leisure ===
+    "park"
+  ) {
+
     return "Park";
   }
 
-  if (tags.leisure === "garden") {
+
+  if (
+    tags.leisure ===
+    "garden"
+  ) {
+
     return "Garden";
   }
 
-  if (tags.tourism === "museum") {
+
+  if (
+    tags.leisure ===
+    "nature_reserve"
+  ) {
+
+    return "Nature Reserve";
+  }
+
+
+  if (
+    tags.tourism ===
+    "museum"
+  ) {
+
     return "Museum";
   }
 
-  if (tags.tourism === "gallery") {
+
+  if (
+    tags.tourism ===
+    "gallery"
+  ) {
+
     return "Gallery";
   }
 
-  if (tags.amenity === "theatre") {
+
+  if (
+    tags.amenity ===
+    "arts_centre"
+  ) {
+
+    return "Arts Center";
+  }
+
+
+  if (
+    tags.amenity ===
+    "theatre"
+  ) {
+
     return "Theater";
   }
+
+
+  if (
+    tags.leisure ===
+    "amusement_arcade"
+  ) {
+
+    return "Arcade";
+  }
+
+
+  if (
+    tags.leisure ===
+    "escape_game"
+  ) {
+
+    return "Escape Room";
+  }
+
+
+  if (
+    tags.amenity ===
+    "billiards"
+  ) {
+
+    return "Billiards";
+  }
+
+
+  if (
+    tags.leisure ===
+    "sports_centre"
+  ) {
+
+    return "Sports Center";
+  }
+
 
   return "Place";
 }
@@ -1571,23 +2484,47 @@ function getPlaceCategory(tags) {
    ADDRESS
 ========================================================= */
 
-function buildAddress(tags) {
+function buildAddress(
+  tags
+) {
 
-  const parts = [];
+  const parts =
+    [];
 
-  if (tags["addr:housenumber"]) {
-    parts.push(tags["addr:housenumber"]);
+
+  if (
+    tags["addr:housenumber"]
+  ) {
+
+    parts.push(
+      tags["addr:housenumber"]
+    );
   }
 
-  if (tags["addr:street"]) {
-    parts.push(tags["addr:street"]);
+
+  if (
+    tags["addr:street"]
+  ) {
+
+    parts.push(
+      tags["addr:street"]
+    );
   }
 
-  if (tags["addr:city"]) {
-    parts.push(tags["addr:city"]);
+
+  if (
+    tags["addr:city"]
+  ) {
+
+    parts.push(
+      tags["addr:city"]
+    );
   }
 
-  return parts.join(" ");
+
+  return parts.join(
+    " "
+  );
 }
 
 
@@ -1602,23 +2539,43 @@ function calculateDistance(
   lng2
 ) {
 
-  const earthRadius = 3958.8;
+  const earthRadius =
+    3958.8;
+
 
   const dLat =
-    degreesToRadians(lat2 - lat1);
+    degreesToRadians(
+      lat2 - lat1
+    );
+
 
   const dLng =
-    degreesToRadians(lng2 - lng1);
+    degreesToRadians(
+      lng2 - lng1
+    );
+
 
   const a =
-    Math.sin(dLat / 2) ** 2 +
+    Math.sin(
+      dLat / 2
+    ) ** 2 +
+
     Math.cos(
-      degreesToRadians(lat1)
+      degreesToRadians(
+        lat1
+      )
     ) *
+
     Math.cos(
-      degreesToRadians(lat2)
+      degreesToRadians(
+        lat2
+      )
     ) *
-    Math.sin(dLng / 2) ** 2;
+
+    Math.sin(
+      dLng / 2
+    ) ** 2;
+
 
   const c =
     2 *
@@ -1627,12 +2584,23 @@ function calculateDistance(
       Math.sqrt(1 - a)
     );
 
-  return earthRadius * c;
+
+  return (
+    earthRadius *
+    c
+  );
 }
 
 
-function degreesToRadians(degrees) {
-  return degrees * Math.PI / 180;
+function degreesToRadians(
+  degrees
+) {
+
+  return (
+    degrees *
+    Math.PI /
+    180
+  );
 }
 
 
@@ -1640,16 +2608,26 @@ function degreesToRadians(degrees) {
    RENDER PLACES
 ========================================================= */
 
-function renderPlaces(places) {
+function renderPlaces(
+  places
+) {
 
   const list =
-    document.getElementById("placesList");
+    document.getElementById(
+      "placesList"
+    );
+
 
   if (!list) return;
 
-  list.innerHTML = "";
 
-  if (!places.length) {
+  list.innerHTML =
+    "";
+
+
+  if (
+    !places.length
+  ) {
 
     list.innerHTML = `
       <div class="loading-state">
@@ -1661,42 +2639,73 @@ function renderPlaces(places) {
     return;
   }
 
-  places.forEach(place => {
 
-    const button =
-      document.createElement("button");
+  places.forEach(
+    place => {
 
-    button.type = "button";
-    button.className = "place-card";
+      const button =
+        document.createElement(
+          "button"
+        );
 
-    button.innerHTML = `
-      <div class="place-icon">
-        ${activityData[state.activity]?.icon || "📍"}
-      </div>
 
-      <div class="place-info">
-        <strong>${escapeHtml(place.name)}</strong>
-        <span>
-          ${escapeHtml(
-            place.address ||
-            place.category ||
-            "Nearby"
+      button.type =
+        "button";
+
+      button.className =
+        "place-card";
+
+
+      button.innerHTML = `
+        <div class="place-icon">
+          ${
+            activityData[
+              state.activity
+            ]?.icon ||
+            "📍"
+          }
+        </div>
+
+        <div class="place-info">
+
+          <strong>
+            ${escapeHtml(
+              place.name
+            )}
+          </strong>
+
+          <span>
+            ${escapeHtml(
+              place.address ||
+              place.category ||
+              "Nearby"
+            )}
+          </span>
+
+        </div>
+
+        <div class="place-distance">
+          ${formatDistance(
+            place.distance
           )}
-        </span>
-      </div>
+        </div>
+      `;
 
-      <div class="place-distance">
-        ${formatDistance(place.distance)}
-      </div>
-    `;
 
-    button.addEventListener(
-      "click",
-      () => choosePlace(place)
-    );
+      button.addEventListener(
+        "click",
+        () =>
+          choosePlace(
+            place
+          )
+      );
 
-    list.appendChild(button);
-  });
+
+      list.appendChild(
+        button
+      );
+    }
+  );
 }
 
 
@@ -1704,15 +2713,25 @@ function renderPlaces(places) {
    CHOOSE PLACE
 ========================================================= */
 
-function choosePlace(place) {
+function choosePlace(
+  place
+) {
 
-  if (!place) return;
+  if (!place) {
+    return;
+  }
 
-  state.selectedPlace = place;
+
+  state.selectedPlace =
+    place;
+
 
   buildFinalPlan();
 
-  showScreen("final");
+
+  showScreen(
+    "final"
+  );
 }
 
 
@@ -1723,77 +2742,138 @@ function choosePlace(place) {
 function buildFinalPlan() {
 
   const container =
-    document.getElementById("finalPlan");
+    document.getElementById(
+      "finalPlan"
+    );
 
-  if (!container) return;
+
+  if (!container) {
+    return;
+  }
+
 
   const activity =
-    activityData[state.activity];
+    activityData[
+      state.activity
+    ];
+
 
   const place =
     state.selectedPlace;
 
+
   if (!place) {
-    container.innerHTML = "";
+
+    container.innerHTML =
+      "";
+
     return;
   }
+
 
   const date =
     state.selectedTime?.date ||
     state.selectedDates[0];
+
 
   const time =
     state.selectedTime?.time ||
     state.selectedTimes[0] ||
     "";
 
+
   container.innerHTML = `
+
     <div class="final-card">
 
       <div class="final-card-header">
-        <h3>${escapeHtml(
-          state.roamName || "Your Roam"
-        )}</h3>
+
+        <h3>
+          ${escapeHtml(
+            state.roamName ||
+            "Your Roam"
+          )}
+        </h3>
+
       </div>
 
+
       <div class="final-detail">
-        <small>Activity</small>
+
+        <small>
+          Activity
+        </small>
+
         <strong>
-          ${activity?.icon || "✨"}
+          ${
+            activity?.icon ||
+            "✨"
+          }
+
           ${escapeHtml(
-            activity?.label || "Hangout"
+            activity?.label ||
+            "Hangout"
           )}
         </strong>
+
       </div>
 
+
       <div class="final-detail">
-        <small>When</small>
+
+        <small>
+          When
+        </small>
+
         <strong>
+
           ${escapeHtml(
             formatDate(date)
           )}
+
           ·
-          ${escapeHtml(time)}
+
+          ${escapeHtml(
+            time
+          )}
+
         </strong>
+
       </div>
 
-      <div class="final-detail">
-        <small>Where</small>
-        <strong>
-          ${escapeHtml(place.name)}
-        </strong>
-      </div>
 
       <div class="final-detail">
-        <small>Roam code</small>
+
+        <small>
+          Where
+        </small>
+
         <strong>
           ${escapeHtml(
-            state.roomCode || "—"
+            place.name
           )}
         </strong>
+
+      </div>
+
+
+      <div class="final-detail">
+
+        <small>
+          Roam code
+        </small>
+
+        <strong>
+          ${escapeHtml(
+            state.roomCode ||
+            "—"
+          )}
+        </strong>
+
       </div>
 
     </div>
+
 
     <div class="final-actions">
 
@@ -1804,6 +2884,7 @@ function buildFinalPlan() {
       >
         Copy plan
       </button>
+
 
       <button
         class="secondary-button"
@@ -1825,29 +2906,49 @@ function buildFinalPlan() {
 function makePlanText() {
 
   const activity =
-    activityData[state.activity];
+    activityData[
+      state.activity
+    ];
+
 
   const place =
     state.selectedPlace;
 
+
   const date =
     state.selectedTime?.date ||
     state.selectedDates[0];
+
 
   const time =
     state.selectedTime?.time ||
     state.selectedTimes[0] ||
     "";
 
+
   return [
+
     `${state.roamName || "Roam"}`,
+
     "",
-    `${activity?.icon || ""} ${activity?.label || "Hangout"}`,
+
+    `${activity?.icon || ""} ${
+      activity?.label ||
+      "Hangout"
+    }`,
+
     `📅 ${formatDate(date)}`,
+
     `🕐 ${time}`,
+
     `📍 ${place?.name || ""}`,
+
     "",
-    `Roam code: ${state.roomCode || ""}`
+
+    `Roam code: ${
+      state.roomCode || ""
+    }`
+
   ].join("\n");
 }
 
@@ -1861,15 +2962,23 @@ async function copyPlan() {
   const text =
     makePlanText();
 
+
   try {
 
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard
+      .writeText(text);
 
-    showToast("Plan copied.");
+
+    showToast(
+      "Plan copied."
+    );
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
+
 
     showToast(
       "Couldn't copy. Try selecting the text."
@@ -1887,6 +2996,7 @@ async function sharePlan() {
   const text =
     makePlanText();
 
+
   if (
     navigator.share
   ) {
@@ -1894,20 +3004,29 @@ async function sharePlan() {
     try {
 
       await navigator.share({
+
         title:
-          state.roamName || "Roam",
+          state.roamName ||
+          "Roam",
+
         text
       });
+
 
       return;
 
     } catch (error) {
 
-      if (error.name === "AbortError") {
+      if (
+        error.name ===
+        "AbortError"
+      ) {
+
         return;
       }
     }
   }
+
 
   await copyPlan();
 }
@@ -1920,20 +3039,33 @@ async function sharePlan() {
 async function startParticipantFlow() {
 
   const input =
-    document.getElementById("joinCode");
+    document.getElementById(
+      "joinCode"
+    );
 
-  if (!input) return;
+
+  if (!input) {
+    return;
+  }
+
 
   const code =
     input.value
       .trim()
       .toUpperCase();
 
+
   if (!code) {
-    showToast("Enter a Roam code.");
+
+    showToast(
+      "Enter a Roam code."
+    );
+
     input.focus();
+
     return;
   }
+
 
   if (!supabaseClient) {
 
@@ -1944,30 +3076,69 @@ async function startParticipantFlow() {
     return;
   }
 
+
   try {
 
     const {
       data,
       error
-    } = await supabaseClient
-      .from("rooms")
-      .select("*")
-      .eq("code", code)
-      .limit(1);
+    } =
+      await supabaseClient
+        .from("rooms")
+        .select("*")
+        .eq(
+          "code",
+          code
+        )
+        .limit(1);
+
 
     if (error) {
-      console.error(error);
-      showToast("Couldn't find that Roam.");
+
+      console.error(
+        error
+      );
+
+
+      showToast(
+        "Couldn't find that Roam."
+      );
+
       return;
     }
 
-    if (!data || data.length === 0) {
-      showToast("No Roam found with that code.");
+
+    if (
+      !data ||
+      data.length === 0
+    ) {
+
+      showToast(
+        "No Roam found with that code."
+      );
+
       return;
     }
+
 
     const room =
       data[0];
+
+
+    /*
+      Reset participant state
+      for a new joined Roam.
+    */
+
+    state.participantSaved =
+      false;
+
+    state.budget =
+      null;
+
+    state.selectedTimes =
+      [];
+
 
     state.roomId =
       room.id;
@@ -1990,49 +3161,69 @@ async function startParticipantFlow() {
     state.groupSize =
       room.group_size;
 
+
     state.selectedDates =
-      Array.isArray(room.candidate_dates)
+      Array.isArray(
+        room.candidate_dates
+      )
         ? room.candidate_dates
         : [];
 
+
     state.activity =
-      room.activity || "";
+      room.activity ||
+      "";
+
 
     const roomName =
       document.getElementById(
         "joinRoomName"
       );
 
+
     const roomLocation =
       document.getElementById(
         "joinRoomLocation"
       );
+
 
     const roomCode =
       document.getElementById(
         "joinRoomCode"
       );
 
+
     if (roomName) {
+
       roomName.textContent =
         room.name;
     }
 
+
     if (roomLocation) {
+
       roomLocation.textContent =
         room.location_text;
     }
 
+
     if (roomCode) {
+
       roomCode.textContent =
         room.code;
     }
 
-    showScreen("join-confirm");
+
+    showScreen(
+      "join-confirm"
+    );
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
+
 
     showToast(
       "Something went wrong."
@@ -2048,24 +3239,42 @@ async function startParticipantFlow() {
 function continueJoining() {
 
   if (!state.roomId) {
-    showToast("Find a Roam first.");
+
+    showToast(
+      "Find a Roam first."
+    );
+
     return;
   }
 
-  state.selectedTimes = [];
+
+  state.selectedTimes =
+    [];
+
+
+  state.participantSaved =
+    false;
+
 
   const nameInput =
     document.getElementById(
       "participantName"
     );
 
+
   if (nameInput) {
-    nameInput.value = "";
+
+    nameInput.value =
+      "";
   }
+
 
   buildTimes();
 
-  showScreen("availability");
+
+  showScreen(
+    "availability"
+  );
 }
 
 
@@ -2073,17 +3282,31 @@ function continueJoining() {
    FORMAT DISTANCE
 ========================================================= */
 
-function formatDistance(miles) {
+function formatDistance(
+  miles
+) {
 
-  if (!Number.isFinite(miles)) {
+  if (
+    !Number.isFinite(
+      miles
+    )
+  ) {
+
     return "";
   }
 
-  if (miles < 0.1) {
+
+  if (
+    miles < 0.1
+  ) {
+
     return "< 0.1 mi";
   }
 
-  return `${miles.toFixed(1)} mi`;
+
+  return (
+    `${miles.toFixed(1)} mi`
+  );
 }
 
 
@@ -2092,7 +3315,11 @@ function formatDistance(miles) {
    No API key required.
 ========================================================= */
 
-function createMapsLink(name, lat, lng) {
+function createMapsLink(
+  name,
+  lat,
+  lng
+) {
 
   return (
     "https://www.google.com/maps/search/?api=1" +
@@ -2107,14 +3334,33 @@ function createMapsLink(name, lat, lng) {
    ESCAPE HTML
 ========================================================= */
 
-function escapeHtml(value) {
+function escapeHtml(
+  value
+) {
 
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+  return String(
+    value ?? ""
+  )
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
 }
 
 
@@ -2122,31 +3368,55 @@ function escapeHtml(value) {
    TOAST
 ========================================================= */
 
-let toastTimer = null;
+let toastTimer =
+  null;
 
-function showToast(message) {
+
+function showToast(
+  message
+) {
 
   const toast =
-    document.getElementById("toast");
+    document.getElementById(
+      "toast"
+    );
+
 
   if (!toast) {
-    alert(message);
+
+    alert(
+      message
+    );
+
     return;
   }
+
 
   toast.textContent =
     message;
 
-  toast.classList.add("show");
 
-  clearTimeout(toastTimer);
+  toast.classList.add(
+    "show"
+  );
+
+
+  clearTimeout(
+    toastTimer
+  );
+
 
   toastTimer =
-    setTimeout(() => {
+    setTimeout(
+      () => {
 
-      toast.classList.remove("show");
+        toast.classList.remove(
+          "show"
+        );
 
-    }, 2800);
+      },
+      2800
+    );
 }
 
 
@@ -2155,9 +3425,14 @@ function showToast(message) {
    Needed because index.html uses onclick=""
 ========================================================= */
 
-window.goHome = goHome;
-window.openCreate = openCreate;
-window.openJoin = openJoin;
+window.goHome =
+  goHome;
+
+window.openCreate =
+  openCreate;
+
+window.openJoin =
+  openJoin;
 
 window.saveRoamDetails =
   saveRoamDetails;
