@@ -3,14 +3,12 @@ const { createClient } = window.supabase || {};
 let supabaseClient = null;
 
 const state = {
-  screen: "home",
   mode: "create",
-
   room: null,
   roomId: null,
 
-  name: "",
   roomName: "",
+  name: "",
   location: "",
   lat: null,
   lng: null,
@@ -22,6 +20,7 @@ const state = {
   activity: null,
 
   places: [],
+  selectedPlace: null,
   bestTimes: [],
 
   organizerToken: null,
@@ -34,7 +33,7 @@ const ACTIVITIES = [
     name: "Food & drinks",
     image:
       "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=900&q=80",
-    tags: ["restaurant", "cafe", "bar", "fast_food"]
+    tags: ["restaurant", "cafe", "fast_food"]
   },
   {
     id: "coffee",
@@ -48,7 +47,7 @@ const ACTIVITIES = [
     name: "Outdoors",
     image:
       "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=900&q=80",
-    tags: ["park", "garden", "pitch"]
+    tags: ["park", "garden"]
   },
   {
     id: "arts",
@@ -62,20 +61,18 @@ const ACTIVITIES = [
     name: "Games",
     image:
       "https://images.unsplash.com/photo-1606167668584-78701c57f13d?auto=format&fit=crop&w=900&q=80",
-    tags: ["bowling_alley", "leisure", "game", "sports_centre"]
+    tags: ["bowling_alley", "sports_centre", "game"]
   },
   {
     id: "shopping",
     name: "Shopping",
     image:
       "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=900&q=80",
-    tags: ["mall", "marketplace", "department_store", "shop"]
+    tags: ["mall", "marketplace", "department_store"]
   }
 ];
 
-const DATE_OPTIONS = getDateOptions();
-
-const TIME_OPTIONS = [
+const TIMES = [
   "9:00 AM",
   "10:00 AM",
   "11:00 AM",
@@ -90,7 +87,7 @@ const TIME_OPTIONS = [
   "8:00 PM"
 ];
 
-const BUDGET_OPTIONS = [
+const BUDGETS = [
   { value: 10, label: "$0–20" },
   { value: 30, label: "$20–40" },
   { value: 50, label: "$40–60" },
@@ -98,32 +95,41 @@ const BUDGET_OPTIONS = [
   { value: 100, label: "$90+" }
 ];
 
+let DATE_OPTIONS = [];
+
 document.addEventListener("DOMContentLoaded", init);
 
 function init() {
   initializeSupabase();
-  renderActivities();
+
+  DATE_OPTIONS = getDateOptions();
+
   renderDates();
   renderTimes();
   renderBudgets();
+  renderActivities();
+
   bindEvents();
+
   showScreen("home");
 }
 
 function initializeSupabase() {
   const config = window.ROAM_CONFIG;
 
-  if (!config || !config.supabaseUrl || !config.supabasePublishableKey) {
-    console.error("Roam config is missing.");
+  if (!config) {
+    console.error("config.js was not loaded.");
     return;
   }
 
   if (
+    !config.supabaseUrl ||
+    !config.supabasePublishableKey ||
     config.supabasePublishableKey.includes(
       "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE"
     )
   ) {
-    console.error("Roam still has the placeholder Supabase key.");
+    console.error("Supabase Publishable Key is missing.");
     return;
   }
 
@@ -136,132 +142,135 @@ function initializeSupabase() {
     config.supabaseUrl,
     config.supabasePublishableKey
   );
+
+  console.log("Roam connected to Supabase.");
 }
 
 function bindEvents() {
-  document.querySelectorAll("[data-screen]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const screen = button.dataset.screen;
-      showScreen(screen);
-    });
-  });
+  const startBtn = document.getElementById("startBtn");
 
-  const createButton = document.getElementById("createRoam");
-  if (createButton) {
-    createButton.addEventListener("click", startCreate);
+  if (startBtn) {
+    startBtn.addEventListener("click", () => {
+      resetState();
+      showScreen("create");
+    });
   }
 
-  const joinButton = document.getElementById("joinRoam");
-  if (joinButton) {
-    joinButton.addEventListener("click", () => {
+  const homeBtn = document.getElementById("homeBtn");
+
+  if (homeBtn) {
+    homeBtn.addEventListener("click", () => {
+      resetState();
+      showScreen("home");
+    });
+  }
+
+  const joinNavBtn = document.getElementById("joinNavBtn");
+
+  if (joinNavBtn) {
+    joinNavBtn.addEventListener("click", () => {
       state.mode = "join";
       showScreen("join");
     });
   }
 
-  const locateButton = document.getElementById("locateBtn");
-  if (locateButton) {
-    locateButton.addEventListener("click", locateUser);
-  }
+  document.querySelectorAll("[data-back]").forEach((button) => {
+    button.addEventListener("click", () => {
+      showScreen(button.dataset.back);
+    });
+  });
 
-  const createNext = document.getElementById("createNext");
-  if (createNext) {
-    createNext.addEventListener("click", saveCreateDetails);
-  }
+  document
+    .getElementById("locateBtn")
+    ?.addEventListener("click", locateUser);
 
-  const datesNext = document.getElementById("datesNext");
-  if (datesNext) {
-    datesNext.addEventListener("click", handleDatesNext);
-  }
+  document
+    .getElementById("createNext")
+    ?.addEventListener("click", saveCreateDetails);
 
-  const datesBack = document.getElementById("datesBack");
-  if (datesBack) {
-    datesBack.addEventListener("click", () => showScreen("create"));
-  }
+  document
+    .getElementById("datesNext")
+    ?.addEventListener("click", handleDatesNext);
 
-  const timesNext = document.getElementById("timesNext");
-  if (timesNext) {
-    timesNext.addEventListener("click", handleTimesNext);
-  }
+  document
+    .getElementById("datesBack")
+    ?.addEventListener("click", () => {
+      showScreen(state.mode === "join" ? "joinConfirm" : "create");
+    });
 
-  const timesBack = document.getElementById("timesBack");
-  if (timesBack) {
-    timesBack.addEventListener("click", () => showScreen("dates"));
-  }
+  document
+    .getElementById("timesNext")
+    ?.addEventListener("click", handleTimesNext);
 
-  const budgetNext = document.getElementById("budgetNext");
-  if (budgetNext) {
-    budgetNext.addEventListener("click", handleBudgetNext);
-  }
+  document
+    .getElementById("timesBack")
+    ?.addEventListener("click", () => showScreen("dates"));
 
-  const budgetBack = document.getElementById("budgetBack");
-  if (budgetBack) {
-    budgetBack.addEventListener("click", () => showScreen("times"));
-  }
+  document
+    .getElementById("budgetNext")
+    ?.addEventListener("click", handleBudgetNext);
 
-  const activityNext = document.getElementById("activityNext");
-  if (activityNext) {
-    activityNext.addEventListener("click", handleActivityNext);
-  }
+  document
+    .getElementById("budgetBack")
+    ?.addEventListener("click", () => showScreen("times"));
 
-  const activityBack = document.getElementById("activityBack");
-  if (activityBack) {
-    activityBack.addEventListener("click", () => showScreen("budget"));
-  }
+  document
+    .getElementById("activityNext")
+    ?.addEventListener("click", handleActivityNext);
 
-  const copyCode = document.getElementById("copyCode");
-  if (copyCode) {
-    copyCode.addEventListener("click", copyRoomCode);
-  }
+  document
+    .getElementById("activityBack")
+    ?.addEventListener("click", () => showScreen("budget"));
 
-  const viewRoam = document.getElementById("viewRoam");
-  if (viewRoam) {
-    viewRoam.addEventListener("click", openRoam);
-  }
+  document
+    .getElementById("copyCode")
+    ?.addEventListener("click", copyRoomCode);
 
-  const findRoam = document.getElementById("findRoam");
-  if (findRoam) {
-    findRoam.addEventListener("click", findRoom);
-  }
+  document
+    .getElementById("viewRoam")
+    ?.addEventListener("click", openRoam);
 
-  const joinNext = document.getElementById("joinNext");
-  if (joinNext) {
-    joinNext.addEventListener("click", startJoinAvailability);
-  }
+  document
+    .getElementById("findRoam")
+    ?.addEventListener("click", findRoom);
 
-  const placesNext = document.getElementById("placesNext");
-  if (placesNext) {
-    placesNext.addEventListener("click", finishRoam);
-  }
+  document
+    .getElementById("joinNext")
+    ?.addEventListener("click", startJoinAvailability);
 
-  const placesBack = document.getElementById("placesBack");
-  if (placesBack) {
-    placesBack.addEventListener("click", () => showScreen("activity"));
-  }
+  document
+    .getElementById("placesNext")
+    ?.addEventListener("click", finishRoam);
 
-  const copyPlan = document.getElementById("copyPlan");
-  if (copyPlan) {
-    copyPlan.addEventListener("click", copyFinalPlan);
-  }
+  document
+    .getElementById("placesBack")
+    ?.addEventListener("click", () => showScreen("activity"));
 
-  const doneButton = document.getElementById("doneBtn");
-  if (doneButton) {
-    doneButton.addEventListener("click", () => showScreen("home"));
-  }
+  document
+    .getElementById("copyPlan")
+    ?.addEventListener("click", copyFinalPlan);
+
+  document
+    .getElementById("doneBtn")
+    ?.addEventListener("click", () => {
+      resetState();
+      showScreen("home");
+    });
 }
 
-function showScreen(screenName) {
-  state.screen = screenName;
-
+function showScreen(id) {
   document.querySelectorAll(".screen").forEach((screen) => {
     screen.classList.remove("active");
   });
 
-  const target = document.getElementById(`screen-${screenName}`);
+  const target = document.getElementById(id);
 
-  if (target) {
-    target.classList.add("active");
+  if (!target) {
+    console.error(`Screen not found: ${id}`);
+    return;
   }
+
+  target.classList.add("active");
 
   window.scrollTo({
     top: 0,
@@ -269,19 +278,12 @@ function showScreen(screenName) {
   });
 }
 
-function startCreate() {
+function resetState() {
   state.mode = "create";
-
-  resetCreateState();
-
-  showScreen("create");
-}
-
-function resetCreateState() {
   state.room = null;
   state.roomId = null;
-  state.name = "";
   state.roomName = "";
+  state.name = "";
   state.location = "";
   state.lat = null;
   state.lng = null;
@@ -291,28 +293,33 @@ function resetCreateState() {
   state.budget = null;
   state.activity = null;
   state.places = [];
+  state.selectedPlace = null;
   state.bestTimes = [];
-  state.organizerToken = null;
 
   const fields = [
-    ["roamName", ""],
-    ["location", ""],
-    ["organizerName", ""]
+    "roamName",
+    "location",
+    "organizerName",
+    "joinCode",
+    "joinName"
   ];
 
-  fields.forEach(([id, value]) => {
+  fields.forEach((id) => {
     const element = document.getElementById(id);
-    if (element) element.value = value;
+    if (element) element.value = "";
   });
 
   const groupSize = document.getElementById("groupSize");
+
   if (groupSize) {
     groupSize.value = "4";
   }
 
-  const status = document.getElementById("locationStatus");
-  if (status) {
-    status.textContent = "";
+  const locationStatus =
+    document.getElementById("locationStatus");
+
+  if (locationStatus) {
+    locationStatus.textContent = "";
   }
 
   renderDates();
@@ -322,10 +329,10 @@ function resetCreateState() {
 }
 
 function saveCreateDetails() {
-  const roomName = getValue("roamName");
-  const location = getValue("location");
-  const organizerName = getValue("organizerName");
-  const groupSize = Number(getValue("groupSize"));
+  const roomName = value("roamName");
+  const location = value("location");
+  const organizerName = value("organizerName");
+  const groupSize = Number(value("groupSize"));
 
   if (!roomName) {
     toast("Give your Roam a name.");
@@ -342,8 +349,8 @@ function saveCreateDetails() {
     return;
   }
 
-  if (!groupSize || groupSize < 2 || groupSize > 50) {
-    toast("Choose a group size between 2 and 50.");
+  if (groupSize < 2 || groupSize > 50) {
+    toast("Choose 2–50 people.");
     return;
   }
 
@@ -356,7 +363,7 @@ function saveCreateDetails() {
 }
 
 function handleDatesNext() {
-  if (state.selectedDates.length === 0) {
+  if (!state.selectedDates.length) {
     toast("Pick at least one day.");
     return;
   }
@@ -365,7 +372,7 @@ function handleDatesNext() {
 }
 
 function handleTimesNext() {
-  if (state.selectedTimes.length === 0) {
+  if (!state.selectedTimes.length) {
     toast("Pick at least one time.");
     return;
   }
@@ -395,45 +402,12 @@ async function handleActivityNext() {
   }
 }
 
-function renderActivities() {
-  const container = document.getElementById("activityGrid");
-
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  ACTIVITIES.forEach((activity) => {
-    const card = document.createElement("button");
-
-    card.type = "button";
-    card.className = "activity-card";
-    card.dataset.activity = activity.id;
-
-    card.innerHTML = `
-      <img src="${activity.image}" alt="${escapeHtml(activity.name)}">
-      <span>${escapeHtml(activity.name)}</span>
-    `;
-
-    card.addEventListener("click", () => {
-      state.activity = activity.id;
-
-      document.querySelectorAll(".activity-card").forEach((item) => {
-        item.classList.remove("selected");
-      });
-
-      card.classList.add("selected");
-    });
-
-    container.appendChild(card);
-  });
-}
-
 function renderDates() {
-  const container = document.getElementById("dateGrid");
+  const grid = document.getElementById("dateGrid");
 
-  if (!container) return;
+  if (!grid) return;
 
-  container.innerHTML = "";
+  grid.innerHTML = "";
 
   DATE_OPTIONS.forEach((date) => {
     const button = document.createElement("button");
@@ -446,16 +420,17 @@ function renderDates() {
     }
 
     button.innerHTML = `
-      <strong>${escapeHtml(date.day)}</strong>
-      <span>${escapeHtml(date.month)}</span>
-      <small>${escapeHtml(date.weekday)}</small>
+      <strong>${date.day}</strong>
+      <span>${date.month}</span>
+      <small>${date.weekday}</small>
     `;
 
     button.addEventListener("click", () => {
       if (state.selectedDates.includes(date.iso)) {
-        state.selectedDates = state.selectedDates.filter(
-          (value) => value !== date.iso
-        );
+        state.selectedDates =
+          state.selectedDates.filter(
+            (item) => item !== date.iso
+          );
       } else {
         state.selectedDates.push(date.iso);
       }
@@ -463,18 +438,18 @@ function renderDates() {
       renderDates();
     });
 
-    container.appendChild(button);
+    grid.appendChild(button);
   });
 }
 
 function renderTimes() {
-  const container = document.getElementById("timeGrid");
+  const grid = document.getElementById("timeGrid");
 
-  if (!container) return;
+  if (!grid) return;
 
-  container.innerHTML = "";
+  grid.innerHTML = "";
 
-  TIME_OPTIONS.forEach((time) => {
+  TIMES.forEach((time) => {
     const button = document.createElement("button");
 
     button.type = "button";
@@ -488,9 +463,10 @@ function renderTimes() {
 
     button.addEventListener("click", () => {
       if (state.selectedTimes.includes(time)) {
-        state.selectedTimes = state.selectedTimes.filter(
-          (value) => value !== time
-        );
+        state.selectedTimes =
+          state.selectedTimes.filter(
+            (item) => item !== time
+          );
       } else {
         state.selectedTimes.push(time);
       }
@@ -498,18 +474,18 @@ function renderTimes() {
       renderTimes();
     });
 
-    container.appendChild(button);
+    grid.appendChild(button);
   });
 }
 
 function renderBudgets() {
-  const container = document.getElementById("budgetGrid");
+  const grid = document.getElementById("budgetGrid");
 
-  if (!container) return;
+  if (!grid) return;
 
-  container.innerHTML = "";
+  grid.innerHTML = "";
 
-  BUDGET_OPTIONS.forEach((budget) => {
+  BUDGETS.forEach((budget) => {
     const button = document.createElement("button");
 
     button.type = "button";
@@ -520,172 +496,193 @@ function renderBudgets() {
     }
 
     button.innerHTML = `
-      <strong>${escapeHtml(budget.label)}</strong>
+      <strong>${budget.label}</strong>
       <span>per person</span>
     `;
 
     button.addEventListener("click", () => {
       state.budget = budget.value;
+
+      document
+        .getElementById("budgetNext")
+        ?.removeAttribute("disabled");
+
       renderBudgets();
     });
 
-    container.appendChild(button);
+    grid.appendChild(button);
+  });
+}
+
+function renderActivities() {
+  const grid = document.getElementById("activityGrid");
+
+  if (!grid) return;
+
+  grid.innerHTML = "";
+
+  ACTIVITIES.forEach((activity) => {
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "activity-card";
+
+    button.innerHTML = `
+      <img
+        src="${activity.image}"
+        alt="${activity.name}"
+      >
+      <span>${activity.name}</span>
+    `;
+
+    button.addEventListener("click", () => {
+      state.activity = activity.id;
+
+      document
+        .querySelectorAll(".activity-card")
+        .forEach((card) => {
+          card.classList.remove("selected");
+        });
+
+      button.classList.add("selected");
+
+      document
+        .getElementById("activityNext")
+        ?.removeAttribute("disabled");
+    });
+
+    grid.appendChild(button);
   });
 }
 
 async function createRoam() {
   if (!supabaseClient) {
-    toast("Roam needs your Supabase key in config.js.");
+    toast("Add your Supabase key in config.js.");
     return;
   }
 
   const button = document.getElementById("activityNext");
 
-  setButtonLoading(button, true);
+  loading(button, true);
 
   try {
-    state.organizerToken = getOrCreateToken("roam_organizer_token");
+    const organizerToken = createToken();
 
-    const code = await generateUniqueCode();
+    state.organizerToken = organizerToken;
 
-    const roomPayload = {
-      code,
-      name: state.roomName,
-      location_text: state.location,
-      lat: state.lat,
-      lng: state.lng,
-      group_size: state.groupSize,
-      candidate_dates: state.selectedDates,
-      activity: state.activity,
-      organizer_token: state.organizerToken
-    };
+    const code = await generateCode();
 
-    const { data: room, error: roomError } = await supabaseClient
-      .from("rooms")
-      .insert(roomPayload)
-      .select()
-      .single();
+    const { data: room, error } =
+      await supabaseClient
+        .from("rooms")
+        .insert({
+          code,
+          name: state.roomName,
+          location_text: state.location,
+          lat: state.lat,
+          lng: state.lng,
+          group_size: state.groupSize,
+          candidate_dates: state.selectedDates,
+          activity: state.activity,
+          organizer_token: organizerToken
+        })
+        .select()
+        .single();
 
-    if (roomError) {
-      throw roomError;
-    }
+    if (error) throw error;
 
     state.room = room;
     state.roomId = room.id;
 
-    const { error: participantError } = await supabaseClient
-      .from("participants")
-      .insert({
-        room_id: room.id,
-        name: state.name,
-        participant_token: state.organizerToken,
-        availability: {
-          dates: state.selectedDates,
-          times: state.selectedTimes
-        },
-        budget: state.budget
-      });
+    const { error: participantError } =
+      await supabaseClient
+        .from("participants")
+        .insert({
+          room_id: room.id,
+          name: state.name,
+          participant_token: organizerToken,
+          availability: {
+            dates: state.selectedDates,
+            times: state.selectedTimes
+          },
+          budget: state.budget
+        });
 
-    if (participantError) {
-      throw participantError;
-    }
+    if (participantError) throw participantError;
 
-    const codeElement = document.getElementById("roomCode");
-
-    if (codeElement) {
-      codeElement.textContent = code;
-    }
+    document.getElementById("roomCode").textContent =
+      code;
 
     showScreen("code");
   } catch (error) {
-    console.error("Create Roam error:", error);
-
-    if (error?.code === "23505") {
-      toast("That Roam code was taken. Try again.");
-    } else {
-      toast("Roam couldn't save that yet. Check your connection and try again.");
-    }
+    console.error(error);
+    toast("Roam couldn't be created. Try again.");
   } finally {
-    setButtonLoading(button, false);
+    loading(button, false);
   }
 }
 
-async function generateUniqueCode() {
+async function generateCode() {
   const words = [
     "PEACH",
     "ORANGE",
     "SUNSET",
     "WANDER",
-    "GROVE",
     "BREEZE",
-    "PICNIC",
     "CITRUS",
-    "BLOSSOM",
     "MANGO",
-    "SUNNY",
     "ROAM",
-    "OLIVE",
     "LAGOON",
-    "CANAL",
     "GELATO",
-    "TERRACE",
     "VISTA",
-    "PALM",
-    "SPRITZ"
+    "BLOSSOM"
   ];
 
-  for (let attempt = 0; attempt < 10; attempt++) {
-    const word = words[Math.floor(Math.random() * words.length)];
+  for (let i = 0; i < 10; i++) {
+    const word =
+      words[Math.floor(Math.random() * words.length)];
 
-    const { data, error } = await supabaseClient
-      .from("rooms")
-      .select("id")
-      .eq("code", word)
-      .maybeSingle();
+    const { data, error } =
+      await supabaseClient
+        .from("rooms")
+        .select("id")
+        .eq("code", word)
+        .maybeSingle();
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
-    if (!data) {
-      return word;
-    }
+    if (!data) return word;
   }
 
   return `ROAM${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
 async function findRoom() {
-  const input = document.getElementById("joinCode");
-
-  if (!input) return;
-
-  const code = input.value.trim().toUpperCase();
+  const code = value("joinCode").toUpperCase();
 
   if (!code) {
-    toast("Enter a Roam code.");
+    toast("Enter your Roam code.");
     return;
   }
 
   if (!supabaseClient) {
-    toast("Roam needs your Supabase key in config.js.");
+    toast("Add your Supabase key in config.js.");
     return;
   }
 
   const button = document.getElementById("findRoam");
 
-  setButtonLoading(button, true);
+  loading(button, true);
 
   try {
-    const { data: room, error } = await supabaseClient
-      .from("rooms")
-      .select("*")
-      .eq("code", code)
-      .maybeSingle();
+    const { data: room, error } =
+      await supabaseClient
+        .from("rooms")
+        .select("*")
+        .eq("code", code)
+        .maybeSingle();
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
     if (!room) {
       toast("We couldn't find that Roam.");
@@ -701,27 +698,27 @@ async function findRoom() {
     state.lng = room.lng;
     state.groupSize = room.group_size;
     state.activity = room.activity;
-    state.selectedDates = [];
-    state.selectedTimes = [];
-    state.budget = null;
-    state.name = "";
 
-    document.getElementById("joinTitle").textContent = room.name;
+    document.getElementById("joinTitle").textContent =
+      room.name;
+
     document.getElementById("joinLocation").textContent =
       room.location_text;
-    document.getElementById("joinCodeDisplay").textContent = room.code;
 
-    showScreen("join-confirm");
+    document.getElementById("joinCodeDisplay").textContent =
+      room.code;
+
+    showScreen("joinConfirm");
   } catch (error) {
-    console.error("Find Roam error:", error);
-    toast("We couldn't load that Roam. Check your connection.");
+    console.error(error);
+    toast("Couldn't load that Roam.");
   } finally {
-    setButtonLoading(button, false);
+    loading(button, false);
   }
 }
 
 function startJoinAvailability() {
-  const name = getValue("joinName");
+  const name = value("joinName");
 
   if (!name) {
     toast("Add your name.");
@@ -730,198 +727,161 @@ function startJoinAvailability() {
 
   state.name = name;
 
-  const candidateDates = Array.isArray(state.room?.candidate_dates)
-    ? state.room.candidate_dates
-    : [];
+  const dates =
+    state.room?.candidate_dates || [];
 
-  if (candidateDates.length) {
-    state.selectedDates = [];
-    renderJoinDates(candidateDates);
-  } else {
-    state.selectedDates = [];
-    renderDates();
-  }
+  state.selectedDates = [];
+  state.selectedTimes = [];
+  state.budget = null;
+
+  renderJoinDates(dates);
 
   showScreen("dates");
 }
 
-function renderJoinDates(candidateDates) {
-  const container = document.getElementById("dateGrid");
+function renderJoinDates(dates) {
+  const grid = document.getElementById("dateGrid");
 
-  if (!container) return;
+  if (!grid) return;
 
-  container.innerHTML = "";
+  grid.innerHTML = "";
 
-  candidateDates.forEach((iso) => {
-    const date = DATE_OPTIONS.find((item) => item.iso === iso);
+  dates.forEach((iso) => {
+    const info = DATE_OPTIONS.find(
+      (date) => date.iso === iso
+    );
 
     const button = document.createElement("button");
 
     button.type = "button";
     button.className = "date-card";
 
-    if (state.selectedDates.includes(iso)) {
-      button.classList.add("selected");
-    }
-
-    if (date) {
-      button.innerHTML = `
-        <strong>${escapeHtml(date.day)}</strong>
-        <span>${escapeHtml(date.month)}</span>
-        <small>${escapeHtml(date.weekday)}</small>
-      `;
-    } else {
-      button.textContent = formatDate(iso);
-    }
+    button.innerHTML = info
+      ? `
+        <strong>${info.day}</strong>
+        <span>${info.month}</span>
+        <small>${info.weekday}</small>
+      `
+      : formatDate(iso);
 
     button.addEventListener("click", () => {
       if (state.selectedDates.includes(iso)) {
-        state.selectedDates = state.selectedDates.filter(
-          (value) => value !== iso
-        );
+        state.selectedDates =
+          state.selectedDates.filter(
+            (item) => item !== iso
+          );
       } else {
         state.selectedDates.push(iso);
       }
 
-      renderJoinDates(candidateDates);
+      renderJoinDates(dates);
     });
 
-    container.appendChild(button);
+    if (state.selectedDates.includes(iso)) {
+      button.classList.add("selected");
+    }
+
+    grid.appendChild(button);
   });
 }
 
 async function saveJoinedParticipant() {
-  if (!state.roomId) {
-    toast("Your Roam isn't loaded.");
-    return;
-  }
+  if (!state.roomId) return;
 
   if (!supabaseClient) {
-    toast("Roam needs your Supabase key in config.js.");
+    toast("Add your Supabase key in config.js.");
     return;
   }
 
-  if (state.selectedDates.length === 0) {
-    toast("Pick at least one day.");
-    return;
-  }
+  const button =
+    document.getElementById("activityNext");
 
-  if (state.selectedTimes.length === 0) {
-    toast("Pick at least one time.");
-    return;
-  }
-
-  if (state.budget === null) {
-    toast("Pick a budget.");
-    return;
-  }
-
-  const button = document.getElementById("activityNext");
-
-  setButtonLoading(button, true);
+  loading(button, true);
 
   try {
-    state.participantToken = createToken();
+    const token = createToken();
 
-    const { error } = await supabaseClient.from("participants").insert({
-      room_id: state.roomId,
-      name: state.name,
-      participant_token: state.participantToken,
-      availability: {
-        dates: state.selectedDates,
-        times: state.selectedTimes
-      },
-      budget: state.budget
-    });
+    state.participantToken = token;
 
-    if (error) {
-      throw error;
-    }
+    const { error } =
+      await supabaseClient
+        .from("participants")
+        .insert({
+          room_id: state.roomId,
+          name: state.name,
+          participant_token: token,
+          availability: {
+            dates: state.selectedDates,
+            times: state.selectedTimes
+          },
+          budget: state.budget
+        });
+
+    if (error) throw error;
 
     await openRoam();
-
   } catch (error) {
-    console.error("Join Roam error:", error);
-    toast("Roam couldn't save your choices. Try again.");
+    console.error(error);
+    toast("Couldn't save your choices.");
   } finally {
-    setButtonLoading(button, false);
+    loading(button, false);
   }
 }
 
 async function openRoam() {
-  if (!state.roomId || !state.room) {
-    toast("Your Roam isn't ready yet.");
-    return;
-  }
-
   showScreen("places");
 
-  const subtitle = document.getElementById("placesSubtitle");
+  const subtitle =
+    document.getElementById("placesSubtitle");
 
-  if (subtitle) {
-    subtitle.textContent = "Finding a good spot nearby…";
-  }
-
-  const placesList = document.getElementById("placesList");
-
-  if (placesList) {
-    placesList.innerHTML = `
-      <div class="loading-card">
-        <span>Looking around ${escapeHtml(state.location)}…</span>
-      </div>
-    `;
-  }
+  subtitle.textContent =
+    "Finding a few places nearby…";
 
   try {
-    state.bestTimes = await calculateBestTimes();
-    state.places = await findPlaces();
+    state.bestTimes =
+      await calculateBestTimes();
+
+    state.places =
+      await findPlaces();
 
     renderPlaces();
 
-    if (subtitle) {
-      subtitle.textContent =
-        state.places.length > 0
-          ? "A few places that fit the vibe."
-          : "We couldn't find a nearby spot automatically.";
-    }
+    subtitle.textContent =
+      state.places.length
+        ? "A few places that fit your Roam."
+        : "No automatic matches yet.";
   } catch (error) {
-    console.error("Open Roam error:", error);
+    console.error(error);
 
     state.places = [];
 
     renderPlaces();
 
-    if (subtitle) {
-      subtitle.textContent =
-        "Pick a place nearby that fits your plans.";
-    }
+    subtitle.textContent =
+      "Your Roam is saved.";
   }
 }
 
 async function calculateBestTimes() {
-  const { data: participants, error } = await supabaseClient
-    .from("participants")
-    .select("availability")
-    .eq("room_id", state.roomId);
+  const { data, error } =
+    await supabaseClient
+      .from("participants")
+      .select("availability")
+      .eq("room_id", state.roomId);
 
-  if (error) {
-    throw error;
-  }
-
-  if (!participants || participants.length === 0) {
-    return [];
-  }
+  if (error) throw error;
 
   const scores = {};
 
-  participants.forEach((participant) => {
-    const availability = participant.availability || {};
-    const dates = Array.isArray(availability.dates)
-      ? availability.dates
-      : [];
-    const times = Array.isArray(availability.times)
-      ? availability.times
-      : [];
+  (data || []).forEach((participant) => {
+    const availability =
+      participant.availability || {};
+
+    const dates =
+      availability.dates || [];
+
+    const times =
+      availability.times || [];
 
     dates.forEach((date) => {
       times.forEach((time) => {
@@ -935,21 +895,13 @@ async function calculateBestTimes() {
           };
         }
 
-        scores[key].count += 1;
+        scores[key].count++;
       });
     });
   });
 
   return Object.values(scores)
-    .sort((a, b) => {
-      if (b.count !== a.count) {
-        return b.count - a.count;
-      }
-
-      return `${a.date}${a.time}`.localeCompare(
-        `${b.date}${b.time}`
-      );
-    })
+    .sort((a, b) => b.count - a.count)
     .slice(0, 3);
 }
 
@@ -958,32 +910,28 @@ async function findPlaces() {
   let lng = state.lng;
 
   if (!lat || !lng) {
-    const geocoded = await geocodeLocation(state.location);
+    const location =
+      await geocode(state.location);
 
-    if (geocoded) {
-      lat = geocoded.lat;
-      lng = geocoded.lng;
+    if (location) {
+      lat = location.lat;
+      lng = location.lng;
     }
   }
 
-  if (!lat || !lng) {
-    return [];
-  }
+  if (!lat || !lng) return [];
 
-  const activity = ACTIVITIES.find(
-    (item) => item.id === state.activity
-  );
+  const activity =
+    ACTIVITIES.find(
+      (item) => item.id === state.activity
+    );
 
-  if (!activity) {
-    return [];
-  }
-
-  const radius = 5000;
+  if (!activity) return [];
 
   const filters = activity.tags
     .map(
       (tag) =>
-        `nwr["amenity"="${tag}"](around:${radius},${lat},${lng});`
+        `nwr["amenity"="${tag}"](around:5000,${lat},${lng});`
     )
     .join("");
 
@@ -999,9 +947,6 @@ async function findPlaces() {
     "https://overpass-api.de/api/interpreter",
     {
       method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=UTF-8"
-      },
       body: query
     }
   );
@@ -1012,47 +957,28 @@ async function findPlaces() {
 
   const data = await response.json();
 
-  const places = (data.elements || [])
-    .map((item) => {
-      const tags = item.tags || {};
-
-      return {
-        id: item.id,
-        name:
-          tags.name ||
-          tags.brand ||
-          tags.operator ||
-          "Nearby place",
-        type:
-          tags.amenity ||
-          tags.shop ||
-          "Place",
-        lat:
-          item.lat ??
-          item.center?.lat ??
-          null,
-        lng:
-          item.lon ??
-          item.center?.lon ??
-          null,
-        address: buildAddress(tags)
-      };
-    })
+  return (data.elements || [])
+    .map((item) => ({
+      id: item.id,
+      name:
+        item.tags?.name ||
+        item.tags?.brand ||
+        "Nearby place",
+      type:
+        item.tags?.amenity ||
+        "Place",
+      address: [
+        item.tags?.["addr:housenumber"],
+        item.tags?.["addr:street"]
+      ]
+        .filter(Boolean)
+        .join(" ")
+    }))
     .filter((place) => place.name)
-    .filter(
-      (place, index, array) =>
-        index ===
-        array.findIndex(
-          (other) =>
-            other.name.toLowerCase() === place.name.toLowerCase()
-        )
-    )
     .slice(0, 8);
-
-  return places;
 }
 
-async function geocodeLocation(location) {
+async function geocode(location) {
   const url =
     "https://nominatim.openstreetmap.org/search?" +
     new URLSearchParams({
@@ -1061,21 +987,15 @@ async function geocodeLocation(location) {
       limit: "1"
     });
 
-  const response = await fetch(url, {
-    headers: {
-      Accept: "application/json"
-    }
-  });
+  const response =
+    await fetch(url);
 
-  if (!response.ok) {
-    return null;
-  }
+  if (!response.ok) return null;
 
-  const data = await response.json();
+  const data =
+    await response.json();
 
-  if (!data.length) {
-    return null;
-  }
+  if (!data.length) return null;
 
   return {
     lat: Number(data[0].lat),
@@ -1084,105 +1004,126 @@ async function geocodeLocation(location) {
 }
 
 function renderPlaces() {
-  const container = document.getElementById("placesList");
+  const container =
+    document.getElementById("placesList");
+
+  const next =
+    document.getElementById("placesNext");
 
   if (!container) return;
 
   container.innerHTML = "";
 
-  if (state.places.length === 0) {
+  state.selectedPlace = null;
+
+  if (!state.places.length) {
     container.innerHTML = `
       <div class="empty-card">
         <strong>No automatic matches yet.</strong>
         <p>
-          Your Roam is saved. You can still choose a nearby place yourself.
+          Your Roam is saved. You can choose a place nearby yourself.
         </p>
       </div>
     `;
+
+    next.disabled = false;
 
     return;
   }
 
   state.places.forEach((place, index) => {
-    const card = document.createElement("button");
+    const card =
+      document.createElement("button");
 
     card.type = "button";
     card.className = "place-card";
 
-    if (index === 0) {
-      card.classList.add("selected");
-      state.selectedPlace = place;
-    }
-
     card.innerHTML = `
-      <div class="place-number">${index + 1}</div>
+      <div class="place-number">
+        ${index + 1}
+      </div>
 
       <div class="place-info">
         <strong>${escapeHtml(place.name)}</strong>
-        <span>${escapeHtml(formatPlaceType(place.type))}</span>
+        <span>${escapeHtml(
+          formatType(place.type)
+        )}</span>
+
         ${
           place.address
-            ? `<small>${escapeHtml(place.address)}</small>`
+            ? `<small>${escapeHtml(
+                place.address
+              )}</small>`
             : ""
         }
       </div>
 
-      <div class="place-check">✓</div>
+      <div class="place-check">
+        ✓
+      </div>
     `;
 
     card.addEventListener("click", () => {
       state.selectedPlace = place;
 
-      document.querySelectorAll(".place-card").forEach((item) => {
-        item.classList.remove("selected");
-      });
+      document
+        .querySelectorAll(".place-card")
+        .forEach((item) =>
+          item.classList.remove("selected")
+        );
 
       card.classList.add("selected");
+
+      next.disabled = false;
     });
 
     container.appendChild(card);
+
+    if (index === 0) {
+      state.selectedPlace = place;
+      card.classList.add("selected");
+      next.disabled = false;
+    }
   });
 }
 
 function finishRoam() {
-  const place = state.selectedPlace || state.places[0] || null;
-
-  state.selectedPlace = place;
-
   renderFinalPlan();
-
   showScreen("final");
 }
 
 function renderFinalPlan() {
-  const heading = document.getElementById("finalHeading");
-  const plan = document.getElementById("finalPlan");
+  const heading =
+    document.getElementById("finalHeading");
 
-  if (!plan) return;
+  const plan =
+    document.getElementById("finalPlan");
 
-  const room = state.room;
-
-  const best = state.bestTimes[0];
+  const best =
+    state.bestTimes[0];
 
   const when = best
     ? `${formatDate(best.date)} at ${best.time}`
     : "Your group's chosen time";
 
-  const where = state.selectedPlace
-    ? state.selectedPlace.name
-    : state.location;
+  const where =
+    state.selectedPlace?.name ||
+    state.location;
 
-  const activityName =
-    ACTIVITIES.find((item) => item.id === state.activity)?.name ||
-    "Hangout";
+  const activity =
+    ACTIVITIES.find(
+      (item) => item.id === state.activity
+    )?.name || "Hangout";
 
   const budget =
-    BUDGET_OPTIONS.find((item) => item.value === state.budget)
-      ?.label || "Flexible";
+    BUDGETS.find(
+      (item) => item.value === state.budget
+    )?.label || "Flexible";
 
-  if (heading) {
-    heading.textContent = room?.name || state.roomName || "Your Roam";
-  }
+  heading.textContent =
+    state.room?.name ||
+    state.roomName ||
+    "Your Roam";
 
   plan.innerHTML = `
     <div class="plan-row">
@@ -1197,75 +1138,80 @@ function renderFinalPlan() {
 
     <div class="plan-row">
       <span>VIBE</span>
-      <strong>${escapeHtml(activityName)}</strong>
+      <strong>${escapeHtml(activity)}</strong>
     </div>
 
     <div class="plan-row">
       <span>BUDGET</span>
-      <strong>${escapeHtml(budget)} per person</strong>
+      <strong>${escapeHtml(
+        budget
+      )} per person</strong>
     </div>
 
     <div class="plan-row">
       <span>ROAM CODE</span>
-      <strong>${escapeHtml(room?.code || "")}</strong>
+      <strong>${escapeHtml(
+        state.room?.code || ""
+      )}</strong>
     </div>
   `;
 }
 
 async function copyRoomCode() {
-  const code = state.room?.code;
+  const code =
+    state.room?.code ||
+    document.getElementById("roomCode")
+      ?.textContent;
 
-  if (!code) return;
+  await copy(code);
 
-  await copyText(code);
-
-  toast("Roam code copied.");
+  toast("Code copied.");
 }
 
 async function copyFinalPlan() {
-  const room = state.room;
-
-  const best = state.bestTimes[0];
+  const best =
+    state.bestTimes[0];
 
   const when = best
     ? `${formatDate(best.date)} at ${best.time}`
     : "TBD";
 
-  const where = state.selectedPlace
-    ? state.selectedPlace.name
-    : state.location;
+  const where =
+    state.selectedPlace?.name ||
+    state.location;
 
-  const activityName =
-    ACTIVITIES.find((item) => item.id === state.activity)?.name ||
-    "Hangout";
+  const activity =
+    ACTIVITIES.find(
+      (item) => item.id === state.activity
+    )?.name || "Hangout";
 
   const budget =
-    BUDGET_OPTIONS.find((item) => item.value === state.budget)
-      ?.label || "Flexible";
+    BUDGETS.find(
+      (item) => item.value === state.budget
+    )?.label || "Flexible";
 
-  const text = `${room?.name || "Roam"}
+  const text = `${state.room?.name || "Roam"}
 
 WHEN: ${when}
 WHERE: ${where}
-VIBE: ${activityName}
+VIBE: ${activity}
 BUDGET: ${budget} per person
 
-Roam code: ${room?.code || ""}`;
+Roam code: ${state.room?.code || ""}`;
 
-  await copyText(text);
+  await copy(text);
 
   toast("Plan copied.");
 }
 
-async function copyText(text) {
+async function copy(text) {
   try {
     await navigator.clipboard.writeText(text);
   } catch {
-    const textarea = document.createElement("textarea");
+    const textarea =
+      document.createElement("textarea");
 
     textarea.value = text;
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
 
     document.body.appendChild(textarea);
 
@@ -1278,62 +1224,60 @@ async function copyText(text) {
 }
 
 function locateUser() {
-  const status = document.getElementById("locationStatus");
+  const status =
+    document.getElementById(
+      "locationStatus"
+    );
 
   if (!navigator.geolocation) {
-    toast("Location isn't available in this browser.");
+    toast("Location isn't available.");
     return;
   }
 
-  if (status) {
-    status.textContent = "Finding you…";
-  }
+  status.textContent =
+    "Finding you…";
 
   navigator.geolocation.getCurrentPosition(
     async (position) => {
-      state.lat = position.coords.latitude;
-      state.lng = position.coords.longitude;
+      state.lat =
+        position.coords.latitude;
+
+      state.lng =
+        position.coords.longitude;
 
       try {
-        const location = await reverseGeocode(
-          state.lat,
-          state.lng
-        );
+        const location =
+          await reverseGeocode(
+            state.lat,
+            state.lng
+          );
 
         if (location) {
           state.location = location;
 
-          const input = document.getElementById("location");
-
-          if (input) {
-            input.value = location;
-          }
-
-          if (status) {
-            status.textContent = "Location found.";
-          }
-        } else {
-          if (status) {
-            status.textContent = "Location found.";
-          }
+          document.getElementById(
+            "location"
+          ).value = location;
         }
+
+        status.textContent =
+          "Location found.";
       } catch {
-        if (status) {
-          status.textContent = "Location found.";
-        }
+        status.textContent =
+          "Location found.";
       }
     },
     () => {
-      if (status) {
-        status.textContent = "Couldn't access your location.";
-      }
+      status.textContent =
+        "Couldn't access your location.";
 
-      toast("You can enter your location manually.");
+      toast(
+        "You can enter your location manually."
+      );
     },
     {
       enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 300000
+      timeout: 10000
     }
   );
 }
@@ -1347,152 +1291,139 @@ async function reverseGeocode(lat, lng) {
       format: "json"
     });
 
-  const response = await fetch(url, {
-    headers: {
-      Accept: "application/json"
-    }
-  });
+  const response =
+    await fetch(url);
 
-  if (!response.ok) {
-    return null;
-  }
+  if (!response.ok) return null;
 
-  const data = await response.json();
+  const data =
+    await response.json();
 
-  if (!data || !data.address) {
-    return null;
-  }
+  const address =
+    data.address || {};
 
-  const address = data.address;
-
-  const parts = [
+  return [
     address.road,
     address.city ||
       address.town ||
-      address.village ||
-      address.municipality,
+      address.village,
     address.state
-  ].filter(Boolean);
-
-  return parts.join(", ");
+  ]
+    .filter(Boolean)
+    .join(", ");
 }
 
 function getDateOptions() {
-  const options = [];
+  const dates = [];
 
   const today = new Date();
 
   for (let i = 0; i < 14; i++) {
-    const date = new Date(today);
+    const date =
+      new Date(today);
 
-    date.setDate(today.getDate() + i);
+    date.setDate(
+      today.getDate() + i
+    );
 
-    const iso = toISODate(date);
-
-    options.push({
-      iso,
+    dates.push({
+      iso: toISO(date),
       day: date.getDate(),
-      month: date.toLocaleDateString("en-US", {
-        month: "short"
-      }),
-      weekday: date.toLocaleDateString("en-US", {
-        weekday: "short"
-      })
+      month: date.toLocaleDateString(
+        "en-US",
+        { month: "short" }
+      ),
+      weekday: date.toLocaleDateString(
+        "en-US",
+        { weekday: "short" }
+      )
     });
   }
 
-  return options;
+  return dates;
+}
+
+function toISO(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0")
+  ].join("-");
 }
 
 function formatDate(iso) {
-  if (!iso) return "";
+  const [year, month, day] =
+    iso.split("-").map(Number);
 
-  const [year, month, day] = iso.split("-").map(Number);
-
-  const date = new Date(year, month - 1, day);
-
-  return date.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric"
-  });
+  return new Date(
+    year,
+    month - 1,
+    day
+  ).toLocaleDateString(
+    "en-US",
+    {
+      weekday: "long",
+      month: "long",
+      day: "numeric"
+    }
+  );
 }
 
-function toISODate(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-function buildAddress(tags) {
-  const parts = [
-    tags["addr:housenumber"],
-    tags["addr:street"],
-    tags["addr:city"]
-  ].filter(Boolean);
-
-  return parts.join(" ");
-}
-
-function formatPlaceType(type) {
-  if (!type) return "Nearby place";
-
-  return type
+function formatType(type) {
+  return String(type || "Place")
     .replaceAll("_", " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    .replace(
+      /\b\w/g,
+      (letter) => letter.toUpperCase()
+    );
 }
 
-function getValue(id) {
-  const element = document.getElementById(id);
-
-  return element ? element.value.trim() : "";
+function value(id) {
+  return (
+    document.getElementById(id)
+      ?.value
+      .trim() || ""
+  );
 }
 
 function createToken() {
-  if (window.crypto?.randomUUID) {
-    return window.crypto.randomUUID();
+  if (crypto.randomUUID) {
+    return crypto.randomUUID();
   }
 
   return (
     "roam-" +
     Date.now() +
     "-" +
-    Math.random().toString(36).slice(2)
+    Math.random()
+      .toString(36)
+      .slice(2)
   );
 }
 
-function getOrCreateToken(key) {
-  const existing = localStorage.getItem(key);
-
-  if (existing && existing.length >= 20) {
-    return existing;
-  }
-
-  const token = createToken();
-
-  localStorage.setItem(key, token);
-
-  return token;
-}
-
-function setButtonLoading(button, loading) {
+function loading(button, isLoading) {
   if (!button) return;
 
-  if (loading) {
-    button.dataset.originalText = button.textContent;
-    button.textContent = "Saving…";
+  if (isLoading) {
+    button.dataset.original =
+      button.textContent;
+
+    button.textContent =
+      "Saving…";
+
     button.disabled = true;
   } else {
     button.textContent =
-      button.dataset.originalText || button.textContent;
+      button.dataset.original ||
+      button.textContent;
+
     button.disabled = false;
   }
 }
 
 function toast(message) {
-  const element = document.getElementById("toast");
+  const element =
+    document.getElementById("toast");
 
   if (!element) {
     alert(message);
@@ -1500,13 +1431,19 @@ function toast(message) {
   }
 
   element.textContent = message;
+
   element.classList.add("show");
 
-  clearTimeout(window.roamToastTimer);
+  clearTimeout(
+    window.roamToastTimer
+  );
 
-  window.roamToastTimer = setTimeout(() => {
-    element.classList.remove("show");
-  }, 3000);
+  window.roamToastTimer =
+    setTimeout(() => {
+      element.classList.remove(
+        "show"
+      );
+    }, 3000);
 }
 
 function escapeHtml(value) {
