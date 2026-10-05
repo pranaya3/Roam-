@@ -3,452 +3,387 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roam — Make plans, together.</title>
+  <title>Roam — Make the plan</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
 <header class="topbar">
-  <a class="brand" href="#" onclick="startOver(); return false;">
-    roam<span>•</span>
-  </a>
+  <button class="brand" onclick="goHome()">roam</button>
 
-  <button class="join-top" onclick="openJoin()">
-    Join a Roam
-  </button>
+  <div class="top-actions">
+    <button class="text-button" onclick="openJoin()">Join a Roam</button>
+
+    <div class="progress-wrap">
+      <div id="progress" class="progress"></div>
+    </div>
+  </div>
 </header>
-
-<div class="progress-wrap">
-  <div id="progress" class="progress"></div>
-</div>
 
 <main>
 
 <!-- HOME -->
-<section id="home" class="screen active">
-  <div class="hero">
+<section id="screen-home" class="screen active">
 
-    <div class="eyebrow">
-      LESS PLANNING. MORE HANGING OUT.
-    </div>
+  <div class="hero">
+    <p class="eyebrow">GROUP HANGOUTS, SIMPLIFIED</p>
 
     <h1>
-      Make plans<br>
-      <em>together.</em>
+      Stop texting.<br>
+      <em>Start roaming.</em>
     </h1>
 
-    <p>
-      Roam finds a time, activity, and place that works for everyone.
+    <p class="subtext">
+      Find a time, pick an activity, and get everyone together
+      without the group-chat chaos.
     </p>
 
-    <button class="primary-button" onclick="startRoam()">
-      Start a Roam <span>→</span>
+    <button class="primary-button large" onclick="startRoam()">
+      Create a Roam <span>→</span>
     </button>
 
-    <button class="text-button" onclick="openJoin()">
-      I have a Roam code
+    <button class="secondary-button large" onclick="openJoin()">
+      Join a friend's Roam
     </button>
-
   </div>
 
-  <div class="hero-art">
-    <div class="sun"></div>
-    <div class="arch"></div>
-    <div class="arch arch-two"></div>
-    <div class="plant">✦</div>
+  <div class="home-note">
+    <span>✦</span>
+    <p>
+      Made for spontaneous plans, weekend adventures,
+      and “what are we doing?” moments.
+    </p>
   </div>
+
 </section>
 
 
 <!-- DETAILS -->
-<section id="details" class="screen">
+<section id="screen-details" class="screen">
 
-  <div class="section-inner">
-
-    <span class="tiny-label">
-      START A ROAM
-    </span>
+  <div class="section-head">
+    <p class="eyebrow">LET'S START</p>
 
     <h2>
-      Where are you<br>
-      <em>heading?</em>
+      What are we <em>planning?</em>
     </h2>
 
     <p class="subtext">
-      Give your hangout a name and starting location.
+      Give your Roam a few basics.
     </p>
+  </div>
 
-    <div class="form-card">
+  <div class="form-card">
 
-      <label for="roamName">
-        Roam name
-      </label>
+    <label for="roamName">Hangout name</label>
+
+    <input
+      id="roamName"
+      type="text"
+      placeholder="Saturday with the crew"
+      maxlength="60"
+    >
+
+    <label for="roamLocation">Where?</label>
+
+    <div class="location-row">
 
       <input
-        id="roamName"
+        id="roamLocation"
         type="text"
-        placeholder="Friday night out"
-        maxlength="80"
+        placeholder="City, neighborhood, or address"
       >
 
-      <label for="location">
-        Location
-      </label>
-
-      <div class="location-input">
-
-        <input
-          id="location"
-          type="text"
-          placeholder="St. Louis, MO"
-          autocomplete="off"
-        >
-
-        <button
-          type="button"
-          onclick="useCurrentLocation()"
-          title="Use my location"
-        >
-          ⌖
-        </button>
-
-      </div>
-
-      <label>
-        Group size
-      </label>
-
-      <div class="stepper">
-
-        <button type="button" onclick="changeGroupSize(-1)">
-          −
-        </button>
-
-        <strong id="groupSizeDisplay">
-          4
-        </strong>
-
-        <button type="button" onclick="changeGroupSize(1)">
-          +
-        </button>
-
-      </div>
-
-      <button class="dark-button" onclick="createRoam()">
-        Create Roam <span>→</span>
+      <button
+        class="location-button"
+        onclick="useCurrentLocation()"
+        title="Use my location"
+      >
+        ⌖
       </button>
 
     </div>
 
+    <label>How many people?</label>
+
+    <div class="stepper">
+
+      <button onclick="changeGroupSize(-1)">−</button>
+
+      <strong id="groupSize">4</strong>
+
+      <span>people</span>
+
+      <button onclick="changeGroupSize(1)">+</button>
+
+    </div>
+
   </div>
+
+  <button class="primary-button" onclick="createRoam()">
+    Continue <span>→</span>
+  </button>
+
+  <button class="back-button" onclick="goHome()">
+    ← Back
+  </button>
 
 </section>
 
 
 <!-- CREATED -->
-<section id="created" class="screen">
+<section id="screen-created" class="screen">
 
-  <div class="section-inner centered">
+  <div class="success-mark">✦</div>
 
-    <span class="tiny-label">
-      YOUR ROAM IS READY
-    </span>
+  <div class="section-head center">
+
+    <p class="eyebrow">YOUR ROAM IS READY</p>
 
     <h2>
-      Get your friends<br>
-      <em>together.</em>
+      Get your friends <em>together.</em>
     </h2>
 
-    <p class="subtext">
+    <p id="createdMessage" class="subtext">
       Share this one-word code with everyone you want to invite.
     </p>
 
-    <div class="code-card">
+  </div>
 
-      <span class="invite-label">
-        YOUR ROAM CODE
-      </span>
+  <div class="code-card">
 
-      <div id="invitePhrase" class="invite-phrase">
-        SUNSET
-      </div>
+    <span class="invite-label">
+      YOUR ROAM CODE
+    </span>
 
-      <p class="invite-help">
-        One word. Easy to share.
-      </p>
-
-      <div class="button-row">
-
-        <button
-          class="secondary-button"
-          onclick="copyRoamCode()"
-        >
-          Copy code
-        </button>
-
-        <button
-          class="primary-small"
-          onclick="shareRoamCode()"
-        >
-          Share
-        </button>
-
-      </div>
-
+    <div id="inviteCode" class="invite-code">
+      SUNSET
     </div>
 
-    <button
-      class="dark-button compact"
-      onclick="continueAfterCreate()"
-    >
-      Continue <span>→</span>
+    <button class="copy-button" onclick="copyInviteCode()">
+      Copy code
     </button>
 
   </div>
+
+  <button class="primary-button" onclick="goToDates()">
+    Set the dates <span>→</span>
+  </button>
+
+  <button class="secondary-button" onclick="shareRoam()">
+    Share Roam
+  </button>
 
 </section>
 
 
 <!-- DATES -->
-<section id="dates" class="screen">
+<section id="screen-dates" class="screen">
 
-  <div class="section-inner">
+  <div class="section-head">
 
-    <span class="tiny-label">
-      WHEN WORKS?
-    </span>
+    <p class="eyebrow">WHEN ARE YOU FREE?</p>
 
     <h2>
-      Pick some<br>
-      <em>possibilities.</em>
+      Pick the <em>possibilities.</em>
     </h2>
 
     <p class="subtext">
-      Choose every date that could work.
+      Choose at least 2 dates.
+      Your friends will mark when they can make it.
     </p>
 
-    <div id="dateGrid" class="date-grid"></div>
-
-    <button class="dark-button" onclick="continueDates()">
-      Continue <span>→</span>
-    </button>
-
   </div>
+
+  <div id="dateGrid" class="date-grid"></div>
+
+  <button
+    id="datesContinue"
+    class="primary-button"
+    onclick="saveDates()"
+  >
+    Continue <span>→</span>
+  </button>
 
 </section>
 
 
 <!-- AVAILABILITY -->
-<section id="availability" class="screen">
+<section id="screen-availability" class="screen">
 
-  <div class="section-inner">
+  <div class="section-head">
 
-    <span class="tiny-label">
-      YOUR AVAILABILITY
-    </span>
+    <p class="eyebrow">YOUR AVAILABILITY</p>
 
     <h2>
-      When are you<br>
-      <em>free?</em>
+      When can <em>you</em> go?
     </h2>
 
     <p class="subtext">
-      Pick all the times you could make it.
+      Pick every time that works.
+      Your friends will do the same.
     </p>
 
-    <div id="timeGrid" class="time-grid"></div>
-
-    <button
-      class="dark-button"
-      onclick="finishAvailability()"
-    >
-      Continue <span>→</span>
-    </button>
-
   </div>
+
+  <div id="availabilityDates" class="availability-dates"></div>
+
+  <button class="primary-button" onclick="saveAvailability()">
+    Continue <span>→</span>
+  </button>
 
 </section>
 
 
 <!-- BUDGET -->
-<section id="budget" class="screen">
+<section id="screen-budget" class="screen">
 
-  <div class="section-inner">
+  <div class="section-head">
 
-    <span class="tiny-label">
-      KEEP IT REAL
-    </span>
+    <p class="eyebrow">KEEP IT COMFY</p>
 
     <h2>
-      What's your<br>
-      <em>budget?</em>
+      What's your <em>budget?</em>
     </h2>
 
     <p class="subtext">
       Your exact number stays private.
-      Roam only shows the group average.
+      Only the group average is shown.
     </p>
 
-    <div class="budget-grid">
+  </div>
 
-      <button
-        class="budget-card"
-        onclick="selectBudget(this, 20)"
-      >
-        <strong>$20</strong>
-        <span>or less</span>
-      </button>
+  <div class="budget-grid">
 
-      <button
-        class="budget-card"
-        onclick="selectBudget(this, 40)"
-      >
-        <strong>$40</strong>
-        <span>or less</span>
-      </button>
+    <button class="budget-card" onclick="selectBudget(this, 20)">
+      <strong>$20</strong>
+      <span>Low-key</span>
+    </button>
 
-      <button
-        class="budget-card"
-        onclick="selectBudget(this, 60)"
-      >
-        <strong>$60</strong>
-        <span>or less</span>
-      </button>
+    <button class="budget-card" onclick="selectBudget(this, 40)">
+      <strong>$40</strong>
+      <span>Casual</span>
+    </button>
 
-      <button
-        class="budget-card"
-        onclick="selectBudget(this, 100)"
-      >
-        <strong>$100</strong>
-        <span>or less</span>
-      </button>
+    <button class="budget-card" onclick="selectBudget(this, 60)">
+      <strong>$60</strong>
+      <span>Mid-range</span>
+    </button>
 
-      <button
-        class="budget-card"
-        onclick="selectBudget(this, 150)"
-      >
-        <strong>$150+</strong>
-        <span>flexible</span>
-      </button>
+    <button class="budget-card" onclick="selectBudget(this, 100)">
+      <strong>$100</strong>
+      <span>Treat yourself</span>
+    </button>
 
-    </div>
-
-    <button
-      id="budgetContinue"
-      class="dark-button"
-      disabled
-      onclick="finishBudget()"
-    >
-      Continue <span>→</span>
+    <button class="budget-card" onclick="selectBudget(this, 150)">
+      <strong>$150+</strong>
+      <span>Go big</span>
     </button>
 
   </div>
+
+  <button
+    id="budgetContinue"
+    class="primary-button disabled"
+    onclick="saveBudget()"
+  >
+    Continue <span>→</span>
+  </button>
 
 </section>
 
 
 <!-- ACTIVITY -->
-<section id="activity" class="screen">
+<section id="screen-activity" class="screen">
 
-  <div class="section-inner">
+  <div class="section-head">
 
-    <span class="tiny-label">
-      WHAT SOUNDS GOOD?
-    </span>
+    <p class="eyebrow">NOW FOR THE FUN PART</p>
 
     <h2>
-      Choose an<br>
-      <em>activity.</em>
+      What do you want <em>to do?</em>
     </h2>
 
     <p class="subtext">
-      Roam will find nearby places that match.
+      Choose an activity and Roam will find nearby options.
     </p>
 
-    <div class="activity-grid">
+  </div>
 
-      <button
-        class="activity-card"
-        data-activity="eat"
-        onclick="selectActivity('eat')"
-      >
-        <b>🍝</b>
-        <strong>Eat</strong>
-        <span>Find somewhere good</span>
-      </button>
+  <div class="activity-grid">
 
-      <button
-        class="activity-card"
-        data-activity="movies"
-        onclick="selectActivity('movies')"
-      >
-        <b>🎬</b>
-        <strong>Movies</strong>
-        <span>Catch a movie</span>
-      </button>
+    <button
+      class="activity-card"
+      onclick="selectActivity(this, 'food')"
+    >
+      <span>🍝</span>
+      <strong>Eat</strong>
+      <small>Restaurants & bites</small>
+    </button>
 
-      <button
-        class="activity-card"
-        data-activity="bowling"
-        onclick="selectActivity('bowling')"
-      >
-        <b>🎳</b>
-        <strong>Bowling</strong>
-        <span>Compete & hang out</span>
-      </button>
+    <button
+      class="activity-card"
+      onclick="selectActivity(this, 'coffee')"
+    >
+      <span>☕</span>
+      <strong>Coffee</strong>
+      <small>Cafés & conversation</small>
+    </button>
 
-      <button
-        class="activity-card"
-        data-activity="coffee"
-        onclick="selectActivity('coffee')"
-      >
-        <b>☕</b>
-        <strong>Coffee</strong>
-        <span>Grab coffee & chill</span>
-      </button>
+    <button
+      class="activity-card"
+      onclick="selectActivity(this, 'movies')"
+    >
+      <span>🎬</span>
+      <strong>Movies</strong>
+      <small>Cinema & popcorn</small>
+    </button>
 
-      <button
-        class="activity-card"
-        data-activity="outdoors"
-        onclick="selectActivity('outdoors')"
-      >
-        <b>🌿</b>
-        <strong>Outdoors</strong>
-        <span>Get outside</span>
-      </button>
+    <button
+      class="activity-card"
+      onclick="selectActivity(this, 'bowling')"
+    >
+      <span>🎳</span>
+      <strong>Bowling</strong>
+      <small>Friendly competition</small>
+    </button>
 
-      <button
-        class="activity-card"
-        data-activity="arts"
-        onclick="selectActivity('arts')"
-      >
-        <b>🎨</b>
-        <strong>Arts & Culture</strong>
-        <span>Explore something creative</span>
-      </button>
+    <button
+      class="activity-card"
+      onclick="selectActivity(this, 'outdoors')"
+    >
+      <span>🌿</span>
+      <strong>Outdoors</strong>
+      <small>Parks & fresh air</small>
+    </button>
 
-      <button
-        class="activity-card"
-        data-activity="games"
-        onclick="selectActivity('games')"
-      >
-        <b>🎮</b>
-        <strong>Games</strong>
-        <span>Play together</span>
-      </button>
+    <button
+      class="activity-card"
+      onclick="selectActivity(this, 'arts')"
+    >
+      <span>🎨</span>
+      <strong>Arts</strong>
+      <small>Museums & galleries</small>
+    </button>
 
-      <button
-        class="activity-card"
-        data-activity="other"
-        onclick="selectActivity('other')"
-      >
-        <b>✦</b>
-        <strong>Something else</strong>
-        <span>Find another idea</span>
-      </button>
+    <button
+      class="activity-card"
+      onclick="selectActivity(this, 'games')"
+    >
+      <span>🕹️</span>
+      <strong>Games</strong>
+      <small>Play & compete</small>
+    </button>
 
-    </div>
+    <button
+      class="activity-card"
+      onclick="selectActivity(this, 'other')"
+    >
+      <span>✨</span>
+      <strong>Something else</strong>
+      <small>Let's see what's nearby</small>
+    </button>
 
   </div>
 
@@ -456,270 +391,203 @@
 
 
 <!-- RESULTS -->
-<section id="results" class="screen">
+<section id="screen-results" class="screen">
 
-  <div class="section-inner">
+  <div class="section-head">
 
-    <span class="tiny-label">
-      THE GROUP DECIDES
-    </span>
+    <p class="eyebrow">THE GROUP HAS SPOKEN</p>
 
     <h2>
-      These times<br>
-      <em>work best.</em>
+      These times <em>work best.</em>
     </h2>
 
     <p class="subtext">
-      Roam ranked the times by everyone's availability.
+      Based on everyone's availability.
     </p>
 
-    <div id="resultsList" class="results-list"></div>
-
-    <div class="average-card">
-
-      <span>
-        GROUP AVERAGE BUDGET
-      </span>
-
-      <strong id="averageBudget">
-        —
-      </strong>
-
-      <small>
-        Individual budgets stay private.
-      </small>
-
-    </div>
-
-    <button
-      class="dark-button"
-      onclick="continueResults()"
-    >
-      Find places <span>→</span>
-    </button>
-
   </div>
+
+  <div id="resultsList" class="results-list"></div>
+
+  <div id="averageBudget" class="average-card"></div>
+
+  <button class="primary-button" onclick="showPlaces()">
+    Find places <span>→</span>
+  </button>
 
 </section>
 
 
 <!-- PLACES -->
-<section id="places" class="screen">
+<section id="screen-places" class="screen">
 
-  <div class="section-inner">
+  <div class="section-head">
 
-    <span class="tiny-label">
-      NEARBY
-    </span>
+    <p class="eyebrow">NEARBY OPTIONS</p>
 
     <h2>
-      Now pick<br>
-      <em>your place.</em>
+      Where should you <em>go?</em>
     </h2>
 
     <p class="subtext">
       Real places near your Roam location.
     </p>
 
-    <div
-      id="placesLoading"
-      class="places-loading"
-    >
-      Finding places...
+  </div>
+
+  <div id="placesList" class="places-list">
+
+    <div class="loading-card">
+      Finding nearby places…
     </div>
 
-    <div
-      id="placesList"
-      class="places-list"
-    ></div>
-
   </div>
+
+  <button
+    class="primary-button"
+    onclick="finishPlan()"
+  >
+    Make the plan <span>→</span>
+  </button>
 
 </section>
 
 
 <!-- FINAL -->
-<section id="final" class="screen">
+<section id="screen-final" class="screen">
 
-  <div class="section-inner centered">
+  <div class="success-mark">✓</div>
 
-    <span class="tiny-label">
-      IT'S A PLAN
-    </span>
+  <div class="section-head center">
+
+    <p class="eyebrow">IT'S A PLAN</p>
 
     <h2>
-      See you<br>
-      <em>there.</em>
+      Roam <em>complete.</em>
     </h2>
 
-    <div class="final-card">
-
-      <div>
-        <span>DATE</span>
-        <strong id="finalDate">—</strong>
-      </div>
-
-      <div>
-        <span>TIME</span>
-        <strong id="finalTime">—</strong>
-      </div>
-
-      <div>
-        <span>ACTIVITY</span>
-        <strong id="finalActivity">—</strong>
-      </div>
-
-      <div>
-        <span>PLACE</span>
-        <strong id="finalPlace">—</strong>
-      </div>
-
-      <div>
-        <span>GROUP</span>
-        <strong id="finalPeople">—</strong>
-      </div>
-
-    </div>
-
-    <div class="code-mini">
-
-      <span>ROAM CODE</span>
-
-      <strong id="roamCodeMiniText">
-        —
-      </strong>
-
-    </div>
-
-    <div class="button-stack">
-
-      <button
-        class="primary-button"
-        onclick="shareFinalPlan()"
-      >
-        Share the plan <span>↗</span>
-      </button>
-
-      <button
-        class="secondary-button"
-        onclick="copyFinalPlan()"
-      >
-        Copy plan
-      </button>
-
-      <button
-        class="text-button"
-        onclick="startOver()"
-      >
-        Start another Roam
-      </button>
-
-    </div>
-
   </div>
+
+  <div id="finalCard" class="final-card"></div>
+
+  <button class="primary-button" onclick="copyPlan()">
+    Copy plan <span>⧉</span>
+  </button>
+
+  <button class="secondary-button" onclick="sharePlan()">
+    Share plan
+  </button>
+
+  <button class="back-button" onclick="startOver()">
+    Create another Roam
+  </button>
 
 </section>
 
 
 <!-- JOIN -->
-<section id="join" class="screen">
+<section id="screen-join" class="screen">
 
-  <div class="section-inner centered">
+  <div class="section-head">
 
-    <span class="tiny-label">
-      JOIN A FRIEND
-    </span>
+    <p class="eyebrow">JOIN A FRIEND</p>
 
     <h2>
-      Jump into<br>
-      <em>the plan.</em>
+      Jump into <em>the plan.</em>
     </h2>
 
     <p class="subtext">
       Enter the one-word code your friend gave you.
     </p>
 
-    <div class="form-card join-card">
+  </div>
 
-      <label for="joinCode">
-        Roam code
-      </label>
+  <div class="form-card">
 
-      <input
-        id="joinCode"
-        type="text"
-        placeholder="SUNSET"
-        autocomplete="off"
-        autocapitalize="characters"
-        spellcheck="false"
-        maxlength="30"
-      >
+    <label for="joinCode">
+      Roam code
+    </label>
 
-      <p class="join-code-help">
-        One word. No spaces needed.
-      </p>
+    <input
+      id="joinCode"
+      type="text"
+      placeholder="SUNSET"
+      maxlength="20"
+      autocomplete="off"
+      autocapitalize="characters"
+      spellcheck="false"
+      oninput="
+        this.value=this.value
+        .toUpperCase()
+        .replace(/[^A-Z]/g,'')
+      "
+    >
 
-      <button
-        class="dark-button"
-        onclick="joinRoam()"
-      >
-        Find Roam <span>→</span>
-      </button>
-
-    </div>
+    <p class="join-code-help">
+      One word. Letters only.
+    </p>
 
   </div>
+
+  <button class="primary-button" onclick="joinRoam()">
+    Join Roam <span>→</span>
+  </button>
+
+  <button class="back-button" onclick="goHome()">
+    ← Back
+  </button>
 
 </section>
 
 
 <!-- JOIN CONFIRM -->
-<section id="joinConfirm" class="screen">
+<section id="screen-join-confirm" class="screen">
 
-  <div class="section-inner centered">
+  <div class="success-mark">✦</div>
 
-    <span class="tiny-label">
-      ROAM FOUND
-    </span>
+  <div class="section-head center">
 
-    <h2>
-      You're joining<br>
-      <em id="joinRoomName">the plan.</em>
+    <p class="eyebrow">YOU'RE IN</p>
+
+    <h2 id="joinRoomName">
+      Roam
     </h2>
 
-    <div class="join-preview">
-
-      <span>LOCATION</span>
-      <strong id="joinRoomLocation">—</strong>
-
-      <span>ROAM CODE</span>
-      <strong id="joinRoomCode">—</strong>
-
-    </div>
-
-    <div class="form-card">
-
-      <label for="participantName">
-        Your name
-      </label>
-
-      <input
-        id="participantName"
-        type="text"
-        placeholder="Your name"
-        maxlength="60"
-      >
-
-      <button
-        class="dark-button"
-        onclick="continueJoin()"
-      >
-        Join Roam <span>→</span>
-      </button>
-
-    </div>
+    <p id="joinRoomLocation" class="subtext"></p>
 
   </div>
+
+  <div class="join-preview">
+
+    <span>ROAM CODE</span>
+
+    <strong id="joinRoomCode">
+      SUNSET
+    </strong>
+
+  </div>
+
+  <div class="form-card">
+
+    <label for="participantName">
+      What's your name?
+    </label>
+
+    <input
+      id="participantName"
+      type="text"
+      placeholder="Your name"
+      maxlength="40"
+    >
+
+  </div>
+
+  <button
+    class="primary-button"
+    onclick="startParticipantFlow()"
+  >
+    Let's go <span>→</span>
+  </button>
 
 </section>
 
