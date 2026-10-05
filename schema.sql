@@ -1,13 +1,18 @@
--- =========================================================
--- ROAM DATABASE
--- =========================================================
+/* =========================================================
+   ROAM — SUPABASE DATABASE SCHEMA
+========================================================= */
+
+
+/* =========================================================
+   EXTENSIONS
+========================================================= */
 
 create extension if not exists pgcrypto;
 
 
--- =========================================================
--- ROOMS
--- =========================================================
+/* =========================================================
+   ROOMS
+========================================================= */
 
 create table if not exists public.rooms (
 
@@ -47,21 +52,21 @@ create table if not exists public.rooms (
   created_at timestamptz
     not null
     default now()
-
 );
 
 
--- =========================================================
--- REMOVE OLD 5-CHARACTER CODE RULE
--- =========================================================
+/* =========================================================
+   REMOVE OLD 5-CHARACTER CODE RULE
+   Roam now uses one-word codes.
+========================================================= */
 
 alter table public.rooms
 drop constraint if exists rooms_code_check;
 
 
--- =========================================================
--- PARTICIPANTS
--- =========================================================
+/* =========================================================
+   PARTICIPANTS
+========================================================= */
 
 create table if not exists public.participants (
 
@@ -89,13 +94,12 @@ create table if not exists public.participants (
   created_at timestamptz
     not null
     default now()
-
 );
 
 
--- =========================================================
--- INDEXES
--- =========================================================
+/* =========================================================
+   INDEXES
+========================================================= */
 
 create index if not exists rooms_code_idx
 on public.rooms(code);
@@ -105,9 +109,9 @@ create index if not exists participants_room_idx
 on public.participants(room_id);
 
 
--- =========================================================
--- ROW LEVEL SECURITY
--- =========================================================
+/* =========================================================
+   ROW LEVEL SECURITY
+========================================================= */
 
 alter table public.rooms
 enable row level security;
@@ -117,9 +121,9 @@ alter table public.participants
 enable row level security;
 
 
--- =========================================================
--- ROOM POLICIES
--- =========================================================
+/* =========================================================
+   ROOMS — PUBLIC READ
+========================================================= */
 
 drop policy if exists
 "rooms public read by code"
@@ -128,7 +132,6 @@ on public.rooms;
 
 create policy
 "rooms public read by code"
-
 on public.rooms
 
 for select
@@ -138,6 +141,10 @@ to anon, authenticated
 using (true);
 
 
+/* =========================================================
+   ROOMS — PUBLIC CREATE
+========================================================= */
+
 drop policy if exists
 "rooms public create"
 on public.rooms;
@@ -145,7 +152,6 @@ on public.rooms;
 
 create policy
 "rooms public create"
-
 on public.rooms
 
 for insert
@@ -157,6 +163,10 @@ with check (
 );
 
 
+/* =========================================================
+   ROOMS — ORGANIZER UPDATE
+========================================================= */
+
 drop policy if exists
 "rooms organizer update"
 on public.rooms;
@@ -164,7 +174,6 @@ on public.rooms;
 
 create policy
 "rooms organizer update"
-
 on public.rooms
 
 for update
@@ -176,9 +185,9 @@ using (true)
 with check (true);
 
 
--- =========================================================
--- PARTICIPANT POLICIES
--- =========================================================
+/* =========================================================
+   PARTICIPANTS — PUBLIC READ
+========================================================= */
 
 drop policy if exists
 "participants public read"
@@ -187,7 +196,6 @@ on public.participants;
 
 create policy
 "participants public read"
-
 on public.participants
 
 for select
@@ -197,6 +205,10 @@ to anon, authenticated
 using (true);
 
 
+/* =========================================================
+   PARTICIPANTS — CREATE
+========================================================= */
+
 drop policy if exists
 "participants create"
 on public.participants;
@@ -204,7 +216,6 @@ on public.participants;
 
 create policy
 "participants create"
-
 on public.participants
 
 for insert
@@ -216,6 +227,10 @@ with check (
 );
 
 
+/* =========================================================
+   PARTICIPANTS — UPDATE
+========================================================= */
+
 drop policy if exists
 "participants update"
 on public.participants;
@@ -223,7 +238,6 @@ on public.participants;
 
 create policy
 "participants update"
-
 on public.participants
 
 for update
@@ -235,9 +249,9 @@ using (true)
 with check (true);
 
 
--- =========================================================
--- AVERAGE BUDGET FUNCTION
--- =========================================================
+/* =========================================================
+   AVERAGE BUDGET FUNCTION
+========================================================= */
 
 create or replace function
 public.get_room_average_budget(
@@ -271,9 +285,9 @@ as $$
 $$;
 
 
--- =========================================================
--- FUNCTION PERMISSIONS
--- =========================================================
+/* =========================================================
+   FUNCTION PERMISSIONS
+========================================================= */
 
 revoke all
 
