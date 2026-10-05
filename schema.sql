@@ -1,3 +1,7 @@
+-- ============================================
+-- ROAM DATABASE
+-- ============================================
+
 create extension if not exists pgcrypto;
 
 
@@ -33,13 +37,6 @@ create table if not exists public.rooms (
 );
 
 
--- Remove the old 5-character restriction
--- so Roam can use word-based codes.
-
-alter table public.rooms
-drop constraint if exists rooms_code_check;
-
-
 -- ============================================
 -- PARTICIPANTS
 -- ============================================
@@ -72,7 +69,6 @@ create table if not exists public.participants (
 create index if not exists rooms_code_idx
 on public.rooms(code);
 
-
 create index if not exists participants_room_idx
 on public.participants(room_id);
 
@@ -89,27 +85,23 @@ enable row level security;
 
 
 -- ============================================
--- ROOM POLICIES
+-- ROOMS POLICIES
 -- ============================================
 
-drop policy if exists
-"rooms public read by code"
+drop policy if exists "rooms public read by code"
 on public.rooms;
 
-create policy
-"rooms public read by code"
+create policy "rooms public read by code"
 on public.rooms
 for select
 to anon, authenticated
 using (true);
 
 
-drop policy if exists
-"rooms public create"
+drop policy if exists "rooms public create"
 on public.rooms;
 
-create policy
-"rooms public create"
+create policy "rooms public create"
 on public.rooms
 for insert
 to anon, authenticated
@@ -118,12 +110,10 @@ with check (
 );
 
 
-drop policy if exists
-"rooms organizer update"
+drop policy if exists "rooms organizer update"
 on public.rooms;
 
-create policy
-"rooms organizer update"
+create policy "rooms organizer update"
 on public.rooms
 for update
 to anon, authenticated
@@ -135,24 +125,20 @@ with check (true);
 -- PARTICIPANT POLICIES
 -- ============================================
 
-drop policy if exists
-"participants public read"
+drop policy if exists "participants public read"
 on public.participants;
 
-create policy
-"participants public read"
+create policy "participants public read"
 on public.participants
 for select
 to anon, authenticated
 using (true);
 
 
-drop policy if exists
-"participants create"
+drop policy if exists "participants create"
 on public.participants;
 
-create policy
-"participants create"
+create policy "participants create"
 on public.participants
 for insert
 to anon, authenticated
@@ -161,12 +147,10 @@ with check (
 );
 
 
-drop policy if exists
-"participants update"
+drop policy if exists "participants update"
 on public.participants;
 
-create policy
-"participants update"
+create policy "participants update"
 on public.participants
 for update
 to anon, authenticated
@@ -178,14 +162,10 @@ with check (true);
 -- AVERAGE BUDGET FUNCTION
 -- ============================================
 
-create or replace function
-public.get_room_average_budget(
+create or replace function public.get_room_average_budget(
   room_uuid uuid
 )
-
-returns table(
-  average_budget numeric
-)
+returns table(average_budget numeric)
 
 language sql
 
@@ -195,10 +175,7 @@ set search_path = public
 
 as $$
 
-  select round(
-    avg(budget)::numeric,
-    2
-  )
+  select round(avg(budget)::numeric, 2)
 
   from public.participants
 
@@ -209,13 +186,14 @@ as $$
 $$;
 
 
+-- ============================================
+-- FUNCTION PERMISSIONS
+-- ============================================
+
 revoke all
-on function
-public.get_room_average_budget(uuid)
+on function public.get_room_average_budget(uuid)
 from public;
 
-
 grant execute
-on function
-public.get_room_average_budget(uuid)
+on function public.get_room_average_budget(uuid)
 to anon, authenticated;
