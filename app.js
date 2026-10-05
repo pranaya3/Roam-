@@ -17,7 +17,7 @@ const SUPABASE_URL =
   It starts with sb_publishable_
 */
 const SUPABASE_KEY =
-  "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
+  "sb_publishable_WaNsM-y0X9VH8pgnAQYFkg_2o68bx6S";
 
 
 let supabaseClient = null;
@@ -26,7 +26,7 @@ if (
   window.supabase &&
   SUPABASE_KEY &&
   SUPABASE_KEY !==
-    "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE"
+    "sb_publishable_WaNsM-y0X9VH8pgnAQYFkg_2o68bx6S"
 ) {
   supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
