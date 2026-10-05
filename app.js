@@ -1,102 +1,266 @@
-/* =========================================================
-   ROAM
-   Main application
-========================================================= */
-
-
-/* =========================================================
-   SUPABASE
-========================================================= */
-
-const SUPABASE_URL =
-  "https://vvbgksamdlhkkchyhlyl.supabase.co";
-
-/*
-  IMPORTANT:
-  Replace the value below with your Supabase Publishable key.
-  It starts with sb_publishable_
-*/
-const SUPABASE_KEY =
-  "sb_publishable_WaNsM-y0X9VH8pgnAQYFkg_2o68bx6S";
-
+const { createClient } = window.supabase || {};
 
 let supabaseClient = null;
 
-if (
-  window.supabase &&
-  SUPABASE_KEY &&
-  SUPABASE_KEY !==
-    "sb_publishable_WaNsM-y0X9VH8pgnAQYFkg_2o68bx6S"
-) {
-  supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
+const state = {
+  screen: "home",
+  mode: "create",
+
+  room: null,
+  roomId: null,
+
+  name: "",
+  roomName: "",
+  location: "",
+  lat: null,
+  lng: null,
+  groupSize: 4,
+
+  selectedDates: [],
+  selectedTimes: [],
+  budget: null,
+  activity: null,
+
+  places: [],
+  bestTimes: [],
+
+  organizerToken: null,
+  participantToken: null
+};
+
+const ACTIVITIES = [
+  {
+    id: "food",
+    name: "Food & drinks",
+    image:
+      "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=900&q=80",
+    tags: ["restaurant", "cafe", "bar", "fast_food"]
+  },
+  {
+    id: "coffee",
+    name: "Coffee & dessert",
+    image:
+      "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=80",
+    tags: ["cafe", "bakery", "ice_cream"]
+  },
+  {
+    id: "outdoors",
+    name: "Outdoors",
+    image:
+      "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=900&q=80",
+    tags: ["park", "garden", "pitch"]
+  },
+  {
+    id: "arts",
+    name: "Arts & culture",
+    image:
+      "https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=900&q=80",
+    tags: ["museum", "gallery", "arts_centre", "theatre"]
+  },
+  {
+    id: "games",
+    name: "Games",
+    image:
+      "https://images.unsplash.com/photo-1606167668584-78701c57f13d?auto=format&fit=crop&w=900&q=80",
+    tags: ["bowling_alley", "leisure", "game", "sports_centre"]
+  },
+  {
+    id: "shopping",
+    name: "Shopping",
+    image:
+      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=900&q=80",
+    tags: ["mall", "marketplace", "department_store", "shop"]
+  }
+];
+
+const DATE_OPTIONS = getDateOptions();
+
+const TIME_OPTIONS = [
+  "9:00 AM",
+  "10:00 AM",
+  "11:00 AM",
+  "12:00 PM",
+  "1:00 PM",
+  "2:00 PM",
+  "3:00 PM",
+  "4:00 PM",
+  "5:00 PM",
+  "6:00 PM",
+  "7:00 PM",
+  "8:00 PM"
+];
+
+const BUDGET_OPTIONS = [
+  { value: 10, label: "$0–20" },
+  { value: 30, label: "$20–40" },
+  { value: 50, label: "$40–60" },
+  { value: 75, label: "$60–90" },
+  { value: 100, label: "$90+" }
+];
+
+document.addEventListener("DOMContentLoaded", init);
+
+function init() {
+  initializeSupabase();
+  renderActivities();
+  renderDates();
+  renderTimes();
+  renderBudgets();
+  bindEvents();
+  showScreen("home");
+}
+
+function initializeSupabase() {
+  const config = window.ROAM_CONFIG;
+
+  if (!config || !config.supabaseUrl || !config.supabasePublishableKey) {
+    console.error("Roam config is missing.");
+    return;
+  }
+
+  if (
+    config.supabasePublishableKey.includes(
+      "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE"
+    )
+  ) {
+    console.error("Roam still has the placeholder Supabase key.");
+    return;
+  }
+
+  if (!createClient) {
+    console.error("Supabase library did not load.");
+    return;
+  }
+
+  supabaseClient = createClient(
+    config.supabaseUrl,
+    config.supabasePublishableKey
   );
 }
 
-
-/* =========================================================
-   APP STATE
-========================================================= */
-
-const state = {
-
-  roamName: "",
-  location: "",
-
-  lat: null,
-  lng: null,
-
-  groupSize: 4,
-
-  candidateDates: [],
-  selectedDates: [],
-
-  participantName: "",
-
-  selectedTimes: [],
-
-  budget: null,
-
-  activity: "",
-
-  roomId: null,
-  roomCode: "",
-
-  organizerToken: "",
-
-  joinedRoom: null,
-  participantId: null,
-
-  selectedTime: null,
-  selectedPlace: null,
-
-  places: [],
-
-  averageBudget: null
-};
-
-
-/* =========================================================
-   DOM HELPERS
-========================================================= */
-
-const $ = (id) =>
-  document.getElementById(id);
-
-
-function showScreen(id) {
-
-  document
-    .querySelectorAll(".screen")
-    .forEach((screen) => {
-      screen.classList.remove("active");
+function bindEvents() {
+  document.querySelectorAll("[data-screen]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const screen = button.dataset.screen;
+      showScreen(screen);
     });
+  });
 
-  const screen = $(id);
+  const createButton = document.getElementById("createRoam");
+  if (createButton) {
+    createButton.addEventListener("click", startCreate);
+  }
 
-  if (screen) {
-    screen.classList.add("active");
+  const joinButton = document.getElementById("joinRoam");
+  if (joinButton) {
+    joinButton.addEventListener("click", () => {
+      state.mode = "join";
+      showScreen("join");
+    });
+  }
+
+  const locateButton = document.getElementById("locateBtn");
+  if (locateButton) {
+    locateButton.addEventListener("click", locateUser);
+  }
+
+  const createNext = document.getElementById("createNext");
+  if (createNext) {
+    createNext.addEventListener("click", saveCreateDetails);
+  }
+
+  const datesNext = document.getElementById("datesNext");
+  if (datesNext) {
+    datesNext.addEventListener("click", handleDatesNext);
+  }
+
+  const datesBack = document.getElementById("datesBack");
+  if (datesBack) {
+    datesBack.addEventListener("click", () => showScreen("create"));
+  }
+
+  const timesNext = document.getElementById("timesNext");
+  if (timesNext) {
+    timesNext.addEventListener("click", handleTimesNext);
+  }
+
+  const timesBack = document.getElementById("timesBack");
+  if (timesBack) {
+    timesBack.addEventListener("click", () => showScreen("dates"));
+  }
+
+  const budgetNext = document.getElementById("budgetNext");
+  if (budgetNext) {
+    budgetNext.addEventListener("click", handleBudgetNext);
+  }
+
+  const budgetBack = document.getElementById("budgetBack");
+  if (budgetBack) {
+    budgetBack.addEventListener("click", () => showScreen("times"));
+  }
+
+  const activityNext = document.getElementById("activityNext");
+  if (activityNext) {
+    activityNext.addEventListener("click", handleActivityNext);
+  }
+
+  const activityBack = document.getElementById("activityBack");
+  if (activityBack) {
+    activityBack.addEventListener("click", () => showScreen("budget"));
+  }
+
+  const copyCode = document.getElementById("copyCode");
+  if (copyCode) {
+    copyCode.addEventListener("click", copyRoomCode);
+  }
+
+  const viewRoam = document.getElementById("viewRoam");
+  if (viewRoam) {
+    viewRoam.addEventListener("click", openRoam);
+  }
+
+  const findRoam = document.getElementById("findRoam");
+  if (findRoam) {
+    findRoam.addEventListener("click", findRoom);
+  }
+
+  const joinNext = document.getElementById("joinNext");
+  if (joinNext) {
+    joinNext.addEventListener("click", startJoinAvailability);
+  }
+
+  const placesNext = document.getElementById("placesNext");
+  if (placesNext) {
+    placesNext.addEventListener("click", finishRoam);
+  }
+
+  const placesBack = document.getElementById("placesBack");
+  if (placesBack) {
+    placesBack.addEventListener("click", () => showScreen("activity"));
+  }
+
+  const copyPlan = document.getElementById("copyPlan");
+  if (copyPlan) {
+    copyPlan.addEventListener("click", copyFinalPlan);
+  }
+
+  const doneButton = document.getElementById("doneBtn");
+  if (doneButton) {
+    doneButton.addEventListener("click", () => showScreen("home"));
+  }
+}
+
+function showScreen(screenName) {
+  state.screen = screenName;
+
+  document.querySelectorAll(".screen").forEach((screen) => {
+    screen.classList.remove("active");
+  });
+
+  const target = document.getElementById(`screen-${screenName}`);
+
+  if (target) {
+    target.classList.add("active");
   }
 
   window.scrollTo({
@@ -105,135 +269,65 @@ function showScreen(id) {
   });
 }
 
+function startCreate() {
+  state.mode = "create";
 
-function toast(message) {
+  resetCreateState();
 
-  const element = $("toast");
-
-  if (!element) return;
-
-  element.textContent = message;
-
-  element.classList.add("show");
-
-  clearTimeout(window.roamToastTimer);
-
-  window.roamToastTimer =
-    setTimeout(() => {
-      element.classList.remove("show");
-    }, 2600);
+  showScreen("create");
 }
 
-
-function generateToken() {
-
-  if (window.crypto?.randomUUID) {
-    return crypto.randomUUID() + crypto.randomUUID();
-  }
-
-  return (
-    Math.random().toString(36).slice(2) +
-    Date.now().toString(36)
-  );
-}
-
-
-/* =========================================================
-   START / RESET
-========================================================= */
-
-function resetState() {
-
-  state.roamName = "";
+function resetCreateState() {
+  state.room = null;
+  state.roomId = null;
+  state.name = "";
+  state.roomName = "";
   state.location = "";
-
   state.lat = null;
   state.lng = null;
-
   state.groupSize = 4;
-
-  state.candidateDates = [];
   state.selectedDates = [];
-
-  state.participantName = "";
-
   state.selectedTimes = [];
-
   state.budget = null;
-
-  state.activity = "";
-
-  state.roomId = null;
-  state.roomCode = "";
-
-  state.organizerToken = "";
-
-  state.joinedRoom = null;
-  state.participantId = null;
-
-  state.selectedTime = null;
-  state.selectedPlace = null;
-
+  state.activity = null;
   state.places = [];
+  state.bestTimes = [];
+  state.organizerToken = null;
 
-  state.averageBudget = null;
+  const fields = [
+    ["roamName", ""],
+    ["location", ""],
+    ["organizerName", ""]
+  ];
 
-  if ($("roamName")) {
-    $("roamName").value = "";
+  fields.forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) element.value = value;
+  });
+
+  const groupSize = document.getElementById("groupSize");
+  if (groupSize) {
+    groupSize.value = "4";
   }
 
-  if ($("location")) {
-    $("location").value = "";
+  const status = document.getElementById("locationStatus");
+  if (status) {
+    status.textContent = "";
   }
 
-  if ($("groupSize")) {
-    $("groupSize").value = 4;
-  }
-
-  if ($("participantName")) {
-    $("participantName").value = "";
-  }
-
-  if ($("joinCode")) {
-    $("joinCode").value = "";
-  }
-
-  if ($("joinName")) {
-    $("joinName").value = "";
-  }
-
-  document
-    .querySelectorAll(".selected")
-    .forEach((element) => {
-      element.classList.remove("selected");
-    });
+  renderDates();
+  renderTimes();
+  renderBudgets();
+  renderActivities();
 }
 
+function saveCreateDetails() {
+  const roomName = getValue("roamName");
+  const location = getValue("location");
+  const organizerName = getValue("organizerName");
+  const groupSize = Number(getValue("groupSize"));
 
-function startRoam() {
-
-  resetState();
-
-  showScreen("createScreen");
-}
-
-
-/* =========================================================
-   CREATE ROAM
-========================================================= */
-
-function saveRoamDetails() {
-
-  const name =
-    $("roamName")?.value.trim();
-
-  const location =
-    $("location")?.value.trim();
-
-  const groupSize =
-    Number($("groupSize")?.value);
-
-  if (!name) {
+  if (!roomName) {
     toast("Give your Roam a name.");
     return;
   }
@@ -243,381 +337,311 @@ function saveRoamDetails() {
     return;
   }
 
-  if (
-    !Number.isInteger(groupSize) ||
-    groupSize < 2 ||
-    groupSize > 50
-  ) {
-    toast("Group size must be between 2 and 50.");
+  if (!organizerName) {
+    toast("Add your name.");
     return;
   }
 
-  state.roamName = name;
+  if (!groupSize || groupSize < 2 || groupSize > 50) {
+    toast("Choose a group size between 2 and 50.");
+    return;
+  }
+
+  state.roomName = roomName;
   state.location = location;
+  state.name = organizerName;
   state.groupSize = groupSize;
 
-  buildDates();
-
-  showScreen("datesScreen");
+  showScreen("dates");
 }
 
-
-/* =========================================================
-   DATES
-========================================================= */
-
-function buildDates() {
-
-  const grid = $("dateGrid");
-
-  if (!grid) return;
-
-  grid.innerHTML = "";
-
-  state.candidateDates = [];
-
-  const today = new Date();
-
-  today.setHours(0, 0, 0, 0);
-
-  for (let i = 0; i < 14; i++) {
-
-    const date =
-      new Date(today);
-
-    date.setDate(
-      today.getDate() + i
-    );
-
-    const iso =
-      date.toISOString().split("T")[0];
-
-    state.candidateDates.push(iso);
-
-    const button =
-      document.createElement("button");
-
-    button.type = "button";
-
-    button.className =
-      "date-option";
-
-    button.dataset.date = iso;
-
-    const day =
-      date.toLocaleDateString(
-        undefined,
-        { weekday: "short" }
-      );
-
-    const month =
-      date.toLocaleDateString(
-        undefined,
-        { month: "short" }
-      );
-
-    const number =
-      date.getDate();
-
-    button.innerHTML = `
-      <span class="date-day">${day}</span>
-      <span class="date-number">${month} ${number}</span>
-    `;
-
-    button.addEventListener(
-      "click",
-      () => toggleDate(iso, button)
-    );
-
-    grid.appendChild(button);
-  }
-}
-
-
-function toggleDate(date, button) {
-
-  const index =
-    state.selectedDates.indexOf(date);
-
-  if (index >= 0) {
-
-    state.selectedDates.splice(
-      index,
-      1
-    );
-
-    button.classList.remove(
-      "selected"
-    );
-
-  } else {
-
-    state.selectedDates.push(date);
-
-    button.classList.add(
-      "selected"
-    );
-  }
-}
-
-
-function saveDates() {
-
-  if (!state.selectedDates.length) {
+function handleDatesNext() {
+  if (state.selectedDates.length === 0) {
     toast("Pick at least one day.");
     return;
   }
 
-  buildTimes();
-
-  showScreen("availabilityScreen");
+  showScreen("times");
 }
 
-
-/* =========================================================
-   TIMES
-========================================================= */
-
-function buildTimes() {
-
-  const grid = $("timeGrid");
-
-  if (!grid) return;
-
-  grid.innerHTML = "";
-
-  state.selectedTimes = [];
-
-  const times = [
-    "10:00 AM",
-    "11:00 AM",
-    "12:00 PM",
-    "1:00 PM",
-    "2:00 PM",
-    "3:00 PM",
-    "4:00 PM",
-    "5:00 PM",
-    "6:00 PM",
-    "7:00 PM",
-    "8:00 PM"
-  ];
-
-  times.forEach((time) => {
-
-    const button =
-      document.createElement("button");
-
-    button.type = "button";
-
-    button.className =
-      "time-option";
-
-    button.textContent = time;
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        const index =
-          state.selectedTimes.indexOf(time);
-
-        if (index >= 0) {
-
-          state.selectedTimes.splice(
-            index,
-            1
-          );
-
-          button.classList.remove(
-            "selected"
-          );
-
-        } else {
-
-          state.selectedTimes.push(time);
-
-          button.classList.add(
-            "selected"
-          );
-        }
-      }
-    );
-
-    grid.appendChild(button);
-  });
-}
-
-
-function saveAvailability() {
-
-  if (!state.selectedTimes.length) {
+function handleTimesNext() {
+  if (state.selectedTimes.length === 0) {
     toast("Pick at least one time.");
     return;
   }
 
-  showScreen("budgetScreen");
+  showScreen("budget");
 }
 
-
-/* =========================================================
-   BUDGET
-========================================================= */
-
-function selectBudget(value, button) {
-
-  state.budget =
-    Number(value);
-
-  document
-    .querySelectorAll(".budget-option")
-    .forEach((item) => {
-      item.classList.remove("selected");
-    });
-
-  button.classList.add("selected");
-
-  $("budgetContinue").disabled =
-    false;
-}
-
-
-function finishBudget() {
-
+function handleBudgetNext() {
   if (state.budget === null) {
-    toast("Choose a budget first.");
+    toast("Pick a budget.");
     return;
   }
 
-  showScreen("activityScreen");
+  showScreen("activity");
 }
 
+async function handleActivityNext() {
+  if (!state.activity) {
+    toast("Pick an activity.");
+    return;
+  }
 
-/* =========================================================
-   ACTIVITIES
-========================================================= */
+  if (state.mode === "create") {
+    await createRoam();
+  } else {
+    await saveJoinedParticipant();
+  }
+}
 
-const ACTIVITIES = [
-  "Food & drinks",
-  "Outdoors",
-  "Arts & culture",
-  "Games & fun",
-  "Coffee & chill",
-  "Something different"
-];
+function renderActivities() {
+  const container = document.getElementById("activityGrid");
 
+  if (!container) return;
 
-function selectActivity(activity, button) {
+  container.innerHTML = "";
 
-  state.activity = activity;
+  ACTIVITIES.forEach((activity) => {
+    const card = document.createElement("button");
 
-  document
-    .querySelectorAll(".activity-card")
-    .forEach((card) => {
-      card.classList.remove("selected");
+    card.type = "button";
+    card.className = "activity-card";
+    card.dataset.activity = activity.id;
+
+    card.innerHTML = `
+      <img src="${activity.image}" alt="${escapeHtml(activity.name)}">
+      <span>${escapeHtml(activity.name)}</span>
+    `;
+
+    card.addEventListener("click", () => {
+      state.activity = activity.id;
+
+      document.querySelectorAll(".activity-card").forEach((item) => {
+        item.classList.remove("selected");
+      });
+
+      card.classList.add("selected");
     });
 
-  button.classList.add("selected");
-
-  $("activityContinue").disabled =
-    false;
+    container.appendChild(card);
+  });
 }
 
+function renderDates() {
+  const container = document.getElementById("dateGrid");
 
-async function finishActivity() {
+  if (!container) return;
 
-  if (!state.activity) {
-    toast("Pick something to do.");
-    return;
-  }
+  container.innerHTML = "";
 
+  DATE_OPTIONS.forEach((date) => {
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "date-card";
+
+    if (state.selectedDates.includes(date.iso)) {
+      button.classList.add("selected");
+    }
+
+    button.innerHTML = `
+      <strong>${escapeHtml(date.day)}</strong>
+      <span>${escapeHtml(date.month)}</span>
+      <small>${escapeHtml(date.weekday)}</small>
+    `;
+
+    button.addEventListener("click", () => {
+      if (state.selectedDates.includes(date.iso)) {
+        state.selectedDates = state.selectedDates.filter(
+          (value) => value !== date.iso
+        );
+      } else {
+        state.selectedDates.push(date.iso);
+      }
+
+      renderDates();
+    });
+
+    container.appendChild(button);
+  });
+}
+
+function renderTimes() {
+  const container = document.getElementById("timeGrid");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  TIME_OPTIONS.forEach((time) => {
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "time-card";
+
+    if (state.selectedTimes.includes(time)) {
+      button.classList.add("selected");
+    }
+
+    button.textContent = time;
+
+    button.addEventListener("click", () => {
+      if (state.selectedTimes.includes(time)) {
+        state.selectedTimes = state.selectedTimes.filter(
+          (value) => value !== time
+        );
+      } else {
+        state.selectedTimes.push(time);
+      }
+
+      renderTimes();
+    });
+
+    container.appendChild(button);
+  });
+}
+
+function renderBudgets() {
+  const container = document.getElementById("budgetGrid");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  BUDGET_OPTIONS.forEach((budget) => {
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "budget-card";
+
+    if (state.budget === budget.value) {
+      button.classList.add("selected");
+    }
+
+    button.innerHTML = `
+      <strong>${escapeHtml(budget.label)}</strong>
+      <span>per person</span>
+    `;
+
+    button.addEventListener("click", () => {
+      state.budget = budget.value;
+      renderBudgets();
+    });
+
+    container.appendChild(button);
+  });
+}
+
+async function createRoam() {
   if (!supabaseClient) {
-
-    toast(
-      "Supabase is not connected. Check your Publishable key."
-    );
-
+    toast("Roam needs your Supabase key in config.js.");
     return;
   }
 
-  const button =
-    $("activityContinue");
+  const button = document.getElementById("activityNext");
 
-  button.disabled = true;
-
-  button.textContent =
-    "Creating your Roam…";
+  setButtonLoading(button, true);
 
   try {
+    state.organizerToken = getOrCreateToken("roam_organizer_token");
 
-    await createRoom();
+    const code = await generateUniqueCode();
 
-    showCreatedRoam();
+    const roomPayload = {
+      code,
+      name: state.roomName,
+      location_text: state.location,
+      lat: state.lat,
+      lng: state.lng,
+      group_size: state.groupSize,
+      candidate_dates: state.selectedDates,
+      activity: state.activity,
+      organizer_token: state.organizerToken
+    };
 
+    const { data: room, error: roomError } = await supabaseClient
+      .from("rooms")
+      .insert(roomPayload)
+      .select()
+      .single();
+
+    if (roomError) {
+      throw roomError;
+    }
+
+    state.room = room;
+    state.roomId = room.id;
+
+    const { error: participantError } = await supabaseClient
+      .from("participants")
+      .insert({
+        room_id: room.id,
+        name: state.name,
+        participant_token: state.organizerToken,
+        availability: {
+          dates: state.selectedDates,
+          times: state.selectedTimes
+        },
+        budget: state.budget
+      });
+
+    if (participantError) {
+      throw participantError;
+    }
+
+    const codeElement = document.getElementById("roomCode");
+
+    if (codeElement) {
+      codeElement.textContent = code;
+    }
+
+    showScreen("code");
   } catch (error) {
+    console.error("Create Roam error:", error);
 
-    console.error(error);
-
-    toast(
-      error.message ||
-      "We couldn't create the Roam."
-    );
-
+    if (error?.code === "23505") {
+      toast("That Roam code was taken. Try again.");
+    } else {
+      toast("Roam couldn't save that yet. Check your connection and try again.");
+    }
   } finally {
-
-    button.disabled = false;
-
-    button.textContent =
-      "Create my Roam";
+    setButtonLoading(button, false);
   }
 }
 
-
-/* =========================================================
-   ROOM CODE
-========================================================= */
-
-const CODE_WORDS = [
-  "ORANGE",
-  "PEACH",
-  "ROAM",
-  "SUNSET",
-  "GROVE",
-  "RIVER",
-  "MANGO",
-  "CLOUD",
-  "LAGOON",
-  "BREEZE",
-  "PARK",
-  "WANDER",
-  "PATIO",
-  "PICNIC",
-  "GOLDEN",
-  "WEEKEND",
-  "VIBE",
-  "CITRUS",
-  "VENICE",
-  "MAPLE"
-];
-
-
 async function generateUniqueCode() {
+  const words = [
+    "PEACH",
+    "ORANGE",
+    "SUNSET",
+    "WANDER",
+    "GROVE",
+    "BREEZE",
+    "PICNIC",
+    "CITRUS",
+    "BLOSSOM",
+    "MANGO",
+    "SUNNY",
+    "ROAM",
+    "OLIVE",
+    "LAGOON",
+    "CANAL",
+    "GELATO",
+    "TERRACE",
+    "VISTA",
+    "PALM",
+    "SPRITZ"
+  ];
 
-  for (let attempt = 0; attempt < 20; attempt++) {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const word = words[Math.floor(Math.random() * words.length)];
 
-    const word =
-      CODE_WORDS[
-        Math.floor(
-          Math.random() *
-          CODE_WORDS.length
-        )
-      ];
-
-    const { data, error } =
-      await supabaseClient
-        .from("rooms")
-        .select("id")
-        .eq("code", word)
-        .maybeSingle();
+    const { data, error } = await supabaseClient
+      .from("rooms")
+      .select("id")
+      .eq("code", word)
+      .maybeSingle();
 
     if (error) {
       throw error;
@@ -628,1303 +652,864 @@ async function generateUniqueCode() {
     }
   }
 
-  return (
-    "ROAM" +
-    Math.floor(
-      1000 +
-      Math.random() * 9000
-    )
-  );
+  return `ROAM${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
+async function findRoom() {
+  const input = document.getElementById("joinCode");
 
-/* =========================================================
-   CREATE ROOM
-========================================================= */
+  if (!input) return;
 
-async function createRoom() {
-
-  const code =
-    await generateUniqueCode();
-
-  state.roomCode = code;
-
-  state.organizerToken =
-    generateToken();
-
-  const roomData = {
-
-    code,
-
-    name:
-      state.roamName,
-
-    location_text:
-      state.location,
-
-    lat:
-      state.lat,
-
-    lng:
-      state.lng,
-
-    group_size:
-      state.groupSize,
-
-    candidate_dates:
-      state.selectedDates,
-
-    activity:
-      state.activity,
-
-    organizer_token:
-      state.organizerToken
-  };
-
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from("rooms")
-      .insert(roomData)
-      .select()
-      .single();
-
-
-  if (error) {
-    console.error(
-      "CREATE ROOM ERROR:",
-      error
-    );
-
-    throw new Error(
-      error.message ||
-      "Unable to create your Roam."
-    );
-  }
-
-
-  state.roomId =
-    data.id;
-
-
-  /*
-    Store the organizer as a participant too.
-    This allows the budget and availability
-    to be included with everyone else.
-  */
-
-  const participantData = {
-
-    room_id:
-      state.roomId,
-
-    name:
-      state.participantName ||
-      "Organizer",
-
-    participant_token:
-      state.organizerToken,
-
-    availability: {
-
-      dates:
-        state.selectedDates,
-
-      times:
-        state.selectedTimes
-    },
-
-    budget:
-      state.budget
-  };
-
-
-  const {
-    data: participant,
-    error: participantError
-  } =
-    await supabaseClient
-      .from("participants")
-      .insert(participantData)
-      .select()
-      .single();
-
-
-  if (participantError) {
-
-    console.warn(
-      "Organizer participant was not saved:",
-      participantError
-    );
-
-  } else {
-
-    state.participantId =
-      participant.id;
-  }
-}
-
-
-/* =========================================================
-   CREATED SCREEN
-========================================================= */
-
-function showCreatedRoam() {
-
-  const code =
-    $("roomCodeDisplay");
-
-  if (code) {
-    code.textContent =
-      state.roomCode;
-  }
-
-  showScreen("resultsScreen");
-}
-
-
-async function copyCode() {
-
-  if (!state.roomCode) return;
-
-  try {
-
-    await navigator.clipboard.writeText(
-      state.roomCode
-    );
-
-    toast("Code copied.");
-
-  } catch {
-
-    toast(
-      `Your code is ${state.roomCode}`
-    );
-  }
-}
-
-
-/* =========================================================
-   VIEW ROAM
-========================================================= */
-
-async function viewMyRoam() {
-
-  if (!state.roomId) {
-    toast("Your Roam hasn't loaded yet.");
-    return;
-  }
-
-  state.selectedTime =
-    state.selectedTimes[0] ||
-    null;
-
-  await loadPlaces();
-
-  showScreen("placesScreen");
-}
-
-
-/* =========================================================
-   PLACE SEARCH
-========================================================= */
-
-function activitySearchTerm() {
-
-  const map = {
-
-    "Food & drinks":
-      "restaurant",
-
-    "Outdoors":
-      "park",
-
-    "Arts & culture":
-      "museum",
-
-    "Games & fun":
-      "entertainment",
-
-    "Coffee & chill":
-      "cafe",
-
-    "Something different":
-      "things to do"
-  };
-
-  return (
-    map[state.activity] ||
-    "things to do"
-  );
-}
-
-
-async function geocodeLocation() {
-
-  if (
-    state.lat !== null &&
-    state.lng !== null
-  ) {
-    return {
-      lat: state.lat,
-      lng: state.lng
-    };
-  }
-
-  const query =
-    encodeURIComponent(
-      state.location
-    );
-
-  const url =
-    `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${query}`;
-
-  const response =
-    await fetch(url, {
-      headers: {
-        Accept:
-          "application/json"
-      }
-    });
-
-  if (!response.ok) {
-    throw new Error(
-      "Location search failed."
-    );
-  }
-
-  const data =
-    await response.json();
-
-  if (!data.length) {
-    throw new Error(
-      "We couldn't find that location."
-    );
-  }
-
-  state.lat =
-    Number(data[0].lat);
-
-  state.lng =
-    Number(data[0].lon);
-
-  return {
-    lat: state.lat,
-    lng: state.lng
-  };
-}
-
-
-async function loadPlaces() {
-
-  const list =
-    $("placesList");
-
-  if (!list) return;
-
-  list.innerHTML = `
-    <div class="card">
-      Finding a few good spots…
-    </div>
-  `;
-
-
-  try {
-
-    const {
-      lat,
-      lng
-    } =
-      await geocodeLocation();
-
-
-    const radius = 8000;
-
-    const query =
-      buildOverpassQuery(
-        lat,
-        lng,
-        radius,
-        state.activity
-      );
-
-
-    const response =
-      await fetch(
-        "https://overpass-api.de/api/interpreter",
-        {
-          method: "POST",
-          body: query
-        }
-      );
-
-
-    if (!response.ok) {
-      throw new Error(
-        "Place search failed."
-      );
-    }
-
-
-    const data =
-      await response.json();
-
-
-    const places =
-      data.elements
-        .map(formatPlace)
-        .filter(Boolean)
-        .slice(0, 9);
-
-
-    state.places =
-      removeDuplicatePlaces(
-        places
-      );
-
-
-    renderPlaces();
-
-
-  } catch (error) {
-
-    console.error(error);
-
-    state.places = [];
-
-    list.innerHTML = `
-      <div class="card">
-        <strong>We couldn't find places automatically.</strong>
-        <p>
-          You can still finish your Roam with the activity and time you picked.
-        </p>
-      </div>
-    `;
-
-    $("placesContinue").disabled =
-      true;
-  }
-}
-
-
-function buildOverpassQuery(
-  lat,
-  lng,
-  radius,
-  activity
-) {
-
-  const around =
-    `(around:${radius},${lat},${lng})`;
-
-  let filters = "";
-
-
-  if (activity === "Food & drinks") {
-
-    filters = `
-      nwr["amenity"="restaurant"]${around};
-      nwr["amenity"="bar"]${around};
-      nwr["amenity"="pub"]${around};
-    `;
-
-  } else if (activity === "Outdoors") {
-
-    filters = `
-      nwr["leisure"="park"]${around};
-      nwr["leisure"="garden"]${around};
-      nwr["tourism"="viewpoint"]${around};
-    `;
-
-  } else if (activity === "Arts & culture") {
-
-    filters = `
-      nwr["tourism"="museum"]${around};
-      nwr["tourism"="gallery"]${around};
-      nwr["amenity"="theatre"]${around};
-    `;
-
-  } else if (activity === "Games & fun") {
-
-    filters = `
-      nwr["leisure"="bowling_alley"]${around};
-      nwr["leisure"="miniature_golf"]${around};
-      nwr["leisure"="amusement_arcade"]${around};
-      nwr["amenity"="cinema"]${around};
-    `;
-
-  } else if (activity === "Coffee & chill") {
-
-    filters = `
-      nwr["amenity"="cafe"]${around};
-    `;
-
-  } else {
-
-    filters = `
-      nwr["tourism"]${around};
-      nwr["leisure"]${around};
-    `;
-  }
-
-
-  return `
-    [out:json][timeout:20];
-
-    (
-      ${filters}
-    );
-
-    out center tags;
-  `;
-}
-
-
-function formatPlace(element) {
-
-  const tags =
-    element.tags || {};
-
-  const name =
-    tags.name;
-
-  if (!name) {
-    return null;
-  }
-
-
-  let lat =
-    element.lat;
-
-  let lng =
-    element.lon;
-
-
-  if (
-    element.center
-  ) {
-
-    lat =
-      element.center.lat;
-
-    lng =
-      element.center.lon;
-  }
-
-
-  if (
-    lat === undefined ||
-    lng === undefined
-  ) {
-    return null;
-  }
-
-
-  return {
-
-    id:
-      element.id,
-
-    name,
-
-    lat,
-
-    lng,
-
-    address:
-      tags["addr:housenumber"] &&
-      tags["addr:street"]
-        ? `${tags["addr:housenumber"]} ${tags["addr:street"]}`
-        : "",
-
-    type:
-      tags.amenity ||
-      tags.tourism ||
-      tags.leisure ||
-      state.activity
-  };
-}
-
-
-function removeDuplicatePlaces(
-  places
-) {
-
-  const seen =
-    new Set();
-
-  return places.filter(
-    (place) => {
-
-      const key =
-        place.name
-          .trim()
-          .toLowerCase();
-
-      if (seen.has(key)) {
-        return false;
-      }
-
-      seen.add(key);
-
-      return true;
-    }
-  );
-}
-
-
-/* =========================================================
-   PLACE RENDERING
-========================================================= */
-
-function renderPlaces() {
-
-  const list =
-    $("placesList");
-
-  if (!list) return;
-
-  list.innerHTML = "";
-
-
-  if (!state.places.length) {
-
-    list.innerHTML = `
-      <div class="card">
-        <strong>No nearby options found.</strong>
-        <p>
-          Try a broader location or choose another activity.
-        </p>
-      </div>
-    `;
-
-    $("placesContinue").disabled =
-      true;
-
-    return;
-  }
-
-
-  state.places.forEach(
-    (place, index) => {
-
-      const card =
-        document.createElement(
-          "article"
-        );
-
-      card.className =
-        "place-card";
-
-      card.innerHTML = `
-        <h3>${escapeHtml(place.name)}</h3>
-
-        <p>
-          ${
-            escapeHtml(
-              place.address ||
-              "Nearby option"
-            )
-          }
-        </p>
-
-        <p class="place-distance">
-          Option ${index + 1}
-        </p>
-      `;
-
-
-      card.addEventListener(
-        "click",
-        () => {
-
-          document
-            .querySelectorAll(
-              ".place-card"
-            )
-            .forEach(
-              (item) =>
-                item.classList.remove(
-                  "selected"
-                )
-            );
-
-          card.classList.add(
-            "selected"
-          );
-
-          state.selectedPlace =
-            place;
-
-          $("placesContinue").disabled =
-            false;
-        }
-      );
-
-
-      list.appendChild(card);
-    }
-  );
-
-
-  if (
-    state.places.length === 1
-  ) {
-
-    state.selectedPlace =
-      state.places[0];
-
-    list
-      .querySelector(
-        ".place-card"
-      )
-      ?.classList.add(
-        "selected"
-      );
-
-    $("placesContinue").disabled =
-      false;
-  }
-}
-
-
-/* =========================================================
-   FINAL PLAN
-========================================================= */
-
-function buildFinalPlan() {
-
-  const plan =
-    $("finalPlan");
-
-  if (!plan) return;
-
-
-  const date =
-    state.selectedDates[0]
-      ? formatDate(
-          state.selectedDates[0]
-        )
-      : "Flexible";
-
-
-  const time =
-    state.selectedTime ||
-    state.selectedTimes[0] ||
-    "Flexible";
-
-
-  const place =
-    state.selectedPlace?.name ||
-    "A spot near you";
-
-
-  plan.innerHTML = `
-
-    <div class="plan-row">
-      <div class="plan-label">
-        When
-      </div>
-
-      <div class="plan-value">
-        ${escapeHtml(date)} · ${escapeHtml(time)}
-      </div>
-    </div>
-
-
-    <div class="plan-row">
-      <div class="plan-label">
-        Where
-      </div>
-
-      <div class="plan-value">
-        ${escapeHtml(place)}
-      </div>
-    </div>
-
-
-    <div class="plan-row">
-      <div class="plan-label">
-        Vibe
-      </div>
-
-      <div class="plan-value">
-        ${escapeHtml(state.activity)}
-      </div>
-    </div>
-
-
-    <div class="plan-row">
-      <div class="plan-label">
-        Roam code
-      </div>
-
-      <div class="plan-value">
-        ${escapeHtml(state.roomCode)}
-      </div>
-    </div>
-
-  `;
-}
-
-
-function showFinalPlan() {
-
-  buildFinalPlan();
-
-  showScreen("finalScreen");
-}
-
-
-async function copyPlan() {
-
-  const date =
-    state.selectedDates[0]
-      ? formatDate(
-          state.selectedDates[0]
-        )
-      : "Flexible";
-
-
-  const time =
-    state.selectedTime ||
-    state.selectedTimes[0] ||
-    "Flexible";
-
-
-  const place =
-    state.selectedPlace?.name ||
-    "A spot near you";
-
-
-  const text =
-`ROAM 🍊
-
-${state.roamName}
-
-${date}
-${time}
-
-${place}
-
-${state.activity}
-
-Code: ${state.roomCode}`;
-
-
-  try {
-
-    await navigator.clipboard.writeText(
-      text
-    );
-
-    toast("Plan copied.");
-
-  } catch {
-
-    toast(
-      "Your plan is ready to share."
-    );
-  }
-}
-
-
-/* =========================================================
-   JOIN A ROAM
-========================================================= */
-
-async function findRoam() {
-
-  if (!supabaseClient) {
-
-    toast(
-      "Supabase is not connected."
-    );
-
-    return;
-  }
-
-
-  const code =
-    $("joinCode")
-      ?.value
-      .trim()
-      .toUpperCase();
-
+  const code = input.value.trim().toUpperCase();
 
   if (!code) {
-
-    toast("Enter your Roam code.");
-
+    toast("Enter a Roam code.");
     return;
   }
 
+  if (!supabaseClient) {
+    toast("Roam needs your Supabase key in config.js.");
+    return;
+  }
 
-  const button =
-    $("joinFindBtn");
+  const button = document.getElementById("findRoam");
 
-  button.disabled = true;
-
-  button.textContent =
-    "Finding it…";
-
+  setButtonLoading(button, true);
 
   try {
-
-    const {
-      data: room,
-      error
-    } =
-      await supabaseClient
-        .from("rooms")
-        .select("*")
-        .eq("code", code)
-        .maybeSingle();
-
+    const { data: room, error } = await supabaseClient
+      .from("rooms")
+      .select("*")
+      .eq("code", code)
+      .maybeSingle();
 
     if (error) {
       throw error;
     }
 
-
     if (!room) {
-
-      toast(
-        "We couldn't find that Roam."
-      );
-
+      toast("We couldn't find that Roam.");
       return;
     }
 
+    state.mode = "join";
+    state.room = room;
+    state.roomId = room.id;
+    state.roomName = room.name;
+    state.location = room.location_text;
+    state.lat = room.lat;
+    state.lng = room.lng;
+    state.groupSize = room.group_size;
+    state.activity = room.activity;
+    state.selectedDates = [];
+    state.selectedTimes = [];
+    state.budget = null;
+    state.name = "";
 
-    state.joinedRoom =
-      room;
-
-    state.roomId =
-      room.id;
-
-    state.roomCode =
-      room.code;
-
-    state.roamName =
-      room.name;
-
-    state.location =
+    document.getElementById("joinTitle").textContent = room.name;
+    document.getElementById("joinLocation").textContent =
       room.location_text;
+    document.getElementById("joinCodeDisplay").textContent = room.code;
 
-    state.activity =
-      room.activity || "";
-
-
-    $("joinRoomName").textContent =
-      room.name;
-
-    $("joinRoomLocation").textContent =
-      room.location_text;
-
-    $("joinRoomCode").textContent =
-      room.code;
-
-
-    showScreen(
-      "joinConfirmScreen"
-    );
-
-
+    showScreen("join-confirm");
   } catch (error) {
-
-    console.error(error);
-
-    toast(
-      error.message ||
-      "Couldn't find the Roam."
-    );
-
+    console.error("Find Roam error:", error);
+    toast("We couldn't load that Roam. Check your connection.");
   } finally {
-
-    button.disabled = false;
-
-    button.textContent =
-      "Find Roam";
+    setButtonLoading(button, false);
   }
 }
 
-
-/* =========================================================
-   JOIN CONFIRMATION
-========================================================= */
-
-async function joinRoam() {
-
-  const name =
-    $("joinName")
-      ?.value
-      .trim();
-
+function startJoinAvailability() {
+  const name = getValue("joinName");
 
   if (!name) {
-
-    toast("Enter your name.");
-
+    toast("Add your name.");
     return;
   }
 
+  state.name = name;
 
-  if (!state.joinedRoom) {
+  const candidateDates = Array.isArray(state.room?.candidate_dates)
+    ? state.room.candidate_dates
+    : [];
 
-    toast(
-      "Find a Roam first."
-    );
-
-    return;
+  if (candidateDates.length) {
+    state.selectedDates = [];
+    renderJoinDates(candidateDates);
+  } else {
+    state.selectedDates = [];
+    renderDates();
   }
 
-
-  state.participantName =
-    name;
-
-
-  state.selectedDates = [];
-
-  state.selectedTimes = [];
-
-
-  buildJoinedDates();
-
-  showScreen(
-    "datesScreen"
-  );
+  showScreen("dates");
 }
 
+function renderJoinDates(candidateDates) {
+  const container = document.getElementById("dateGrid");
 
-/*
-  For a joined user, dates come from
-  the organizer's Roam rather than
-  generating new dates.
-*/
+  if (!container) return;
 
-function buildJoinedDates() {
+  container.innerHTML = "";
 
-  const grid =
-    $("dateGrid");
+  candidateDates.forEach((iso) => {
+    const date = DATE_OPTIONS.find((item) => item.iso === iso);
 
-  if (!grid) return;
+    const button = document.createElement("button");
 
+    button.type = "button";
+    button.className = "date-card";
 
-  grid.innerHTML = "";
-
-  state.selectedDates = [];
-
-
-  const dates =
-    state.joinedRoom
-      ?.candidate_dates || [];
-
-
-  if (!dates.length) {
-
-    toast(
-      "This Roam doesn't have dates yet."
-    );
-
-    return;
-  }
-
-
-  dates.forEach(
-    (iso) => {
-
-      const date =
-        new Date(
-          `${iso}T12:00:00`
-        );
-
-
-      const button =
-        document.createElement(
-          "button"
-        );
-
-      button.type = "button";
-
-      button.className =
-        "date-option";
-
-      button.dataset.date =
-        iso;
-
-
-      button.innerHTML = `
-        <span class="date-day">
-          ${date.toLocaleDateString(
-            undefined,
-            { weekday: "short" }
-          )}
-        </span>
-
-        <span class="date-number">
-          ${date.toLocaleDateString(
-            undefined,
-            {
-              month: "short",
-              day: "numeric"
-            }
-          )}
-        </span>
-      `;
-
-
-      button.addEventListener(
-        "click",
-        () =>
-          toggleDate(
-            iso,
-            button
-          )
-      );
-
-
-      grid.appendChild(
-        button
-      );
+    if (state.selectedDates.includes(iso)) {
+      button.classList.add("selected");
     }
-  );
+
+    if (date) {
+      button.innerHTML = `
+        <strong>${escapeHtml(date.day)}</strong>
+        <span>${escapeHtml(date.month)}</span>
+        <small>${escapeHtml(date.weekday)}</small>
+      `;
+    } else {
+      button.textContent = formatDate(iso);
+    }
+
+    button.addEventListener("click", () => {
+      if (state.selectedDates.includes(iso)) {
+        state.selectedDates = state.selectedDates.filter(
+          (value) => value !== iso
+        );
+      } else {
+        state.selectedDates.push(iso);
+      }
+
+      renderJoinDates(candidateDates);
+    });
+
+    container.appendChild(button);
+  });
 }
 
-
-/* =========================================================
-   JOINED AVAILABILITY
-========================================================= */
-
-async function saveJoinedAvailability() {
-
-  if (!state.selectedDates.length) {
-
-    toast(
-      "Pick at least one day."
-    );
-
+async function saveJoinedParticipant() {
+  if (!state.roomId) {
+    toast("Your Roam isn't loaded.");
     return;
   }
-
-
-  buildTimes();
-
-  showScreen(
-    "availabilityScreen"
-  );
-
-
-  const button =
-    $("availabilityContinue");
-
-  button.onclick =
-    saveJoinedTimes;
-}
-
-
-async function saveJoinedTimes() {
-
-  if (!state.selectedTimes.length) {
-
-    toast(
-      "Pick at least one time."
-    );
-
-    return;
-  }
-
-
-  showScreen(
-    "budgetScreen"
-  );
-
-
-  const continueButton =
-    $("budgetContinue");
-
-  continueButton.disabled =
-    false;
-
-  continueButton.onclick =
-    saveJoinedBudget;
-}
-
-
-async function saveJoinedBudget() {
-
-  if (state.budget === null) {
-
-    toast(
-      "Choose a budget."
-    );
-
-    return;
-  }
-
-
-  try {
-
-    await saveParticipant();
-
-    state.selectedTime =
-      state.selectedTimes[0] ||
-      null;
-
-    await loadJoinedPlaces();
-
-    showScreen(
-      "placesScreen"
-    );
-
-  } catch (error) {
-
-    console.error(error);
-
-    toast(
-      error.message ||
-      "Couldn't save your choices."
-    );
-  }
-}
-
-
-/* =========================================================
-   SAVE PARTICIPANT
-========================================================= */
-
-async function saveParticipant() {
 
   if (!supabaseClient) {
-    throw new Error(
-      "Supabase is not connected."
-    );
+    toast("Roam needs your Supabase key in config.js.");
+    return;
   }
 
+  if (state.selectedDates.length === 0) {
+    toast("Pick at least one day.");
+    return;
+  }
 
-  const token =
-    generateToken();
+  if (state.selectedTimes.length === 0) {
+    toast("Pick at least one time.");
+    return;
+  }
 
+  if (state.budget === null) {
+    toast("Pick a budget.");
+    return;
+  }
 
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from("participants")
-      .insert({
+  const button = document.getElementById("activityNext");
 
-        room_id:
-          state.roomId,
+  setButtonLoading(button, true);
 
-        name:
-          state.participantName,
+  try {
+    state.participantToken = createToken();
 
-        participant_token:
-          token,
+    const { error } = await supabaseClient.from("participants").insert({
+      room_id: state.roomId,
+      name: state.name,
+      participant_token: state.participantToken,
+      availability: {
+        dates: state.selectedDates,
+        times: state.selectedTimes
+      },
+      budget: state.budget
+    });
 
-        availability: {
+    if (error) {
+      throw error;
+    }
 
-          dates:
-            state.selectedDates,
+    await openRoam();
 
-          times:
-            state.selectedTimes
-        },
+  } catch (error) {
+    console.error("Join Roam error:", error);
+    toast("Roam couldn't save your choices. Try again.");
+  } finally {
+    setButtonLoading(button, false);
+  }
+}
 
-        budget:
-          state.budget
+async function openRoam() {
+  if (!state.roomId || !state.room) {
+    toast("Your Roam isn't ready yet.");
+    return;
+  }
 
-      })
-      .select()
-      .single();
+  showScreen("places");
 
+  const subtitle = document.getElementById("placesSubtitle");
+
+  if (subtitle) {
+    subtitle.textContent = "Finding a good spot nearby…";
+  }
+
+  const placesList = document.getElementById("placesList");
+
+  if (placesList) {
+    placesList.innerHTML = `
+      <div class="loading-card">
+        <span>Looking around ${escapeHtml(state.location)}…</span>
+      </div>
+    `;
+  }
+
+  try {
+    state.bestTimes = await calculateBestTimes();
+    state.places = await findPlaces();
+
+    renderPlaces();
+
+    if (subtitle) {
+      subtitle.textContent =
+        state.places.length > 0
+          ? "A few places that fit the vibe."
+          : "We couldn't find a nearby spot automatically.";
+    }
+  } catch (error) {
+    console.error("Open Roam error:", error);
+
+    state.places = [];
+
+    renderPlaces();
+
+    if (subtitle) {
+      subtitle.textContent =
+        "Pick a place nearby that fits your plans.";
+    }
+  }
+}
+
+async function calculateBestTimes() {
+  const { data: participants, error } = await supabaseClient
+    .from("participants")
+    .select("availability")
+    .eq("room_id", state.roomId);
 
   if (error) {
     throw error;
   }
 
+  if (!participants || participants.length === 0) {
+    return [];
+  }
 
-  state.participantId =
-    data.id;
+  const scores = {};
+
+  participants.forEach((participant) => {
+    const availability = participant.availability || {};
+    const dates = Array.isArray(availability.dates)
+      ? availability.dates
+      : [];
+    const times = Array.isArray(availability.times)
+      ? availability.times
+      : [];
+
+    dates.forEach((date) => {
+      times.forEach((time) => {
+        const key = `${date}|${time}`;
+
+        if (!scores[key]) {
+          scores[key] = {
+            date,
+            time,
+            count: 0
+          };
+        }
+
+        scores[key].count += 1;
+      });
+    });
+  });
+
+  return Object.values(scores)
+    .sort((a, b) => {
+      if (b.count !== a.count) {
+        return b.count - a.count;
+      }
+
+      return `${a.date}${a.time}`.localeCompare(
+        `${b.date}${b.time}`
+      );
+    })
+    .slice(0, 3);
 }
 
+async function findPlaces() {
+  let lat = state.lat;
+  let lng = state.lng;
 
-/* =========================================================
-   JOINED PLACES
-========================================================= */
+  if (!lat || !lng) {
+    const geocoded = await geocodeLocation(state.location);
 
-async function loadJoinedPlaces() {
+    if (geocoded) {
+      lat = geocoded.lat;
+      lng = geocoded.lng;
+    }
+  }
 
-  const list =
-    $("placesList");
+  if (!lat || !lng) {
+    return [];
+  }
 
-  if (!list) return;
+  const activity = ACTIVITIES.find(
+    (item) => item.id === state.activity
+  );
 
+  if (!activity) {
+    return [];
+  }
 
-  list.innerHTML = `
-    <div class="card">
-      Finding a few good spots…
-    </div>
+  const radius = 5000;
+
+  const filters = activity.tags
+    .map(
+      (tag) =>
+        `nwr["amenity"="${tag}"](around:${radius},${lat},${lng});`
+    )
+    .join("");
+
+  const query = `
+    [out:json][timeout:15];
+    (
+      ${filters}
+    );
+    out center tags;
   `;
 
+  const response = await fetch(
+    "https://overpass-api.de/api/interpreter",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=UTF-8"
+      },
+      body: query
+    }
+  );
 
-  state.lat =
-    state.joinedRoom?.lat ??
-    null;
+  if (!response.ok) {
+    throw new Error("Place search failed.");
+  }
 
-  state.lng =
-    state.joinedRoom?.lng ??
-    null;
+  const data = await response.json();
 
+  const places = (data.elements || [])
+    .map((item) => {
+      const tags = item.tags || {};
 
-  state.location =
-    state.joinedRoom?.location_text ||
-    state.location;
+      return {
+        id: item.id,
+        name:
+          tags.name ||
+          tags.brand ||
+          tags.operator ||
+          "Nearby place",
+        type:
+          tags.amenity ||
+          tags.shop ||
+          "Place",
+        lat:
+          item.lat ??
+          item.center?.lat ??
+          null,
+        lng:
+          item.lon ??
+          item.center?.lon ??
+          null,
+        address: buildAddress(tags)
+      };
+    })
+    .filter((place) => place.name)
+    .filter(
+      (place, index, array) =>
+        index ===
+        array.findIndex(
+          (other) =>
+            other.name.toLowerCase() === place.name.toLowerCase()
+        )
+    )
+    .slice(0, 8);
 
+  return places;
+}
 
+async function geocodeLocation(location) {
+  const url =
+    "https://nominatim.openstreetmap.org/search?" +
+    new URLSearchParams({
+      q: location,
+      format: "json",
+      limit: "1"
+    });
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = await response.json();
+
+  if (!data.length) {
+    return null;
+  }
+
+  return {
+    lat: Number(data[0].lat),
+    lng: Number(data[0].lon)
+  };
+}
+
+function renderPlaces() {
+  const container = document.getElementById("placesList");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (state.places.length === 0) {
+    container.innerHTML = `
+      <div class="empty-card">
+        <strong>No automatic matches yet.</strong>
+        <p>
+          Your Roam is saved. You can still choose a nearby place yourself.
+        </p>
+      </div>
+    `;
+
+    return;
+  }
+
+  state.places.forEach((place, index) => {
+    const card = document.createElement("button");
+
+    card.type = "button";
+    card.className = "place-card";
+
+    if (index === 0) {
+      card.classList.add("selected");
+      state.selectedPlace = place;
+    }
+
+    card.innerHTML = `
+      <div class="place-number">${index + 1}</div>
+
+      <div class="place-info">
+        <strong>${escapeHtml(place.name)}</strong>
+        <span>${escapeHtml(formatPlaceType(place.type))}</span>
+        ${
+          place.address
+            ? `<small>${escapeHtml(place.address)}</small>`
+            : ""
+        }
+      </div>
+
+      <div class="place-check">✓</div>
+    `;
+
+    card.addEventListener("click", () => {
+      state.selectedPlace = place;
+
+      document.querySelectorAll(".place-card").forEach((item) => {
+        item.classList.remove("selected");
+      });
+
+      card.classList.add("selected");
+    });
+
+    container.appendChild(card);
+  });
+}
+
+function finishRoam() {
+  const place = state.selectedPlace || state.places[0] || null;
+
+  state.selectedPlace = place;
+
+  renderFinalPlan();
+
+  showScreen("final");
+}
+
+function renderFinalPlan() {
+  const heading = document.getElementById("finalHeading");
+  const plan = document.getElementById("finalPlan");
+
+  if (!plan) return;
+
+  const room = state.room;
+
+  const best = state.bestTimes[0];
+
+  const when = best
+    ? `${formatDate(best.date)} at ${best.time}`
+    : "Your group's chosen time";
+
+  const where = state.selectedPlace
+    ? state.selectedPlace.name
+    : state.location;
+
+  const activityName =
+    ACTIVITIES.find((item) => item.id === state.activity)?.name ||
+    "Hangout";
+
+  const budget =
+    BUDGET_OPTIONS.find((item) => item.value === state.budget)
+      ?.label || "Flexible";
+
+  if (heading) {
+    heading.textContent = room?.name || state.roomName || "Your Roam";
+  }
+
+  plan.innerHTML = `
+    <div class="plan-row">
+      <span>WHEN</span>
+      <strong>${escapeHtml(when)}</strong>
+    </div>
+
+    <div class="plan-row">
+      <span>WHERE</span>
+      <strong>${escapeHtml(where)}</strong>
+    </div>
+
+    <div class="plan-row">
+      <span>VIBE</span>
+      <strong>${escapeHtml(activityName)}</strong>
+    </div>
+
+    <div class="plan-row">
+      <span>BUDGET</span>
+      <strong>${escapeHtml(budget)} per person</strong>
+    </div>
+
+    <div class="plan-row">
+      <span>ROAM CODE</span>
+      <strong>${escapeHtml(room?.code || "")}</strong>
+    </div>
+  `;
+}
+
+async function copyRoomCode() {
+  const code = state.room?.code;
+
+  if (!code) return;
+
+  await copyText(code);
+
+  toast("Roam code copied.");
+}
+
+async function copyFinalPlan() {
+  const room = state.room;
+
+  const best = state.bestTimes[0];
+
+  const when = best
+    ? `${formatDate(best.date)} at ${best.time}`
+    : "TBD";
+
+  const where = state.selectedPlace
+    ? state.selectedPlace.name
+    : state.location;
+
+  const activityName =
+    ACTIVITIES.find((item) => item.id === state.activity)?.name ||
+    "Hangout";
+
+  const budget =
+    BUDGET_OPTIONS.find((item) => item.value === state.budget)
+      ?.label || "Flexible";
+
+  const text = `${room?.name || "Roam"}
+
+WHEN: ${when}
+WHERE: ${where}
+VIBE: ${activityName}
+BUDGET: ${budget} per person
+
+Roam code: ${room?.code || ""}`;
+
+  await copyText(text);
+
+  toast("Plan copied.");
+}
+
+async function copyText(text) {
   try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const textarea = document.createElement("textarea");
 
-    await loadPlaces();
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
 
-  } catch (error) {
+    document.body.appendChild(textarea);
 
-    console.error(error);
+    textarea.select();
+
+    document.execCommand("copy");
+
+    textarea.remove();
   }
 }
 
+function locateUser() {
+  const status = document.getElementById("locationStatus");
 
-/* =========================================================
-   FORMATTING
-========================================================= */
-
-function formatDate(iso) {
-
-  if (!iso) {
-    return "Flexible";
+  if (!navigator.geolocation) {
+    toast("Location isn't available in this browser.");
+    return;
   }
 
-  const date =
-    new Date(
-      `${iso}T12:00:00`
-    );
+  if (status) {
+    status.textContent = "Finding you…";
+  }
 
-  return date.toLocaleDateString(
-    undefined,
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      state.lat = position.coords.latitude;
+      state.lng = position.coords.longitude;
+
+      try {
+        const location = await reverseGeocode(
+          state.lat,
+          state.lng
+        );
+
+        if (location) {
+          state.location = location;
+
+          const input = document.getElementById("location");
+
+          if (input) {
+            input.value = location;
+          }
+
+          if (status) {
+            status.textContent = "Location found.";
+          }
+        } else {
+          if (status) {
+            status.textContent = "Location found.";
+          }
+        }
+      } catch {
+        if (status) {
+          status.textContent = "Location found.";
+        }
+      }
+    },
+    () => {
+      if (status) {
+        status.textContent = "Couldn't access your location.";
+      }
+
+      toast("You can enter your location manually.");
+    },
     {
-      weekday: "long",
-      month: "long",
-      day: "numeric"
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 300000
     }
   );
 }
 
+async function reverseGeocode(lat, lng) {
+  const url =
+    "https://nominatim.openstreetmap.org/reverse?" +
+    new URLSearchParams({
+      lat,
+      lon: lng,
+      format: "json"
+    });
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = await response.json();
+
+  if (!data || !data.address) {
+    return null;
+  }
+
+  const address = data.address;
+
+  const parts = [
+    address.road,
+    address.city ||
+      address.town ||
+      address.village ||
+      address.municipality,
+    address.state
+  ].filter(Boolean);
+
+  return parts.join(", ");
+}
+
+function getDateOptions() {
+  const options = [];
+
+  const today = new Date();
+
+  for (let i = 0; i < 14; i++) {
+    const date = new Date(today);
+
+    date.setDate(today.getDate() + i);
+
+    const iso = toISODate(date);
+
+    options.push({
+      iso,
+      day: date.getDate(),
+      month: date.toLocaleDateString("en-US", {
+        month: "short"
+      }),
+      weekday: date.toLocaleDateString("en-US", {
+        weekday: "short"
+      })
+    });
+  }
+
+  return options;
+}
+
+function formatDate(iso) {
+  if (!iso) return "";
+
+  const [year, month, day] = iso.split("-").map(Number);
+
+  const date = new Date(year, month - 1, day);
+
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric"
+  });
+}
+
+function toISODate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function buildAddress(tags) {
+  const parts = [
+    tags["addr:housenumber"],
+    tags["addr:street"],
+    tags["addr:city"]
+  ].filter(Boolean);
+
+  return parts.join(" ");
+}
+
+function formatPlaceType(type) {
+  if (!type) return "Nearby place";
+
+  return type
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function getValue(id) {
+  const element = document.getElementById(id);
+
+  return element ? element.value.trim() : "";
+}
+
+function createToken() {
+  if (window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+
+  return (
+    "roam-" +
+    Date.now() +
+    "-" +
+    Math.random().toString(36).slice(2)
+  );
+}
+
+function getOrCreateToken(key) {
+  const existing = localStorage.getItem(key);
+
+  if (existing && existing.length >= 20) {
+    return existing;
+  }
+
+  const token = createToken();
+
+  localStorage.setItem(key, token);
+
+  return token;
+}
+
+function setButtonLoading(button, loading) {
+  if (!button) return;
+
+  if (loading) {
+    button.dataset.originalText = button.textContent;
+    button.textContent = "Saving…";
+    button.disabled = true;
+  } else {
+    button.textContent =
+      button.dataset.originalText || button.textContent;
+    button.disabled = false;
+  }
+}
+
+function toast(message) {
+  const element = document.getElementById("toast");
+
+  if (!element) {
+    alert(message);
+    return;
+  }
+
+  element.textContent = message;
+  element.classList.add("show");
+
+  clearTimeout(window.roamToastTimer);
+
+  window.roamToastTimer = setTimeout(() => {
+    element.classList.remove("show");
+  }, 3000);
+}
 
 function escapeHtml(value) {
-
   return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -1932,434 +1517,3 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-
-
-/* =========================================================
-   LOCATION BUTTON
-========================================================= */
-
-function useMyLocation() {
-
-  if (!navigator.geolocation) {
-
-    toast(
-      "Location isn't available in this browser."
-    );
-
-    return;
-  }
-
-
-  const status =
-    $("locationStatus");
-
-  if (status) {
-    status.textContent =
-      "Finding your location…";
-  }
-
-
-  navigator.geolocation.getCurrentPosition(
-
-    async (position) => {
-
-      state.lat =
-        position.coords.latitude;
-
-      state.lng =
-        position.coords.longitude;
-
-
-      try {
-
-        const response =
-          await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${state.lat}&lon=${state.lng}`,
-            {
-              headers: {
-                Accept:
-                  "application/json"
-              }
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        const display =
-          data.display_name ||
-          "Current location";
-
-
-        state.location =
-          display;
-
-        $("location").value =
-          display;
-
-
-        if (status) {
-          status.textContent =
-            "Location found.";
-        }
-
-
-      } catch {
-
-        $("location").value =
-          "Current location";
-
-        state.location =
-          "Current location";
-
-        if (status) {
-          status.textContent =
-            "Location found.";
-        }
-      }
-    },
-
-
-    () => {
-
-      if (status) {
-        status.textContent =
-          "Couldn't access your location.";
-      }
-
-      toast(
-        "You can enter your location manually."
-      );
-    },
-
-    {
-      enableHighAccuracy: false,
-      timeout: 10000,
-      maximumAge: 300000
-    }
-  );
-}
-
-
-/* =========================================================
-   EVENT LISTENERS
-========================================================= */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-
-    /* Home */
-
-    $("startRoamBtn")
-      ?.addEventListener(
-        "click",
-        startRoam
-      );
-
-
-    $("brandHome")
-      ?.addEventListener(
-        "click",
-        () => {
-          resetState();
-          showScreen("homeScreen");
-        }
-      );
-
-
-    $("navJoin")
-      ?.addEventListener(
-        "click",
-        () => {
-          showScreen("joinScreen");
-        }
-      );
-
-
-    /* Create */
-
-    $("createContinue")
-      ?.addEventListener(
-        "click",
-        saveRoamDetails
-      );
-
-
-    $("createBack")
-      ?.addEventListener(
-        "click",
-        () => showScreen("homeScreen")
-      );
-
-
-    $("locationBtn")
-      ?.addEventListener(
-        "click",
-        useMyLocation
-      );
-
-
-    /* Dates */
-
-    $("datesContinue")
-      ?.addEventListener(
-        "click",
-        saveDates
-      );
-
-
-    $("datesBack")
-      ?.addEventListener(
-        "click",
-        () => {
-
-          if (state.joinedRoom) {
-
-            showScreen(
-              "joinConfirmScreen"
-            );
-
-          } else {
-
-            showScreen(
-              "createScreen"
-            );
-          }
-        }
-      );
-
-
-    /* Availability */
-
-    $("availabilityContinue")
-      ?.addEventListener(
-        "click",
-        saveAvailability
-      );
-
-
-    $("availabilityBack")
-      ?.addEventListener(
-        "click",
-        () => showScreen("datesScreen")
-      );
-
-
-    /* Budget */
-
-    document
-      .querySelectorAll(
-        ".budget-option"
-      )
-      .forEach(
-        (button) => {
-
-          button.addEventListener(
-            "click",
-            () =>
-              selectBudget(
-                button.dataset.budget,
-                button
-              )
-          );
-        }
-      );
-
-
-    $("budgetContinue")
-      ?.addEventListener(
-        "click",
-        finishBudget
-      );
-
-
-    $("budgetBack")
-      ?.addEventListener(
-        "click",
-        () =>
-          showScreen(
-            "availabilityScreen"
-          )
-      );
-
-
-    /* Activity */
-
-    document
-      .querySelectorAll(
-        ".activity-card"
-      )
-      .forEach(
-        (button) => {
-
-          button.addEventListener(
-            "click",
-            () =>
-              selectActivity(
-                button.dataset.activity,
-                button
-              )
-          );
-        }
-      );
-
-
-    $("activityContinue")
-      ?.addEventListener(
-        "click",
-        finishActivity
-      );
-
-
-    $("activityBack")
-      ?.addEventListener(
-        "click",
-        () =>
-          showScreen(
-            "budgetScreen"
-          )
-      );
-
-
-    /* Created */
-
-    $("copyCodeBtn")
-      ?.addEventListener(
-        "click",
-        copyCode
-      );
-
-
-    $("viewRoamBtn")
-      ?.addEventListener(
-        "click",
-        viewMyRoam
-      );
-
-
-    /* Join */
-
-    $("joinFindBtn")
-      ?.addEventListener(
-        "click",
-        findRoam
-      );
-
-
-    $("joinBack")
-      ?.addEventListener(
-        "click",
-        () =>
-          showScreen(
-            "homeScreen"
-          )
-      );
-
-
-    $("joinContinue")
-      ?.addEventListener(
-        "click",
-        joinRoam
-      );
-
-
-    $("joinConfirmBack")
-      ?.addEventListener(
-        "click",
-        () =>
-          showScreen(
-            "joinScreen"
-          )
-      );
-
-
-    /* Places */
-
-    $("placesContinue")
-      ?.addEventListener(
-        "click",
-        showFinalPlan
-      );
-
-
-    /* Final */
-
-    $("copyPlanBtn")
-      ?.addEventListener(
-        "click",
-        copyPlan
-      );
-
-
-    $("newRoamBtn")
-      ?.addEventListener(
-        "click",
-        () => {
-
-          resetState();
-
-          showScreen(
-            "homeScreen"
-          );
-        }
-      );
-
-
-    /*
-      Allow pressing Enter in the
-      Join code field.
-    */
-
-    $("joinCode")
-      ?.addEventListener(
-        "keydown",
-        (event) => {
-
-          if (
-            event.key === "Enter"
-          ) {
-            findRoam();
-          }
-        }
-      );
-
-
-    /*
-      Allow pressing Enter in
-      the name field.
-    */
-
-    $("joinName")
-      ?.addEventListener(
-        "keydown",
-        (event) => {
-
-          if (
-            event.key === "Enter"
-          ) {
-            joinRoam();
-          }
-        }
-      );
-
-
-  }
-);
-
-
-/* =========================================================
-   INITIALIZE
-========================================================= */
-
-console.log(
-  "Roam loaded."
-);
-
-console.log(
-  "Supabase connected:",
-  Boolean(supabaseClient)
-);
