@@ -2544,6 +2544,9 @@ document.addEventListener(
 /* =========================================================
    GLOBAL FUNCTIONS
    ========================================================= */
+window.showScreen = showScreen;
+
+window.showJoinMessage = openJoinScreen;
 
 window.startRoam =
   startRoam;
